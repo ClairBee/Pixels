@@ -6,6 +6,9 @@ library(plyr)
 #  - pixelwise mean
 #  - pixelwise SD
 
+##################################################################################
+# Try using a tree to categorise pixels according to unspecified similarities
+# May have to define manual algorithm, classifying by stepping through each sequence
 
 ##################################################################################
 # array to contain pixelwise data
@@ -19,8 +22,10 @@ for (i in 1:20) {
     setTxtProgressBar(pb, i)
 }
 
-
 # get pixelwise mean & SD
-PWmean <- array(dim=c(1996,1996))
-PWsd <- array(dim=c(1996,1996))
+PWmean <- apply(m, c(1,2), mean)
+PWsd <- apply(m, c(1,2), sd)
+
+globalmean <- mean(m)
+globalSD <- sd(m)
 
