@@ -4,7 +4,7 @@ library(plyr)
 if (getwd() !=  "~Pixels") {setwd("~/Pixels")}
 
 # Functions to create:
-#  - import all images from single day & channel - ROTATE MATRIX IN FN
+#  - import all images from single day & channel - UPDATE FUNCTION TO ROTATE MATRIX
 #  - pixelwise mean
 #  - pixelwise SD
 #  - cropped histograms
