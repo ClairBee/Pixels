@@ -1,5 +1,6 @@
-library(tiff)
+chklibrary(tiff)
 library(plyr)
+library("IO.pixels")
 
 if (getwd() !=  "~Pixels") {setwd("~/Pixels")}
 
@@ -17,15 +18,38 @@ if (getwd() !=  "~Pixels") {setwd("~/Pixels")}
 
 # should deal with fact that not always 20 snapshots - at some point, at least!
 ##################################################################################
+# Check that 150702 acquisitions are in fact all the same
+{
+    chk <- array(dim = c(20,3,3))
+    channel = c("black", "grey", "white")
+    for (j in 1:3) {
+        for (i in 1:20) {
+            tmp <- readTIFF(paste("./Image-data/150702/",channel[j],"/",channel[j],"_020715_",i,".tif", sep = ""))
+            t1 <- c(tmp[,,1]); t2 <- c(tmp[,,2]); t3 <- c(tmp[,,3])
+            chk[i,1,j] <- length(t1[t1!=t2])
+            chk[i,2,j] <- length(t1[t2!=t3])
+            chk[i,3,j] <- length(t1[t3!=t1])
+        }
+    }
+    chk     # no differences between three layers of matrix: can take first only
+}
 
-# correct orientation of matrix data to match original display direction
-z <- readTIFF("sample-tif.tiff")[,,1]
-zz <- t(apply(z,2,rev))     # correct matrix to be correctly oriented
-t(mat[nrow(mat):1,,drop=FALSE])     # alternative approach: need to test which is better
 
-# difference in time elapsed is v small for 1996x1996 matrix (such as those we are importing)
-system.time(image(t(apply(mean.150828,2,rev))))                           # 8.18 elapsed
-system.time(image(t(mean.150828[nrow(mean.150828):1,,drop=FALSE])))       # 8.09 elapsed    
+##################################################################################
+# how to correct orientation of matrix data to match original display direction
+{
+    z <- readTIFF("sample-tif.tiff")[,,1]
+    zz <- t(apply(z,2,rev))     # correct matrix to be correctly oriented
+    t(mat[nrow(mat):1,,drop=FALSE])     # alternative approach: need to test which is better
+    
+    # difference in time elapsed is v small for 1996x1996 matrix (such as those we are importing)
+    system.time(image(t(apply(mean.150828,2,rev))))                           # 8.18 elapsed
+    system.time(image(t(mean.150828[nrow(mean.150828):1,,drop=FALSE])))       # 8.09 elapsed    
+    
+    system.time(b.150828 <- load.daily(150828, "black"))    # using apply:   31.33
+    system.time(b.150828 <- load.daily(150828, "black"))    # using reorder: 7.17
+}
+
 
 ##################################################################################
 # import daily snapshots
@@ -79,7 +103,7 @@ load.channel <- function(channel, x = 1996, y = 1996, z = 20, progress = F, fpat
     # add a 'from date and 'to date' rather than just picking everything up, modify d
     
     m <- array(dim = c(x,y,z,d))
-
+    
     if (progress) {pb <- txtProgressBar(max = d, style = 3)}
     
     for (j in 1:d) {
@@ -127,4 +151,3 @@ Sys.getenv("DISPLAY")
 ###################################################################################
 
 # try making larger matrix, giving multiple days
-
