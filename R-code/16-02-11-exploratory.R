@@ -1,11 +1,11 @@
-chklibrary(tiff)
+library(tiff)
 library(plyr)
-library("IO.pixels")
+library("IO.Pixels")
 
 if (getwd() !=  "~Pixels") {setwd("~/Pixels")}
 
 # Functions to create:
-#  - import all images from single day & channel - UPDATE FUNCTION TO ROTATE MATRIX
+#  - import all images from single day & channel
 #  - pixelwise mean
 #  - pixelwise SD
 #  - cropped histograms
@@ -14,9 +14,7 @@ if (getwd() !=  "~Pixels") {setwd("~/Pixels")}
 # Try using a tree to categorise pixels according to ?unspecified similarities
 # May have to define manual algorithm, classifying by stepping through each sequence
 
-# Label axes of daily matrix?
-
-# should deal with fact that not always 20 snapshots - at some point, at least!
+# should deal with fact that not always 20 snapshots?
 ##################################################################################
 # Check that 150702 acquisitions are in fact all the same
 {
@@ -56,8 +54,9 @@ if (getwd() !=  "~Pixels") {setwd("~/Pixels")}
 b.150828 <- load.daily(150828, "black")
 
 # daily mean & SD
-mean.150828 <- apply(b.150828, c(1,2), mean)
+mean.150828 <- apply(b.150828, c(1,2), mean)        # 151.43 elapsed
 sd.150828 <- apply(b.150828, c(1,2), sd)
+
 
 # histogram of daily mean & SD
 
