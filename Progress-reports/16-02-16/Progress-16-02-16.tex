@@ -1,0 +1,105 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\llap{\parbox{1cm}{\thesubsection}}}{0em}{}
+	
+%----------------------------------------------------------------------
+% SPECIFY BIBLIOGRAPHY FILE & FIELDS TO EXCLUDE
+%\addbibresource{bibfile.bib}
+%\AtEveryBibitem{\clearfield{url}}
+%\AtEveryBibitem{\clearfield{doi}}
+%\AtEveryBibitem{\clearfield{isbn}}
+%\AtEveryBibitem{\clearfield{issn}}
+
+%----------------------------------------------------------------------
+% define code format
+\lstnewenvironment{code}[1][R]{			% default language is R
+	\lstset{language = #1,
+        		columns=fixed,
+    			tabsize = 4,
+    			breakatwhitespace = true,
+			showspaces = false,
+    			xleftmargin = .75cm,
+    			lineskip = {0pt},
+			showstringspaces = false,
+			extendedchars = true
+    }}
+    {}
+    
+%======================================================================
+
+\usepackage{fancyhdr}
+
+\fancyhf{}
+\fancyhead[R]{\textbf{17-Feb-2016}}
+\pagestyle{fancy}
+
+\addtolength{\topmargin}{-0.5cm}
+\addtolength{\textheight}{1.4cm}
+
+\renewcommand{\headrulewidth}{0pt}
+
+\begin{document}
+
+\subsection*{Since last week}
+
+\begin{itemize}
+
+\item
+GitHub repository created at \url{https://github.com/ClairBee/IO.Pixels} to store functions: \textit{count available images, load images, get pixelwise mean/SD, create filled contour plot/image of pixel values with panels marked}. Package can be installed directly to R using \texttt{devtools}.
+
+\item
+Functions in that package will rotate the .tif image as it loads, so plotting can be done automatically
+
+\item
+Data from 15-07-02 can now be loaded: each .tif consists of three layers, but manual comparison confirms all are identical, so only the first is imported (code for comparison is in \texttt{16-02-11-exploratory.R}
+
+\item
+Seems to be some duplication of data: 15-08-01 and 15-01-08 contain the same files (labelling issue)
+
+\item
+Panels are 128 x 1024 pixels, but overall image is cropped (details are stored in xml profiles, so can check that cropping is always the same) - seems to be 2 pixels on LHS, 20 pixels on upper. Can therefore split each image into component panels to carry out comparison of spatial distributions.
+
+\item
+Briefly looked at time series of 20 acquisitions for one channel on one day, plotting only pixels that reached a particularly high value. No real fluctuation, so seems like behaviour is reasonably consistent in the short term - still need to check all pixelwise SDs for any pixels that do behave flickering/blipping behaviour.
+
+\end{itemize}
+
+\subsection*{Current questions/considerations}
+
+\begin{itemize}
+\item
+Can see the logic of using median value across all pixels rather than mean, since this should give the 'target' value and be more robust to high numbers of bad pixels. Maybe consider accepting this as our mid-point cutoff instead of mean value? \\
+Still need to decide whether to use mean or median across daily acquisitions to give pixelwise value. Using median will essentially discard any `bad' (extreme) values, so should be robust to flickering pixels etc.
+
+\item
+Reading the TIFF images converts each pixel to a value from 0 to 1, scaled according to the values in the image. Do we need to investigate whether we can rely on the same scaling in each image (ie. will all grey images have the same 0 and 1? What if there are no 'hot' pixels at all?) or are we confident that the numerical values returned will be ok? If there is a rescaling issue then is it possible that `well-behaved' pixels may appear to have some drift in value simply because of a difference in max \& min values on that image?
+
+\end{itemize}
+
+\subsection*{Next steps}
+
+\begin{itemize}
+
+\item
+Plot daily time series of pixels with high daily SD - these may be showing short-term 'flickering'/'blipping' behaviour. (Those investigated so far seem fairly constant in the short term)
+
+\item
+For `bad' pixels (currently anything where value is more than 3sd from the mean, since this gives only the most extreme values), plot daily pixelwise mean for full sequence of measurements
+
+\item
+Create a df to store information about each image set - mean, SD, median, offset, max, min etc - to avoid having to calculate everything each time (should be updated when loading a day's data, if the record doesn't already exist, and include summary xml data)
+
+\end{itemize}
+
+%\newpage
+%\printbibliography
+\end{document}
