@@ -1,0 +1,104 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\llap{\parbox{1cm}{\thesubsection}}}{0em}{}
+	
+%----------------------------------------------------------------------
+% SPECIFY BIBLIOGRAPHY FILE & FIELDS TO EXCLUDE
+%\addbibresource{bibfile.bib}
+%\AtEveryBibitem{\clearfield{url}}
+%\AtEveryBibitem{\clearfield{doi}}
+%\AtEveryBibitem{\clearfield{isbn}}
+%\AtEveryBibitem{\clearfield{issn}}
+
+%----------------------------------------------------------------------
+% define code format
+\lstnewenvironment{code}[1][R]{			% default language is R
+	\lstset{language = #1,
+        		columns=fixed,
+    			tabsize = 4,
+    			breakatwhitespace = true,
+			showspaces = false,
+    			xleftmargin = .75cm,
+    			lineskip = {0pt},
+			showstringspaces = false,
+			extendedchars = true
+    }}
+    {}
+    
+%======================================================================
+
+\usepackage{fancyhdr}
+
+\fancyhf{}
+\fancyhead[R]{\textbf{23-Feb-2016}}
+\pagestyle{fancy}
+
+\addtolength{\topmargin}{-0.5cm}
+\addtolength{\textheight}{1.4cm}
+
+\renewcommand{\headrulewidth}{0pt}
+
+\begin{document}
+
+\subsection*{Since last week}
+
+\begin{itemize}
+
+\item
+Checked through all image profiles - cropping is always at 2 and 20, with image size 1996, so can assume consistent panel locations.
+
+\item
+Importing using \texttt{as.is = T} takes approx. half the memory because all values are integers, ranging from 0 to 65536. This avoids danger of stretching data owing to possible scaling between values other than 0 and 1, and also gives a more useful (interpretable) scale. Matrix is also half the size (because integer-valued rather than floats) and operations are therefore much faster. Checked summary statistics against original imported versions and scaling is linear, so will switch to using the smaller, faster version.
+\end{itemize}
+
+\subsection*{Current questions/considerations}
+
+\begin{itemize}
+\item
+Questions for Jay:
+\begin{itemize}
+
+\item
+Go through manual's definition of underperforming pixels, ensure that I'm applying the right tests to the right images.
+
+\item
+Can we get the details of the background correction usually carried out by the machine? (Assume this will counteract the circular pattern, which is an artefact of the source and not the sensor - hopefully giving a clearer image of panelwise differences)
+
+\item
+If exact correction is not available, can we get a set of test images with and without the correction applied, so that we can try to reverse-engineer a mask to replicate the effect?
+\end{itemize}
+
+\item
+Usual image order is white, grey, black but one day (150702) the order was reversed - also the day on which the images were corrupted. Need to look more closely at this batch to see if there are any different patterns: is there any indication that the order of taking the images changes the sensitivity?
+\end{itemize}
+
+\subsection*{Next steps}
+
+\begin{itemize}
+
+\item
+Try converting tif files using \texttt{as.is = T} or \texttt{convert = T} to see if this affects the colour scaling (will address potential issue of mean-value drift if data is not always scaled to same 0 and 1)
+
+\item
+Plot daily time series of pixels with high daily SD - these may be showing short-term 'flickering'/'blipping' behaviour. (Those investigated so far seem fairly constant in the short term)
+
+\item
+For `bad' pixels (use official threshold for time being), plot daily pixelwise mean for full sequence of measurements
+
+\item
+Create a tracking df to store summary information about each image set
+
+\end{itemize}
+
+%\newpage
+%\printbibliography
+\end{document}

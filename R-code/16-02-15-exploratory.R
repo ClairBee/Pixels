@@ -121,3 +121,30 @@ abline(h = ll.b.150828, col = "red")
 abline(h = mean(b.150828), col = "red", lwd = 2)
 
 #####################################################################################################
+
+# summary of xml profiles: offset parameters are consistent
+summ <- summarise.image.profiles()
+summ <- summ[order(summ$acq.time),]
+summ <- summ[order(summ$acq.date),]
+summ
+
+#####################################################################################################
+
+# compare import methods: as.is = T or F
+
+filenm <- "./Image-data/150828/black/black_280815_1.tif"
+
+m.org <- readTIFF(filenm)
+m.asis <- readTIFF(filenm, as.is = T)
+
+system.time(summ.org <- batch.summary(m.org))           # 0.72 elapsed
+system.time(summ.asis <- batch.summary(m.asis))         # 0.41 elapsed
+
+# summary statistics are all the same, scaling appears to be linear: ok to use the 'as-is' import method
+round(summ.org * 65535,9) == round(summ.asis,9)
+
+#####################################################################################################
+
+# get summary statistics for all images
+
+system.time(z <- summarise.all())
