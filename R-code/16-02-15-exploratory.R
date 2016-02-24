@@ -145,6 +145,16 @@ round(summ.org * 65535,9) == round(summ.asis,9)
 
 #####################################################################################################
 
-# get summary statistics for all images
+# get summary statistics for all images, output to .csv to create tables in knitr
 
-system.time(z <- summarise.all())
+system.time(z <- summarise.images())            # 614.83 elapsed
+write.csv(z, "./Other-data/Image-summaries.csv", row.names = F)
+
+system.time(summ <- summarise.profiles())       # 17.9 elapsed
+summ <- summ[order(summ$acq.time),]
+summ <- summ[order(summ$acq.date),]
+summ
+
+write.csv(summ, "./Other-data/Profile-summaries.csv", row.names = F)
+
+#####################################################################################################
