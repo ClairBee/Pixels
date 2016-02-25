@@ -1,0 +1,96 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\llap{\parbox{1cm}{\thesubsection}}}{0em}{}
+	
+%----------------------------------------------------------------------
+% SPECIFY BIBLIOGRAPHY FILE & FIELDS TO EXCLUDE
+%\addbibresource{bibfile.bib}
+%\AtEveryBibitem{\clearfield{url}}
+%\AtEveryBibitem{\clearfield{doi}}
+%\AtEveryBibitem{\clearfield{isbn}}
+%\AtEveryBibitem{\clearfield{issn}}
+
+%----------------------------------------------------------------------
+% define code format
+\lstnewenvironment{code}[1][R]{			% default language is R
+	\lstset{language = #1,
+        		columns=fixed,
+    			tabsize = 4,
+    			breakatwhitespace = true,
+			showspaces = false,
+    			xleftmargin = .75cm,
+    			lineskip = {0pt},
+			showstringspaces = false,
+			extendedchars = true
+    }}
+    {}
+    
+%======================================================================
+
+\usepackage{fancyhdr}
+
+\fancyhf{}
+\fancyhead[R]{\textbf{23-Feb-2016}}
+\pagestyle{fancy}
+
+\addtolength{\topmargin}{-0.5cm}
+\addtolength{\textheight}{1.4cm}
+
+\renewcommand{\headrulewidth}{0pt}
+
+\begin{document}
+
+\subsection*{Since last week}
+
+\begin{itemize}
+
+\item
+Brief literature review carried out. Some suggestions for thresholding are listed below.
+
+\end{itemize}
+
+\subsection*{Current questions/considerations}
+
+Thresholding ideas/possibilities:
+
+\begin{itemize}
+\item
+For each pixel, apply signed rank test to difference between pixel and its neighbours (or simply determine if centroid is max/min of block) - a pixel that is max/min of all its neighbours is probably either hot or dead.
+
+\item
+Set threshold for bad pixels based on difference between $Q_{99.9}$ (say) and modal value
+
+\item
+\end{itemize}
+
+\subsection*{Next steps}
+
+\begin{itemize}
+
+\item
+Create a set of functions to identify `bad' pixels. Begin by using thresholds/definitions given in manual, but make functions flexible in order to update parameters later.
+
+\item
+In particular, plot daily time series of pixels with high daily SD - these may be showing short-term 'flickering'/'blipping' behaviour. (Those investigated so far seem fairly constant in the short term)
+
+\item
+For all `bad' pixels identified, plot daily pixelwise mean for full sequence of measurements
+
+\item
+For each panel, look at pixelwise mean \& SD - should be a relationship between the two, which will differ across the panels (intra-panel dependency)
+
+
+\end{itemize}
+
+%\newpage
+%\printbibliography
+\end{document}

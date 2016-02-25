@@ -1,0 +1,177 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\large\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\llap{\parbox{1cm}{\thesubsection}}}{0em}{}
+	
+%----------------------------------------------------------------------
+% SPECIFY BIBLIOGRAPHY FILE & FIELDS TO EXCLUDE
+\addbibresource{/home/clair/Documents/Pixels/Pixels-refs.bib}
+%\AtEveryBibitem{\clearfield{url}}
+%\AtEveryBibitem{\clearfield{doi}}
+%\AtEveryBibitem{\clearfield{isbn}}
+%\AtEveryBibitem{\clearfield{issn}}
+
+%----------------------------------------------------------------------
+% define code format
+\lstnewenvironment{code}[1][R]{			% default language is R
+	\lstset{language = #1,
+        		columns=fixed,
+    			tabsize = 4,
+    			breakatwhitespace = true,
+			showspaces = false,
+    			xleftmargin = .75cm,
+    			lineskip = {0pt},
+			showstringspaces = false,
+			extendedchars = true
+    }}
+    {}
+    
+%======================================================================
+
+\begin{document}
+
+\section{Advanced anomalous pixel correction algorithms for hyperspectral thermal infrared data \cite{Santini2014}}
+
+\begin{itemize}
+
+\item
+Need to consider permanent and intermittent response variations; not only in time, but in intensity. Does number/severity of affected pixels increase at higher intensities?
+
+\item
+Refers to \cite{Cracknell2013} for use of statistical parameters such as median or variance and \cite{Liu2009} for `median filtering and statistic method'. Need to follow up both of these but first refers to a collection of 37 papers and second doesn't appear to exist in English.
+
+\item
+Bad pixel identification/correction methods mentioned: ITRES, RXD.
+
+\item
+Specifies dark, saturated or blinking pixels as possible types of a anomalous pixels - nothing else
+
+\subsection{ITRES approach}
+`The ITRES procedures for correcting anomalous pixels are based on combination of median filtering and statistic threshold filtering \cite{Cracknell2013}. Any pixel with a percentage difference, between a pixel's variance (and/or mean value depending on the user choice) and the same pixel's variance (and/or mean value) after a five-element median filter, greater than a user provided value is flagged as anomalous for a whole flight line.' (\textit{sic})
+
+\begin{itemize}
+\item
+Depends heavily on user-provided threshold value
+\end{itemize}
+
+\subsection{RXD approach}
+Requires spectral-spatial data so not appropriate for our purposes (at least, as described in the current paper)
+
+\subsection{Iterative threshold procedure}
+Common method of threshold setting: find mean \& sd, set threshold as scalar multiple of sd. However, sd can be very variable (esp. between channels) and this will not pick up pixels where response does not vary much (ie. low-gain pixels).
+
+`More in detail, at each iteration step, the procedure computes the over the 640 scanline pixels for each row (spectral band) of the two FP-RXD images following \ref{eq:row-sd}, where the dependence on the iteration step is omitted for simplicity 
+
+\begin{equation}
+\label{eq:row-sd}
+\sigma_k = \sqrt{\sum_{j \in m} \frac{(z_{kj} - <z>_k)^2}{\left|m \right|}}
+\end{equation}
+
+where $z_{kj}$ is the generic element of the FP-RXD image computed by means of \textit{[refs removed]}; $k$ is the index of row (spectral band) and $j$ is the index of column (scanline); $m$ is a subset of the $M$ scanline pixels which cardinality ($|M| < 640$) decreases at each iteration step due to the exclusion of a set of anomalous pixels from the computation; and $<z>$ is the mean value of $z$ computed above the $m$- ensemble:
+
+\begin{equation}
+\label{eq:adj-mean}
+<z>_k = \sum_{j\in m} \frac{z_{kj}}{|m|}
+\end{equation}
+
+Then, a five-pixel smooth function is applied to each row of the FP-RXD images in order to obtain a couple (scene and shutter data) of reference values for each FP pixel of the FP-RXD images. At each iteration step, the pixels overcoming, at least for one of the two FP-RXD images, the smoothed function reference value by a given number ($n_\sigma$, fixed at the beginning of the thresholding procedure) of $\sigma_k^p$, are flagged as anomalous and excluded from the computation of $\sigma_k^p$ in the following steps. The use of the smoothed function, in place of a simple mean value, reduces the amount of false alarms, especially in the case of scene data. In fact, it takes into consideration the local behaviour of the  FP-RXD due to natural variations of the data.'
+
+Convergence declared when no anomalous pixels detected between two subsequent iteration steps.
+
+\begin{itemize}
+\item
+Method does require recomputation of the FP-RXD image so is not strictly applicable. However, idea of recomputing $\sigma$ with anomalous pixels removed as a convergent thresholding approach may be a useful one.
+
+\item
+Other `choose' functions mentioned: RMSE between contiguous image columns; RMSE between image \& image after application of a median filter (RMSE-MF); columnar variance.
+\end{itemize}
+
+\end{itemize}
+
+\section{Detection and correction of abnormal pixels in Hyperion images \cite{Han2002}}
+
+\begin{itemize}
+\item
+Hyperion bad pixel map was found to be inaccurate, so separate classification of bad pixels was needed. As in IO data, many abnormal pixels appear as dark stripes (continuous or intermittent). Classes determined: continuous (solid line) vs intermittent (sequence of dots), and either atypical values or constant value. Classifications are very specific to Hyperion images (gathered with pushbroom approach, rather than 2d array as in our data) so not likely to transfer.
+
+\item
+Multiple images taken with same equipment and compared - most bad pixels found to be stationary.
+
+\item 
+Intermittent atypical lines identified by looking for vertical lines of pixels with a lower value than both neighbours: scans rows to find single abnormal pixel, then scans up and down to build lines of abnormal pixels. Maximum allowed line length (dependent on maximum vertical length of a `real' feature) and proportion of abnormal cells (50\%) are set by the user.
+\end{itemize}
+
+\section{Dynamic identification and correction of defective pixels \cite{Pinto2012}}
+\label{Pinto2012}
+
+
+Outlines a fairly simple procedure for identification of bad pixels - worth considering as way to identify locally non-uniform points, if not as a single catch-all.
+
+\begin{itemize}
+
+\item
+For each pixel, obtain value and values of neighbours (whether to use 8-neighbours or 4-neighbours TBD \nb{compare results with both - also time required})
+
+\item
+Subtract values of neighbours from pixel and compare signs.  If all signs are the same, pixel may be defective, so carry on testing. Otherwise, assume pixel is ok, so use as is. \nb{use Wilcoxon signed rank test?}.
+
+\item
+Compare magnitudes of differences with threshold value (threshold may be different for positive and negative differences, and also for 4-neighbour and corner-neighbours?) - anything within the threshold is actually OK.
+
+\item
+Thresholds are set based on a black calibration image (positive threshold) and a white calibration image (negative threshold). Create a histogram of the pixel values in the calibration image and find modal value \nb{Would be interesting to look at frequency of numbers to either side of modal value as well}; also find value below which a certain proportion (eg. 99.9\%) of values fall. Threshold for positive values is then $Q_{99.9} - Mo$, while threshold for negative values is $Mo - Q_{0.01}$.
+
+\end{itemize}
+
+\section{Identification and replacement of defective pixel based on Matlab for IR sensor \cite{Yang2011}}
+
+\begin{itemize}
+\item
+Defines dead pixels as having responsivity < 10\% of average responsivity. Hot pixels depend on exposure, but are always brighter than surrounding pixels.
+
+\item
+Uses improved median filtering algorithm (see \cite{Meng2010} for traditional method):
+\begin{equation}
+\hat{f}(i,j) = median \left\lbrace f(x, y) \right\rbrace
+\end{equation}
+where $f(x, y)$ is the grey value of all pixels in the $n \times n$ filter window.  \nb{Not clear if central point is included here}. Then pixel is defective if $|f(i, j) - \hat{f}(i, j)| > T$ where $T$ is some threshold value.
+
+Here, $T$ is determined manually by observation: subtract original image from median-filtered image and determine threshold by observation. Threshold used is $3\sigma$.
+
+\item
+\textbf{Improvement:} Since values of defective pixels are included when calculating average pixel value, the average used is based on the median-filtered values instead:
+
+\begin{equation}
+u = \sum_{i=1}^M \sum_{j=1}^N \hat{f}(i, j)
+\end{equation}
+
+\end{itemize}
+
+\hrulefill
+
+\section*{To do}
+
+\todo{Run algorithm used in \autoref{Pinto2012} and investigate resulting classification of locally non-uniform pixels}
+
+\todo{Try running algorithms across all images, vs only across grey channel (using black \& white only to determine threshold values)}
+
+\todo{Use `official' (median-based) classification of locally non-uniform pixels to identify bad pixels. Compare results to the above.}
+
+\todo{Create histograms as in \autoref{Pinto2012} and look at frequency of values close to modal value. Is there a single distinct spike or no?}
+
+\todo{Look at using Wilcoxon to measure differences between neighbouring pixels}
+
+\todo{Check histograms. Is data approximately normal or is there still appreciable skew?}
+
+\newpage
+\printbibliography
+
+\end{document}
