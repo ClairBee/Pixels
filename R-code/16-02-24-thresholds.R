@@ -27,7 +27,7 @@ bad.pixels[[1]] <- unique(which(bright.offset.corrected > (1.5 * median.bright),
 nrow(bad.pixels[[1]])
 
 
-# no gain: dark pixel, no list response (pixelwise mean value == 0)
+# no gain: dark pixel, no light response (pixelwise mean value == 0)
 bad.pixels[[2]] <- unique(which(gain.img == 0, arr.ind = T)[,c(1:2)])
 nrow(bad.pixels[[2]])
 
