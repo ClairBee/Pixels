@@ -1,0 +1,318 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\large\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\llap{\parbox{1cm}{\thesubsection}}}{0em}{}
+	
+%----------------------------------------------------------------------
+% SPECIFY BIBLIOGRAPHY FILE & FIELDS TO EXCLUDE
+\addbibresource{/home/clair/Documents/Pixels/Pixels-refs.bib}
+%\AtEveryBibitem{\clearfield{url}}
+%\AtEveryBibitem{\clearfield{doi}}
+%\AtEveryBibitem{\clearfield{isbn}}
+%\AtEveryBibitem{\clearfield{issn}}
+
+%----------------------------------------------------------------------
+% define code format
+\lstnewenvironment{code}[1][R]{			% default language is R
+	\lstset{language = #1,
+        		columns=fixed,
+    			tabsize = 4,
+    			breakatwhitespace = true,
+			showspaces = false,
+    			xleftmargin = .75cm,
+    			lineskip = {0pt},
+			showstringspaces = false,
+			extendedchars = true
+    }}
+    {}
+    
+%======================================================================
+
+\begin{document}
+
+Look specifically for articles on pixel correction in focal plane array/staring plane array. These are 2d sensor arrays, as opposed to pushbroom arrays often used in flyover imaging, which require different techniques.
+
+Other useful search terms: `bad pixel map', `switching median filter'.
+
+\section{Advanced anomalous pixel correction algorithms for hyperspectral thermal infrared data \cite{Santini2014}}
+
+\begin{itemize}
+
+\item
+Need to consider permanent and intermittent response variations; not only in time, but in intensity. Does number/severity of affected pixels increase at higher intensities?
+
+\item
+Refers to \cite{Cracknell2013} for use of statistical parameters such as median or variance and \cite{Liu2009} for `median filtering and statistic method'. Need to follow up both of these but first refers to a collection of 37 papers and second doesn't appear to exist in English.
+
+\item
+Bad pixel identification/correction methods mentioned: ITRES, RXD.
+
+\item
+Specifies dark, saturated or blinking pixels as possible types of a anomalous pixels - nothing else
+
+\subsection{ITRES approach}
+`The ITRES procedures for correcting anomalous pixels are based on combination of median filtering and statistic threshold filtering \cite{Cracknell2013}. Any pixel with a percentage difference, between a pixel's variance (and/or mean value depending on the user choice) and the same pixel's variance (and/or mean value) after a five-element median filter, greater than a user provided value is flagged as anomalous for a whole flight line.' (\textit{sic})
+
+\begin{itemize}
+\item
+Depends heavily on user-provided threshold value
+\end{itemize}
+
+\subsection{RXD approach}
+Requires spectral-spatial data so not appropriate for our purposes (at least, as described in the current paper)
+
+\subsection{Iterative threshold procedure}
+Common method of threshold setting: find mean \& sd, set threshold as scalar multiple of sd. However, sd can be very variable (esp. between channels) and this will not pick up pixels where response does not vary much (ie. low-gain pixels).
+
+`More in detail, at each iteration step, the procedure computes the over the 640 scanline pixels for each row (spectral band) of the two FP-RXD images following \ref{eq:row-sd}, where the dependence on the iteration step is omitted for simplicity 
+
+\begin{equation}
+\label{eq:row-sd}
+\sigma_k = \sqrt{\sum_{j \in m} \frac{(z_{kj} - <z>_k)^2}{\left|m \right|}}
+\end{equation}
+
+where $z_{kj}$ is the generic element of the FP-RXD image computed by means of \textit{[refs removed]}; $k$ is the index of row (spectral band) and $j$ is the index of column (scanline); $m$ is a subset of the $M$ scanline pixels which cardinality ($|M| < 640$) decreases at each iteration step due to the exclusion of a set of anomalous pixels from the computation; and $<z>$ is the mean value of $z$ computed above the $m$- ensemble:
+
+\begin{equation}
+\label{eq:adj-mean}
+<z>_k = \sum_{j\in m} \frac{z_{kj}}{|m|}
+\end{equation}
+
+Then, a five-pixel smooth function is applied to each row of the FP-RXD images in order to obtain a couple (scene and shutter data) of reference values for each FP pixel of the FP-RXD images. At each iteration step, the pixels overcoming, at least for one of the two FP-RXD images, the smoothed function reference value by a given number ($n_\sigma$, fixed at the beginning of the thresholding procedure) of $\sigma_k^p$, are flagged as anomalous and excluded from the computation of $\sigma_k^p$ in the following steps. The use of the smoothed function, in place of a simple mean value, reduces the amount of false alarms, especially in the case of scene data. In fact, it takes into consideration the local behaviour of the  FP-RXD due to natural variations of the data.'
+
+Convergence declared when no anomalous pixels detected between two subsequent iteration steps.
+
+\begin{itemize}
+\item
+Method does require recomputation of the FP-RXD image so is not strictly applicable. However, idea of recomputing $\sigma$ with anomalous pixels removed as a convergent thresholding approach may be a useful one.
+
+\item
+Other `choose' functions mentioned: RMSE between contiguous image columns; RMSE between image \& image after application of a median filter (RMSE-MF); columnar variance.
+\end{itemize}
+
+\end{itemize}
+
+\section{Detection and correction of abnormal pixels in Hyperion images \cite{Han2002}}
+
+\begin{itemize}
+\item
+Hyperion bad pixel map was found to be inaccurate, so separate classification of bad pixels was needed. As in IO data, many abnormal pixels appear as dark stripes (continuous or intermittent). Classes determined: continuous (solid line) vs intermittent (sequence of dots), and either atypical values or constant value. Classifications are very specific to Hyperion images (gathered with pushbroom approach, rather than 2d array as in our data) so not likely to transfer.
+
+\item
+Multiple images taken with same equipment and compared - most bad pixels found to be stationary.
+
+\item 
+Intermittent atypical lines identified by looking for vertical lines of pixels with a lower value than both neighbours: scans rows to find single abnormal pixel, then scans up and down to build lines of abnormal pixels. Maximum allowed line length (dependent on maximum vertical length of a `real' feature) and proportion of abnormal cells (50\%) are set by the user.
+\end{itemize}
+
+\section{Dynamic identification and correction of defective pixels \cite{Pinto2012}}
+\label{Pinto2012}
+
+
+Outlines a fairly simple procedure for identification of bad pixels - worth considering as way to identify locally non-uniform points, if not as a single catch-all.
+
+\begin{itemize}
+
+\item
+For each pixel, obtain value and values of neighbours (whether to use 8-neighbours or 4-neighbours TBD \nb{compare results with both - also time required})
+
+\item
+Subtract values of neighbours from pixel and compare signs.  If all signs are the same, pixel may be defective, so carry on testing. Otherwise, assume pixel is ok, so use as is. \nb{use Wilcoxon signed rank test?}.
+
+\item
+Compare magnitudes of differences with threshold value (threshold may be different for positive and negative differences, and also for 4-neighbour and corner-neighbours?) - anything within the threshold is actually OK.
+
+\item
+Thresholds are set based on a black calibration image (positive threshold) and a white calibration image (negative threshold). Create a histogram of the pixel values in the calibration image and find modal value \nb{Would be interesting to look at frequency of numbers to either side of modal value as well}; also find value below which a certain proportion (eg. 99.9\%) of values fall. Threshold for positive values is then $Q_{99.9} - Mo$, while threshold for negative values is $Mo - Q_{0.01}$.
+
+\end{itemize}
+
+\section{Identification and replacement of defective pixel based on Matlab for IR sensor \cite{Yang2011}}
+
+\begin{itemize}
+\item
+Defines dead pixels as having responsivity < 10\% of average responsivity. Hot pixels depend on exposure, but are always brighter than surrounding pixels.
+
+\item
+Uses improved median filtering algorithm (see \cite{Meng2010} for traditional method):
+\begin{equation}
+\hat{f}(i,j) = median \left\lbrace f(x, y) \right\rbrace
+\end{equation}
+where $f(x, y)$ is the grey value of all pixels in the $n \times n$ filter window.  \nb{Not clear if central point is included here}. Then pixel is defective if $|f(i, j) - \hat{f}(i, j)| > T$ where $T$ is some threshold value.
+
+Here, $T$ is determined manually by observation: subtract original image from median-filtered image and determine threshold by observation. Threshold used is $3\sigma$.
+
+\item
+\textbf{Improvement:} Since values of defective pixels are included when calculating average pixel value, the average used is based on the median-filtered values instead:
+
+\begin{equation}
+u = \sum_{i=1}^M \sum_{j=1}^N \hat{f}(i, j)
+\end{equation}
+
+\end{itemize}
+
+\section{Bad pixel replacement based on spatial statistics for IR sensor \cite{Meng2010}}
+
+\begin{itemize}
+
+\item Starts from assumption that bad pixel map already exists and is to be relied upon.
+
+\item
+Cites median-filtering as an improvement on mean-filtering \cite{Dierickx1998}, but one which may remove useful detail from the image. Mean-filtering (2d interpolation) referred to as possible bad pixel replacement method, with particularly high accuracy when estimating homogeneous background signals \cite{Acito2005}. Nearest-neighbour method (eg. always use left-adjacent pixel) is straighforward \& relatively safe, but may result in propagation of errors. 
+
+
+\item
+Uses Kriging as an approach to replace bad pixel values: weighted linear combination of known sample variance s.t. error variance is minimized and mean of prediction errors is 0 to avoid under- or over-estimation. 
+
+Ordinary kriging assumes that data has a stationary mean within the focal window, but also a stationary variance - so may not be globally applicable. \nb{Kriging with non-stationary variance?}
+
+\item Gives evaluation method based on known `true' pixel values compared to interpolated values for simulated bad pixels. Could adapt this approach to identify bad pixels based on distance from smoothed values?
+
+\end{itemize}
+
+\section{Efficient defect pixel cluster detection and correction for Bayer CFA image sequences \cite{Tajbakhsh2011}}
+
+\begin{itemize}
+
+\item Types of dead pixel specified: ``Such pixels may always give a high reading (clipped hot), a low reading (dead) or
+any reading which is not varying significantly in a small range (stuck). any reading which is not varying significantly in a small range (stuck). In general, a signal can be generated which is proportional to the incident light, but does not represent the incident light in the same way than the signals generated by other nearby situated photodetectors. This can be due to an incorrect photodiode gain, dark current and/or an offset for example.''
+
+\item Checks gradient across each cell by applying four focal filters:
+
+\begin{center}
+$
+g_1 = \left[ \begin{matrix} -1 & 0 & 0 \\ 0 & 2 & 0 \\ 0 & 0 & -1 \end{matrix} \right]
+\, \, \, \,  
+g_2 = \left[ \begin{matrix} 0 & 0 & -1 \\ 0 & 2 & 0 \\ -1 & 0 & 0 \end{matrix} \right]
+\, \, \, \, 
+g_3 = \left[ \begin{matrix} 0 & 0 & 0 \\ -1 & 2 & -1 \\ 0 & 0 & 0 \end{matrix} \right]
+\, \, \, \, 
+g_4 = \left[ \begin{matrix} 0 & -1 & 0 \\ 0 & 2 & 0 \\ 0 & -1 & 0 \end{matrix} \right] $
+\end{center}
+
+Then finds minimum absolute filter response of all four directions
+\[ \Delta (\textbf{x}) = \min_{i \in \left\lbrace 1, 2, 3, 4 \right\rbrace} |(f_k \circledast g_i)(\textbf{x})| \]
+where $f_k(\textbf{x})$ is the pixel value at image coordinates $\textbf{x} = (x, y)^T$ in frame $k$, and $\circledast$ is the 2D convolution operator.
+
+Image coordinates of the possible defect pixel $\textbf{x}^* = (x^*, y^*)^T$ are then
+\[ \textbf{x}^* = \text{arg}\max_{\textbf{x} \in \mathcal{X}} \Delta(\textbf{x)} \]
+
+This may not give exact coordinates - $\textbf{x}^*$ is to be used as the seed for a second step of the search (thus cutting the need for a lengthy exhaustive search in step 2). Defect candidates are sorted in descending order of $\Delta(\textbf{x)}$.
+
+\item The pixels that form a block $\mathcal{B}$ around the candidate defect are examined over a sequence of frames to increase confidence about the defective condition of the pixel. Introduce $\mathcal{X}_{defect} \in \mathcal{X}$ to track pixels confirmed as defective and $\mathcal{X}_{good} \in \mathcal{X}$ to track those confirmed as ok (both initialised as $\emptyset$), and for each \textbf{x} in $\mathcal{B}$, set a counter $c(\textbf{x}) = 0$ to track the number of positive defect identifications for that pixel. At the beginning of each trial, set $f_{min}(\textbf{x}) = f_k(\textbf{x})$ and $f_{max}(\textbf{x}) = f_k(\textbf{x})$ for all $\textbf{x} \in \mathcal{B}$.
+
+\item Over a number of frames, evaluate the min and max values of all pixels in the block, so that at each step we update $f_{min}(\textbf{x}) = \min(f_{min}(\textbf{x}), f_k(\textbf{x}))$ and $f_{max}(\textbf{x}) = \max(f_{max}(\textbf{x}), f_k(\textbf{x}))$ and evaluate the range of valued observed so far, $\Delta(\textbf{x}) = f_{max}(\textbf{x}) - f_{min}(\textbf{x})$. Pixels with a high variability over a number of frames are supposed to be intact, hence once a pixel's range exceeds a certain threshold $T_{min}$, the pixel is added to $\mathcal{X}_{good}$. If all pixels are confirmed as acceptable, this criteria will be satisfied quickly and the algorithm moves to the next block. If there are some pixels with a low range and others with a high range, we assume that those with a low range are probably defective. Once a pixel has been classified as probably defective a certain number of times, we append it to $\mathcal{X}_{defect}$.
+
+\item Replacement method uses a mean of medians; specifically, a switched median filter \nb{?} that gives a ranked ordering of selected kernel pixels (details in paper - differs from our requirements because our data is greyscale, not Bayer CFA), then takes the mean of the two middle-ranked values as the replacement value.
+
+\item Mentions that a larger than 5x5 filter aperture was tested, but to no appreciable results. Also concludes that 4x4 block is as effective as 8x8 to identify individual bad pixels, but less effective to identify clusters (4x4 block can identify clusters of up to 3 pixels)
+
+\item Uses peak signal-to-noise ratio (PSNR) to evaluate effectiveness of this method over others. Should look into this further.
+
+\end{itemize}
+
+\section{A new impulse detector for switching median filters \cite{Zhang2002}}
+
+\begin{itemize}
+
+\item Focus is on noise removal, not on dead pixel identification.
+
+\item Numerous terms to clearly define \& understand: weighted median filter (WM), switching median filter (SM).
+
+\item Median-based detector may fail to identify thin lines - switching median should be able to capture these. BUT we want thin lines to be identified as defects - so maybe the simple median filter would be more appropriate?
+
+\item Assumes `true' image consists of smoothly varying regions separated by edges, while noise pixels have a grey value substantially larger or smaller than its neighbours. Given panel edges, this seems like an accurate description of our setup.
+
+\item Let $x_{ij}$ be pixel value at $(i,j)$ in the corrupted image,  $y_{ij}$ in the restored image. $m_{ij}$ is the median of the samples in the $(2N+1)\times (2N+1)$  window centred at $x_{ij}$.
+
+Median-based detector \cite{Sun1994} measures $|x_{ij} - m_{ij}|$ and compares it to a predefined threshold $T_1$ to determine whether $x_{ij}$ is noise - an approach likely to interpret thin lines as impulses.
+
+\item Proposed method: convolve input image with a set of convolution kernels $\mathcal{K}$:
+
+\begin{center}
+$
+\left[ \begin{matrix} 0 & 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 & 0 \\ -1 & -1 & 4 & -1 & -1 \\ 0 & 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 & 0 \end{matrix} \right]
+\, \, \, \,  
+\left[ \begin{matrix} 0 & 0 & -1 & 0 & 0 \\ 0 & 0 & -1 & 0 & 0 \\ 0 & 0 & 4 & 0 & 0 \\ 0 & 0 & -1 & 0 & 0 \\ 0 & 0 & -1 & 0 & 0 \end{matrix} \right]
+\, \, \, \, 
+\left[ \begin{matrix} -1 & 0 & 0 & 0 & 0 \\ 0 & -1 & 0 & 0 & 0 \\ 0 & 0 & 4 & 0 & 0 \\ 0 & 0 & 0 & -1 & 0 \\ 0 & 0 & 0 & 0 & -1 \end{matrix} \right]
+\, \, \, \, 
+\left[ \begin{matrix} 0 & 0 & 0 & 0 & -1 \\ 0 & 0 & 0 & -1 & 0 \\ 0 & 0 & 4 & 0 & 0 \\ 0 & -1 & 0 & 0 & 0 \\ -1 & 0 & 0 & 0 & 0 \end{matrix} \right] $
+\end{center}
+
+Then the minimum absolute value of those convolutions  $r_{ij} = \min \left\lbrace |x_{ij} \bigotimes K_p| : p = \text{1 to 4} \right\rbrace$ is used for impulse detection.
+
+\begin{itemize}
+\item $r_{ij}$ is large when the current pixel is an isolated pixel because the four convolutions are large and almost the same.
+
+\item $r_{ij}$ is small when the current pixel is a noise-free flat-region pixel because the four convolutions are close to zero.
+
+\item $r_{ij}$ is also small when the current pixel is an edge (including thin line) pixel, because one of the convolutions is very small even if the other three are large.
+\end{itemize}
+
+An appropriate threshold for `small' values of $r_{ij}$ was obtained using computer simulations.
+
+
+\end{itemize}
+
+\section{Bad pixel identification by means of principal components analysis \cite{Alda2002}}
+
+\begin{itemize}
+\item Assumes calibration over multiple frames of constant, stable exposure: should be applicable to our data. Uses PCA to characterize a `normal' pixel.
+
+\item Treat data set as $N$ observations of $M$ pixels,so each pixel is an observation of $N$ variables, the $N$ frames - values of a pixel are components of a point within $N$-dimensional space.
+
+\item If set of frames are equally distributed, principal components will tend to be normally distributed, and probability of particular observed values will follow a $\chi^2$ distribution, which can be used to calculate a threshold. This assumes that the principal components are independent, with zero mean and unit variance.
+
+\item Second statistic obtained: $D^2_\beta$, the square of the Mahalanobis distance between pixel $\beta$ and the mean of the data. (Mahalanobis distance = a multi-dimensional generalization of the idea of measuring how many standard deviations away a point P is from the mean of a distribution D)
+
+\item Threshold $D_{th}$ is set so that probability of only one bad pixel is lower than a certain value: $p(D^2 > D_{th}^2)M < k$; this is a dynamic value, dependent on number of detectors/pixels $M$ (otherwise we could change M to manipulate this probability).
+
+\item Normalized distance of each pixel: $d_\beta = \frac{D_\beta^2}{D_{th}^2}$
+
+Pixels classified as `normal' will show values lower than 1, while bad pixels will have values higher than 1.
+
+\item All of the above assumes that the principal components form a multi-normal distribution. However, in practical terms, the threshold will be beyond the point where non-uniformity is an issue (!), and the results should be robust.
+
+Because of large number of detectors used, can get an empirical probability distribution from the histogram. Then fit a normal distribution and calculate the difference in distributions. Can also test for normality based on kurtosis and skewness; some principal components will be found to be normal, while others will require an adjustment (see paper for details).
+
+\item Tests showed that pixels from visible camera were closer to normal than those from IR camera - so hopefully this will be a useful method to use in our data.
+
+\end{itemize}
+
+
+
+\newpage
+\section*{To do}
+
+
+\todo{Look into properties of median vs mean-filtering to obtain replacement pixel value}
+
+\todo{Run algorithm used in \autoref{Pinto2012} and investigate resulting classification of locally non-uniform pixels}
+
+\todo{Try running algorithms across all images, vs only across grey channel (using black \& white only to determine threshold values)}
+
+\todo{Use `official' (median-based) classification of locally non-uniform pixels to identify bad pixels. Compare results to the above.}
+
+\todo{Create histograms as in \autoref{Pinto2012} and look at frequency of values close to modal value. Is there a single distinct spike or no?}
+
+\todo{Look at using Wilcoxon to measure differences between neighbouring pixels}
+
+\todo{Check histograms. Is data approximately normal or is there still appreciable skew?}
+
+\todo{When using a moving-window filter, test different sizes of filter \& compare results, rather than just assuming a 3x3 square}
+
+\todo{Try splitting an image into blocks and applying same method to them all: does it work equally well in all regions ie. in corners and in centre of image? Try running over some of the old data to see if it will still be robust for a really damaged screen (although only aggregated data will be available there)}
+
+\newpage
+\printbibliography
+
+\end{document}

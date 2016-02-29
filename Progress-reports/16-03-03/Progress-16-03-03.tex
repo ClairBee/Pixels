@@ -1,0 +1,109 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\llap{\parbox{1cm}{\thesubsection}}}{0em}{}
+	
+%----------------------------------------------------------------------
+% SPECIFY BIBLIOGRAPHY FILE & FIELDS TO EXCLUDE
+%\addbibresource{bibfile.bib}
+%\AtEveryBibitem{\clearfield{url}}
+%\AtEveryBibitem{\clearfield{doi}}
+%\AtEveryBibitem{\clearfield{isbn}}
+%\AtEveryBibitem{\clearfield{issn}}
+
+%----------------------------------------------------------------------
+% define code format
+\lstnewenvironment{code}[1][R]{			% default language is R
+	\lstset{language = #1,
+        		columns=fixed,
+    			tabsize = 4,
+    			breakatwhitespace = true,
+			showspaces = false,
+    			xleftmargin = .75cm,
+    			lineskip = {0pt},
+			showstringspaces = false,
+			extendedchars = true
+    }}
+    {}
+    
+%======================================================================
+
+\usepackage{fancyhdr}
+
+\fancyhf{}
+\fancyhead[R]{\textbf{23-Feb-2016}}
+\pagestyle{fancy}
+
+\addtolength{\topmargin}{-0.5cm}
+\addtolength{\textheight}{1.4cm}
+
+\renewcommand{\headrulewidth}{0pt}
+
+\begin{document}
+
+\subsection*{Since last week}
+
+\begin{itemize}
+
+\item
+Brief literature review carried out. Several broadly different approaches to identification of bad pixels found:
+
+\begin{itemize}
+
+\item Absolute cutoff based on mean/SD value (Thresholding approach varies: based on difference between $Q_{99.9}$ (say) and modal value, or on a given \% of mean/median value)
+
+\item Max/min filtering (if pixel is more extreme than all neighbours, likely to be defective)
+
+\item Convolution with neighbouring pixels, based on linear kernels: if smallest convolution is large, we have an isolated pixel
+
+\item Principal component analysis
+
+\end{itemize}
+
+\end{itemize}
+
+\subsection*{Current questions/considerations}
+\begin{itemize}
+
+\item Need to check whether these methods will work for a high density of bad pixels, and whether they will be able to identify vertical lines of bad pixels (eg. may need to convolve without vertical-line kernel)
+
+\item Currently looking only at bad pixel identification. Do we want to also consider imputation/replacement methods? The robustness of these under various types/densities of bad pixels may affect the definition of `too many' bad pixels.
+
+\item Does purpose of image affect how conservative we want to be in our assessment of `too many' bad pixels? eg. when looking for defects, a bad pixel will signal a false alarm - but is a single isolated pixel enough to signal this?
+
+\end{itemize}
+
+
+
+
+\subsection*{Next steps}
+
+\begin{itemize}
+
+\item
+Create a set of functions to identify `bad' pixels. Run over small test sections of data to compare effectiveness in regions with higher or lower density of bad pixels. %Begin by using thresholds/definitions given in manual, but make functions flexible in order to update parameters later.
+
+\item
+Look at SD across daily acquisitions - are there any pixels with high daily SD (short-term `flickering'/`blipping' behaviour), or do bad pixels tend to have a less variable response than normal ones? 
+
+%In particular, plot daily time series of pixels with high daily SD - these may be showing short-term 'flickering'/'blipping' behaviour. (Those investigated so far seem fairly constant in the short term)
+
+%For all `bad' pixels identified, plot daily pixelwise mean for full sequence of measurements
+
+\item
+For each panel, look at pixelwise mean \& SD - should be a relationship between the two, which will differ across the panels (intra-panel dependency)
+
+
+\end{itemize}
+
+%\newpage
+%\printbibliography
+\end{document}

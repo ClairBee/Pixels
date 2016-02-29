@@ -57,7 +57,15 @@
 Checked through all image profiles - cropping is always at 2 and 20, with image size 1996, so can assume consistent panel locations.
 
 \item
-Importing using \texttt{as.is = T} takes approx. half the memory because all values are integers, ranging from 0 to 65536. This avoids danger of stretching data owing to possible scaling between values other than 0 and 1, and also gives a more useful (interpretable) scale. Matrix is also half the size (because integer-valued rather than floats) and operations are therefore much faster. Checked summary statistics against original imported versions and scaling is linear, so will switch to using the smaller, faster version.
+Importing using \texttt{as.is = T} takes approx. half the memory because all values are integers, ranging from 0 to 65535. This is not only more easily interpretable, but matrix is also half the size (because integer-valued rather than floating point values) and operations are therefore much faster. Checked scaled summary statistics against original imported versions and scaling is linear, so will switch to using the smaller, faster version.
+
+\item
+Loaded all profile data so that applied parameters can be checked. Some inconsistencies - need to check significance with Jay.
+
+\item
+Plotted time series of mean, SD \& quartiles - no immediately obvious trend.\\
+However, there is a spike in the grey channel on 15-01-13, reflecting the different uA and Power values used. Presumably renders this batch unusable - although gives more information on relationship between mean and standard deviation.
+
 \end{itemize}
 
 \subsection*{Current questions/considerations}
@@ -66,19 +74,27 @@ Importing using \texttt{as.is = T} takes approx. half the memory because all val
 \item
 Questions for Jay:
 \begin{itemize}
-
 \item
-Go through manual's definition of underperforming pixels, ensure that I'm applying the right tests to the right images.
+Need to check through parameters in xml profile data - where not identical, what is significance?
 
 \item
 Can we get the details of the background correction usually carried out by the machine? (Assume this will counteract the circular pattern, which is an artefact of the source and not the sensor - hopefully giving a clearer image of panelwise differences)
 
 \item
 If exact correction is not available, can we get a set of test images with and without the correction applied, so that we can try to reverse-engineer a mask to replicate the effect?
+
+\item
+Go through manual's definition of underperforming pixels, ensure that I'm applying the right tests to the right images.
+
 \end{itemize}
 
 \item
-Usual image order is white, grey, black but one day (150702) the order was reversed - also the day on which the images were corrupted. Need to look more closely at this batch to see if there are any different patterns: is there any indication that the order of taking the images changes the sensitivity?
+Considering the grey-channel data from 15-01-13 - should we/could we look at different values of grey to see how this affects pixel distribution? (Currently only considering 3 points on greyscale, but presumably we could get more?)
+
+
+%\item
+%Usual image order is white, grey, black but one day (150702) the order was reversed - also the day on which the images were corrupted. This batch is also scaled from 0 to 1 (at least, the first layer is: need to investigate the others more closely). 
+
 \end{itemize}
 
 \subsection*{Next steps}
@@ -86,16 +102,13 @@ Usual image order is white, grey, black but one day (150702) the order was rever
 \begin{itemize}
 
 \item
-Try converting tif files using \texttt{as.is = T} or \texttt{convert = T} to see if this affects the colour scaling (will address potential issue of mean-value drift if data is not always scaled to same 0 and 1)
+Create a set of functions to identify `bad' pixels. Begin by using thresholds/definitions given in manual, but make functions flexible in order to update parameters later.
 
 \item
-Plot daily time series of pixels with high daily SD - these may be showing short-term 'flickering'/'blipping' behaviour. (Those investigated so far seem fairly constant in the short term)
+In particular, plot daily time series of pixels with high daily SD - these may be showing short-term 'flickering'/'blipping' behaviour. (Those investigated so far seem fairly constant in the short term)
 
 \item
-For `bad' pixels (use official threshold for time being), plot daily pixelwise mean for full sequence of measurements
-
-\item
-Create a tracking df to store summary information about each image set
+For all `bad' pixels identified, plot daily pixelwise mean for full sequence of measurements
 
 \end{itemize}
 
