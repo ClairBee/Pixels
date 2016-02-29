@@ -54,36 +54,49 @@
 \begin{itemize}
 
 \item
-Brief literature review carried out. Some suggestions for thresholding are listed below.
+Brief literature review carried out. Several broadly different approaches to identification of bad pixels found:
+
+\begin{itemize}
+
+\item Absolute cutoff based on mean/SD value (Thresholding approach varies: based on difference between $Q_{99.9}$ (say) and modal value, or on a given \% of mean/median value)
+
+\item Max/min filtering (if pixel is more extreme than all neighbours, likely to be defective)
+
+\item Convolution with neighbouring pixels, based on linear kernels: if smallest convolution is large, we have an isolated pixel
+
+\item Principal component analysis
+
+\end{itemize}
 
 \end{itemize}
 
 \subsection*{Current questions/considerations}
-
-Thresholding ideas/possibilities:
-
 \begin{itemize}
-\item
-For each pixel, apply signed rank test to difference between pixel and its neighbours (or simply determine if centroid is max/min of block) - a pixel that is max/min of all its neighbours is probably either hot or dead.
 
-\item
-Set threshold for bad pixels based on difference between $Q_{99.9}$ (say) and modal value
+\item Need to check whether these methods will work for a high density of bad pixels, and whether they will be able to identify vertical lines of bad pixels (eg. may need to convolve without vertical-line kernel)
 
-\item
+\item Currently looking only at bad pixel identification. Do we want to also consider imputation/replacement methods? The robustness of these under various types/densities of bad pixels may affect the definition of `too many' bad pixels.
+
+\item Does purpose of image affect how conservative we want to be in our assessment of `too many' bad pixels? eg. when looking for defects, a bad pixel will signal a false alarm - but is a single isolated pixel enough to signal this?
+
 \end{itemize}
+
+
+
 
 \subsection*{Next steps}
 
 \begin{itemize}
 
 \item
-Create a set of functions to identify `bad' pixels. Begin by using thresholds/definitions given in manual, but make functions flexible in order to update parameters later.
+Create a set of functions to identify `bad' pixels. Run over small test sections of data to compare effectiveness in regions with higher or lower density of bad pixels. %Begin by using thresholds/definitions given in manual, but make functions flexible in order to update parameters later.
 
 \item
-In particular, plot daily time series of pixels with high daily SD - these may be showing short-term 'flickering'/'blipping' behaviour. (Those investigated so far seem fairly constant in the short term)
+Look at SD across daily acquisitions - are there any pixels with high daily SD (short-term `flickering'/`blipping' behaviour), or do bad pixels tend to have a less variable response than normal ones? 
 
-\item
-For all `bad' pixels identified, plot daily pixelwise mean for full sequence of measurements
+%In particular, plot daily time series of pixels with high daily SD - these may be showing short-term 'flickering'/'blipping' behaviour. (Those investigated so far seem fairly constant in the short term)
+
+%For all `bad' pixels identified, plot daily pixelwise mean for full sequence of measurements
 
 \item
 For each panel, look at pixelwise mean \& SD - should be a relationship between the two, which will differ across the panels (intra-panel dependency)
