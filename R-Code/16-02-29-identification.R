@@ -18,50 +18,7 @@ load.images(150828, "white")
 #   globally non-uniform: value is > 2% from median value
 #   locally non-uniform: value is > 1% from median of its 9x9 neighbours
 
-get.bad.pixels <- function(data) {
-    
-    # create temporary list to hold output
-    bp <- list()
-    
-    pw.mean <- pixelwise.mean(data)
-    pw.sd <- pixelwise.sd(data)
-    median.value <- median(data)
-    median.sd <- median(pw.sd)
-    
-    
-    # always use tryNULL when creating data frames, in case no rows are returned
-    
-    # order in which each type is added to df is order of priority when classifying
-    # (eg. duplicates in later categories will be removed)
-    
-    # dead pixels: daily mean value is exactly 0
-    bp$dead <- tryNULL(cbind(data.frame(which(pw.mean == 0.0, arr.ind = T)), 
-                             type = "Dead"))
-    
-    # hot pixels: daily mean value is exactly 65535
-    bp$hot <- tryNULL(cbind(data.frame(which(pw.mean == 65535.0, arr.ind = T)),
-                            type = "Hot"))
-    
-    # underperforming bright pixels: value > 1.5x median
-    bp$bright <- tryNULL(cbind(data.frame(unique(which(data > (1.5 * median.value), arr.ind = T)[,c(1:2)])),
-                               type = "Too bright"))
-    if (!is.null(bp$bright)) {colnames(bp$bright) <- c("row", "col", "type")}
-    
-    # underperforming dark pixels: value < 0.45x median
-    bp$dim <- tryNULL(cbind(data.frame(unique(which(data < (0.45 * median.value), arr.ind = T)[,c(1:2)])),
-                            type = "Too dark"))
-    if (!is.null(bp$dim)) {colnames(bp$dim) <- c("row", "col", "type")}
-    
-    # noise: pixel sigma > 6x median sigma
-    bp$noisy <- tryNULL(cbind(data.frame(which(pw.sd > (6 * median.sd), arr.ind = T)),
-                              type = "Noisy"))
-    
-    # merge separate data frames into one
-    df <- data.frame(do.call("rbind", bp))
-    
-    # remove duplicates and return df
-    return(df[!duplicated(df[,c(1:2)]),])
-}
+
 
 system.time(bp <- get.bad.pixels(b.150828))     # 174.03 elapsed
 
@@ -94,7 +51,54 @@ panel.all <- do.call("rbind", panel.bp)
 write.csv(panel.all, "./Other-data/Panelwise-bad-pixels.csv", row.names = F)
 
 bp$panel <- apply(cbind(cut(bp$col, p$y-1), "-", cut(bp$row, p$x-1)), 1, paste, collapse = "")
-write.csv(bp$panel, "./Other-data/All-bad-pixels.csv", row.names = F)
+write.csv(bp, "./Other-data/All-bad-pixels.csv", row.names = F)
+
+#=============================================================================================
+
+bp.grey <- threshold.pixels(g.150828)
+bp.grey$panel <- apply(cbind(cut(bp.grey$col, p$y-1), "-",
+                             cut(bp.grey$row, p$x-1)), 1, paste, collapse = "")
+write.csv(bp.grey, "./Other-data/All-bad-pixels-grey.csv", row.names = F)
+
+bp.white <- threshold.pixels(w.150828)
+bp.white$panel <- apply(cbind(cut(bp.white$col, p$y-1), "-",
+                              cut(bp.white$row, p$x-1)), 1, paste, collapse = "")
+write.csv(bp.white, "./Other-data/All-bad-pixels-white.csv", row.names = F)
+
+#:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+# get panelwise values as well
+p <- panel.edges()
+
+panel.bp.white <- list()
+for (i in 1:32) {
+    j <- ceiling(i/16)
+    k <- ((i-1) %% 16)+1
+    
+    panel <- w.150828[c(p$x[k]:(p$x[k+1]-1)),
+                      c(p$y[j]:(p$y[j+1]-1)),]
+    tmp <- threshold.pixels(panel)
+    panel.bp.white[[i]] <- rbind(panel = paste0(p$x[k], ":", (p$x[k+1]-1),", ", p$y[j],":",(p$y[j+1]-1)),
+                           tmp)
+}
+bp.white.panels <- do.call("rbind", panel.bp.white)
+write.csv(bp.white.panels, "./Other-data/Panelwise-bad-pixels-white.csv", row.names = F)
+
+
+panel.bp.grey <- list()
+for (i in 1:32) {
+    j <- ceiling(i/16)
+    k <- ((i-1) %% 16)+1
+    
+    panel <- g.150828[c(p$x[k]:(p$x[k+1]-1)),
+                      c(p$y[j]:(p$y[j+1]-1)),]
+    tmp <- threshold.pixels(panel)
+    panel.bp.grey[[i]] <- rbind(panel = paste0(p$x[k], ":", (p$x[k+1]-1),", ", p$y[j],":",(p$y[j+1]-1)),
+                                 tmp)
+}
+bp.grey.panels <- do.call("rbind", panel.bp.grey)
+write.csv(bp.grey.panels, "./Other-data/Panelwise-bad-pixels-grey.csv", row.names = F)
+
 
 #=============================================================================================
 # local non-uniformity:
