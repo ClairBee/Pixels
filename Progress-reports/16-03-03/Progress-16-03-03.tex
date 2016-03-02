@@ -58,27 +58,37 @@ Brief literature review carried out. Several broadly different approaches to ide
 
 \begin{itemize}
 
-\item Absolute cutoff based on mean/SD value (Thresholding approach varies: based on difference between $Q_{99.9}$ (say) and modal value, or on a given \% of mean/median value)
+\item Absolute cutoff based on mean/SD value (Thresholding approach varies: based on a given \% of mean/median value, or on difference between $Q_{99.9}$ (say) and modal value)
 
-\item Max/min filtering (if pixel is more extreme than all neighbours, likely to be defective)
+\item Max/min filtering (if pixel is more extreme than all neighbours, likely to be defective) \textit{(Produced c. 80k pixels that were local min/max of $9 \times 9$ neighbours: particularly at panel edges. Need to come up with something more sophisticated)}
 
 \item Convolution with neighbouring pixels, based on linear kernels: if smallest convolution is large, we have an isolated pixel
 
-\item Principal component analysis
+\item Principal component analysis \textit{(Not sure if this is appropriate here: some papers treat successive frames as independent observations of pixel value, but can't claim independence)} 
 
 \end{itemize}
 
+\item
+Recreated (partially) the thresholding approach used in the manual to classify dead, hot, noisy, dim and bright pixels in the first and last acquisition sets. Different channels are more prone to different types of `bad' pixels, and spatial distribution of each seems to differ.
+
+\item
+Also briefly compared effect of adjusting threshold. No obvious better candidate in terms of absolute cutoff (unsurprisingly) but approach looking at difference between modal value and quartile may be more useful.
 \end{itemize}
 
 \subsection*{Current questions/considerations}
 \begin{itemize}
 
-\item Need to check whether these methods will work for a high density of bad pixels, and whether they will be able to identify vertical lines of bad pixels (eg. may need to convolve without vertical-line kernel)
+\item
+Need to understand how local/glocal thresholding works in the manual. Seems to be run on an adjusted image, but exact details aren't clear, so would like to discuss further with Jay (unless this has already been clarified?) \textit{(Tried to run on one channel's data but picked up 800k pixels either side...)}
 
-\item Currently looking only at bad pixel identification. Do we want to also consider imputation/replacement methods? The robustness of these under various types/densities of bad pixels may affect the definition of `too many' bad pixels.
+\item
+Not picking up many lines (only at top-left corner of white/grey channel). How concerned should we be about this?
 
-\item Does purpose of image affect how conservative we want to be in our assessment of `too many' bad pixels? eg. when looking for defects, a bad pixel will signal a false alarm - but is a single isolated pixel enough to signal this?
+\item Does purpose of image affect how conservative we want to be in our assessment of `too many' bad pixels? eg. when looking for defects, a bad pixel will signal a false alarm - but is a single isolated pixel enough to signal this? %Need to check whether these methods will work for a high density of bad pixels, and whether they will be able to identify vertical lines of bad pixels (eg. may need to convolve without vertical-line kernel)
 
+\item Need to decide on a hierarchy of problems: is a noisy pixel worse than one which is consistently too bright or too dim? Or should we treat these as entirely separate (bad value vs too variable, for example)
+
+\item Intra-panel dependency: is this something I should be looking at, or is Audrey tacklng this already?
 \end{itemize}
 
 
@@ -89,18 +99,22 @@ Brief literature review carried out. Several broadly different approaches to ide
 \begin{itemize}
 
 \item
-Create a set of functions to identify `bad' pixels. Run over small test sections of data to compare effectiveness in regions with higher or lower density of bad pixels. %Begin by using thresholds/definitions given in manual, but make functions flexible in order to update parameters later.
+Use thresholds based on difference between modal values and quantiles to classify bad pixels of various types as in [Pinto2012]
 
 \item
-Look at SD across daily acquisitions - are there any pixels with high daily SD (short-term `flickering'/`blipping' behaviour), or do bad pixels tend to have a less variable response than normal ones? 
+Implement convolution-based approach to identifying locally non-uniform points as in [Zhang2002]: again, likely to be confounded by panel edges, but may be useful with appropriate threshold setting.
 
+\item
+Consider plotting evolution of pixel population at each time stage (maybe as a tree diagram? Or is there a better way to visualise this?)
+
+\item
+Look at SD across daily acquisitions - how high is the SD of a `noisy' pixel? Is there any pattern in the variability? 
 %In particular, plot daily time series of pixels with high daily SD - these may be showing short-term 'flickering'/'blipping' behaviour. (Those investigated so far seem fairly constant in the short term)
 
 %For all `bad' pixels identified, plot daily pixelwise mean for full sequence of measurements
 
-\item
-For each panel, look at pixelwise mean \& SD - should be a relationship between the two, which will differ across the panels (intra-panel dependency)
-
+%\item
+%For each panel, look at pixelwise mean \& SD - should be a relationship between the two, which will differ across the panels (intra-panel dependency)
 
 \end{itemize}
 
