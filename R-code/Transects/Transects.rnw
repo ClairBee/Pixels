@@ -1,0 +1,81 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+% add document-specific packages here
+
+\titleformat{\section}
+    {\normalfont\bfseries}
+    {\llap{\parbox{1cm}{\thesection}}}{0em}{}
+    
+\begin{document}
+\renewenvironment{knitrout}{\vspace{1em}}{\vspace{1em}}
+<<setup, include=FALSE>>=
+opts_chunk$set(size = 'footnotesize',   # smaller font size for chunks
+               out.width = '0.45\\textwidth',   # default figure size = quarter of text width
+               fig.show = 'hold',   # display all figures at end of chunk
+               fig.align='center',
+               echo = F)
+options(width = 80, digits = 4)
+set.seed(24747)
+library(xtable)
+library("IO.Pixels")
+
+# not run as part of compile - takes too long
+x <- c(1151, 1278)
+y <- c(1869, 1996)
+load.images(150828, "black")
+pw.m.b.150828 <- pixelwise.mean(b.150828)
+minidat <- b.150828[c(x[1]:x[2]), c(y[1]:y[2]),]
+lvls <- sd.levels(pixelwise.mean(b.150828))
+
+pw.m <- pixelwise.mean(minidat)
+pw.sd <- pixelwise.sd(minidat)
+
+org.par <- par()        # save default parameters in case needed later
+@
+
+\section*{Transects of mean \& SD across small subset of image}
+
+<<plot-images, eval = F>>=
+pixel.image(pw.m.b.150828, title = "Black channel image")
+lines(as.matrix(cbind(x = c(x[1], x[1], x[2], x[2], x[1]),
+                      y = c(y[1], y[2], y[2], y[1], y[1]))))
+pixel.image(minidat[,,1], break.levels = lvls, title = "Subset")
+@
+
+<<plot-transects-1, out.width = '\\textwidth', caption = "Values across column 1. Plot range is mean pixel value +- 2sd">>=
+par(mfrow = c(5,4), mar = c(1,2,1,1))
+col <- 3
+for (i in 1:20) {
+    plot(minidat[col,,i], type = "o", pch = 20, cex = 0.7,
+         xlab = "", xaxt = "none",
+         ylab = paste0("Image ",i, ", Column ", col),
+         xlim = c(0, x[2]-x[1] + 1), 
+         ylim = c(min(minidat[col,,]) - 10, max(minidat[col,,]) + 10))
+#    points(pw.m[1,], type = "o", pch = 20, col = adjustcolor("red", alpha = 0.5))
+}
+@
+
+<<plot-col-transect-summ, out.width = '0.49\\textwidth'>>=
+for (i in 1:10) {
+    plot(pw.m[i,], type = "o", pch = 20, cex = 0.7, ylab = "Pixel value", ylim = c(5000, 6000),
+         xlab = "", xaxt = "none", main = paste0("Pixelwise mean, col ",i))
+}
+@
+
+<<plot-row-transect-summ, out.width = '0.49\\textwidth'>>=
+for (i in 1:10) {
+    plot(pw.m[,i], type = "o", pch = 20, cex = 0.7, 
+         ylab = "Pixel value", ylim = c(5000, 6000),
+         xlab = "", xaxt = "none", main = paste0("Pixelwise mean, row ",i))
+}
+@
+
+\todo{Try smoothing across columns and plotting row-wise transect across smoothed values. Raster function movingFun may be useful.}
+
+\todo{Get coordinates of actual dead/hot pixels, move transect across one}
+
+\todo{Seems to be oscillating behaviour among adjacent cells in column: leads to horizontal 'striping'. Presumably something to do with way voltages are transferred between pixels, need to learn more about this. Can we justify treating oscillation as noise due to sensor operation, and smoothing columns (prob. not rows) using a moving average?}
+
+\todo{Use loess smoothing with confidence intervals to identify outliers per row/column}
+
+\end{document}

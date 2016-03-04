@@ -1,18 +1,4 @@
 
-update.functions <- function(package = "IO.pixels") {
-    require(devtools)
-    require(roxygen2)
-    
-    org.dir <- getwd()
-    
-    target.dir <- paste0("~R/My-packages/", package, "/")
-    if (org.dir != target.dir) {setwd(target.dir)}
-    document()
-    setwd("..")
-    install(package)
-    setwd(org.dir)
-}
-
 #=============================================================================================
 pw.sd.b <- pixelwise.sd(b.150828)
 
