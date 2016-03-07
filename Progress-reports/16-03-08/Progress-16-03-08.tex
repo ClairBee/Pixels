@@ -55,17 +55,17 @@
 
 \item Brief literature review carried out. Several broadly different approaches to identification of bad pixels found, but not convinced of their appropriateness/effectiveness: as well as simple thresholding, could try convolution-based method, max-min filtering, or PCA.
 
-\item Recreated (partially) the thresholding approach used in the manual to classify dead, hot, noisy, dim and bright pixels in the first and last acquisition sets. Different channels are more prone to different types of `bad' pixels, and spatial distribution of each seems to differ.
+\item Recreated (partially) the thresholding approach used in the manual to classify dead, hot, noisy, dim and bright pixels in the first and last acquisition sets. Different channels are more prone to different types of `bad' pixels, and spatial distribution of each seems to differ. Need to refine initial thresholding approach based on image adjustments given in manual.
 
 \item Also briefly compared effect of adjusting threshold. No obvious better candidate in terms of absolute cutoff (unsurprisingly) but approach looking at difference between modal value and quartile may be more useful.
 
-\item Transects of pixelwise mean \& pixelwise SD created. Mean shows oscillating behaviour (also discernible in individual tracks)
+\item Transects of pixelwise mean created. Mean shows oscillating behaviour in black channel (also discernible in individual tracks), pattern is not so clear in grey \& white channels.
 \end{itemize}
 
 \subsection*{Current questions/considerations}
 \begin{itemize}
 
-\item There appears to be a degree of oscillation between values of consecutive pixels in the rows - presumably an artefact of the way the data is read. Assuming that this is typical behaviour for this type of array, suggests that a smoothing approach may be appropriate to find the `true' registered value of each pixel, column-wise at least. Suggestions for search terms would be appreciated.
+\item There appears to be a degree of oscillation between values of consecutive pixels in the columns of the black channel - presumably an artefact of the way the data is read. Assuming that this is typical behaviour for this type of array, suggests that a smoothing approach may be appropriate to find the `true' registered value of each pixel, column-wise at least. Suggestions for search terms would be appreciated.
 
 \item Need to understand how local/glocal thresholding works in the manual. Seems to be run on an adjusted image, but exact details aren't clear, so would like to discuss further with Jay (unless this has already been clarified?) \textit{(Tried to run on one channel's data but picked up 800k pixels either side...)}
 

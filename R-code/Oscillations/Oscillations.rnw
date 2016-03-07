@@ -1,0 +1,139 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+% add document-specific packages here
+
+\titleformat{\section}
+    {\normalfont\bfseries}
+    {\llap{\parbox{1cm}{\thesection}}}{0em}{}
+    
+\begin{document}
+\renewenvironment{knitrout}{\vspace{1em}}{\vspace{1em}}
+<<setup, include = F>>=
+opts_chunk$set(size = 'footnotesize',   # smaller font size for chunks
+               out.width = '0.32\\textwidth',   # default figure size = quarter of text width
+               fig.show = 'hold',   # display all figures at end of chunk
+               fig.align='center',
+               echo = F)
+options(width = 80, digits = 4)
+set.seed(24747)
+library(xtable)
+library("IO.Pixels")
+library(mixtools)
+org.par <- par()        # save default parameters in case needed later
+@
+
+<<functions>>=
+symm.ll <- function(x, mu, sigma) {
+    x <- c(x)
+    
+    remove <- unique(c(which(dnorm(x, mu, sigma) == 0), 
+                       which(dnorm(x, -mu, sigma) == 0)))
+    
+    x <- x[-remove]
+    
+    l <- matrix(nrow = 2, ncol = length(x))
+    
+    l[1,] <- 0.5 * dnorm(x, -mu, sigma)
+    l[2,] <- 0.5 * dnorm(x, mu, sigma)
+    
+    list(ll = sum(log(colSums(l))), no.density = remove)
+}
+
+mse <- function(obs, pred) {
+    obs <- c(obs)
+    pred <- c(pred)
+    mean((obs-pred)^2)
+}
+@
+
+<<prepare-data, include = F>>=
+# extract subset of image to process, get pixelwise mean & sd
+load.images(150828, "black")
+pw.m.b.150828 <- pixelwise.mean(b.150828)
+
+# calculate neighbour differences along columns
+diffs <- pw.m.b.150828[, c(1:1995)] - pw.m.b.150828[, c(2:1996)]
+
+# fit mixture of two normal distributions using EM algorithm
+mixt <- normalmixEM(diffs, lambda = 0.5)
+
+# parameters for manual mixture model
+m <- 95
+s <- 60
+
+# get log-likelihood for manual mixture model
+symm.res <- symm.ll(diffs, m, s)
+
+# get densities of suggested models
+o <- hist(diffs, breaks = c(floor(min(diffs)):ceiling(max(diffs))))
+symm.pred <- (0.5 * dnorm(o$mids, mean = m, sd = s)) + 
+                (0.5 * dnorm(o$mids, mean = -m, sd = s))
+EM.pred <- (mixt$lambda[1] * dnorm(o$mids, mean = mixt$mu[1], sd = mixt$sigma[1])) + 
+                (mixt$lambda[2] * dnorm(o$mids, mean = mixt$mu[2], sd = mixt$sigma[2]))
+
+# start point for transects
+x <- c(1151, 1278)
+y <- c(993, 1120)
+
+# calculate table of values to compare models
+df <- data.frame(prop1 = c(max(mixt$lambda), 0.5),
+                 mu1 = c(mixt$mu[which.max(mixt$lambda)], m),
+                 sigma1 = c(mixt$sigma[which.max(mixt$lambda)], s),
+                 mu2 =  c(mixt$mu[which.min(mixt$lambda)], -m), 
+                 sigma2 = c(mixt$sigma[which.min(mixt$lambda)], s),
+                 ll = c(mixt$loglik, symm.res$ll),
+                 mse = c(mse(o$density, EM.pred), mse(o$density, symm.pred)),
+                 stringsAsFactors = F)
+rownames(df) <- c("EM", "Symmetric")
+@
+
+\section*{Oscillations in consecutive readings in black channel (15-08-28)}
+
+\begin{figure}[!h]
+\caption{Plots of pixelwise mean for single column of data in centre of black channel, showing oscillating values. Column 1 is left-hand panel edge, and shows less regular oscillationg than the other columns}
+<<fig-transects>>=
+for (i in c(1:6)) {
+    plot(pw.m.b.150828[x[1] + i - 1, c(y[1]:y[2])], type = "o", pch = 20, cex = 0.7, 
+         ylab = "Pixel value", ylim = c(4700, 5400), xlab = "", xaxt = "none", 
+         main = paste0("Pixelwise mean & smoothed values: column ", i))
+}
+@
+\end{figure}
+
+\begin{figure}[!h]
+\caption{Histogram of differences between columnwise neighbours across whole of black panel}
+<<fig-diffs>>=
+hist(diffs, breaks = c(floor(min(diffs)):ceiling(max(diffs))), prob = T, 
+     main = "All values")
+
+hist(diffs, breaks = c(floor(min(diffs)):ceiling(max(diffs))), prob = T, xlim = c(-500, 500),
+     main = "Centred at zero")
+@
+\end{figure}
+
+\begin{figure}[!h]
+\caption{Histogram of differences with mixture models fitted.}
+<<fig-models>>=
+hist(diffs, breaks = c(floor(min(diffs)):ceiling(max(diffs))), prob = T, xlim = c(-500, 500),
+     main = "EM fitted model")
+plot(mixt, whichplots = 2, add = T, lwd = 2)
+
+hist(diffs, breaks = c(floor(min(diffs)):ceiling(max(diffs))), prob = T, xlim = c(-500, 500),
+     main = "Symmetric model")
+lines(c(-400:400), 0.5 * dnorm(c(-400:400), mean = m, sd = s) +
+          0.5 * dnorm(c(-400:400), mean = -m, sd = s), lwd = 2, col = "cornflowerblue")
+@
+
+Normal mixture model (LHS) was fitted using EM algorithm from \texttt{mixtools}. Symmetric mixture of mirrored normals was fitted by eye in the absence of a tailored algorithm. Could develop an EM algorithm with proportions constrained to be 0.5 if further investigation is necessary.
+
+\end{figure}
+
+
+<<xtable-models, results = 'asis'>>=
+print(xtable(df, align = "l|ccc|cc|cc", 
+             caption = "Summary and comparison of fitted models"), 
+      size = "footnotesize",    
+      table.placement = "!h")
+@
+
+\end{document}

@@ -18,10 +18,27 @@ options(width = 80, digits = 4)
 set.seed(24747)
 library(xtable)
 library("IO.Pixels")
+library(mixtools)
+
+symm.ll <- function(x, mu, sigma) {
+    x <- c(x)
+    
+    remove <- unique(c(which(dnorm(x, mu, sigma) == 0), 
+                       which(dnorm(x, -mu, sigma) == 0)))
+    
+    x <- x[-remove]
+    
+    l <- matrix(nrow = 2, ncol = length(x))
+    
+    l[1,] <- 0.5 * dnorm(x, -mu, sigma)
+    l[2,] <- 0.5 * dnorm(x, mu, sigma)
+    
+    list(ll = sum(log(colSums(l))), no.density = remove)
+}
 
 # extract subset of image to process, get pixelwise mean & sd
 x <- c(1151, 1278)
-y <- c(993, 1996)
+y <- c(993, 1120)
 load.images(150828, "black")
 pw.m.b.150828 <- pixelwise.mean(b.150828)
 minidat <- b.150828[c(x[1]:x[2]), c(y[1]:y[2]),]
@@ -33,28 +50,106 @@ pw.sd <- pixelwise.sd(minidat)
 org.par <- par()        # save default parameters in case needed later
 @
 
-\section*{Pixelwise mean values with and without columnwise smoothing}
-Pixelwise mean across black channel shows oscillating behaviour between successive pixels: 
-
-<<smoothing-1, out.width = '0.45\\textwidth'>>=
-plot(pw.m[2,], type = "o", pch = 20, cex = 0.7, ylab = "Pixel value", ylim = c(5000, 6000),
-     xlab = "", xaxt = "none", main = "Pixelwise mean & smoothed values: column 2")
-points(filter(pw.m[2,], rep(1/2, 2), sides = 1), type = "l", lwd = 2, col = "blue")
-
-plot(pw.m[3,], type = "o", pch = 20, cex = 0.7, ylab = "Pixel value", ylim = c(5000, 6000),
-     xlab = "", xaxt = "none", main = "Pixelwise mean & smoothed values: column 3")
-points(filter(pw.m[3,], rep(1/2, 2), sides = 1), type = "l", lwd = 2, col = "blue")
-
-plot(pw.m[4,], type = "o", pch = 20, cex = 0.7, ylab = "Pixel value", ylim = c(5000, 6000),
-     xlab = "", xaxt = "none", main = "Pixelwise mean & smoothed values: column 4")
-points(filter(pw.m[4,], rep(1/2, 2), sides = 1), type = "l", lwd = 2, col = "blue")
-
-plot(pw.m[2,], type = "o", pch = 20, cex = 0.7, ylab = "Pixel value", ylim = c(5000, 6000),
-     xlab = "", xaxt = "none", main = "Pixelwise mean & smoothed values: column 2")
-points(filter(pw.m[2,], rep(1/2, 2), sides = 1), type = "l", lwd = 2, col = "blue")
+<<image, eval = F>>=
+pixel.image(pw.m.b.150828, title = "Pixelwise mean of black channel, showing subset")
+lines(as.matrix(cbind(x = c(x[1], x[1], x[2], x[2], x[1]),
+                      y = c(y[1], y[2], y[2], y[1], y[1]))))
+pixel.image(pw.m, break.levels = lvls, title = "Closeup of subset used in plots")
 @
 
+\section*{Pixelwise mean values with and without columnwise smoothing}
+Pixelwise mean across black channel shows oscillating behaviour between successive pixels. Blue line shows simple moving average of each pixel and the pixel preceding it: 
 
+<<smoothing-1, out.width = '0.45\\textwidth'>>=
+for (i in 1:4) {
+    plot(pw.m[i,], type = "o", pch = 20, cex = 0.7, 
+         ylab = "Pixel value", ylim = c(4500, 5500), xlab = "", xaxt = "none", 
+         main = paste0("Pixelwise mean & smoothed values: column ", i))
+    points(filter(pw.m[i,], rep(1/2, 2), sides = 1), type = "l", lwd = 2, col = "blue")
+}
+@
 
+Column 1 is panel edge: more erratic than mid-panel columns.
+
+%\begin{figure}
+%\caption{Histogram of absolute values of differences between column-wise consecutive cells. Red and green line show components fitted by EM algorithm using \texttt{mixtools}}
+
+<<diffs-boxplot, out.width = '0.49\\textwidth', eval = F>>=
+diffs <- pw.m[, c(1:127)] - pw.m[, c(2:128)]
+hist(diffs, breaks = c(floor(min(diffs)):ceiling(max(diffs))), prob = T)
+hist(diffs, breaks = c(floor(min(diffs)):ceiling(max(diffs))), 
+     xlim = c(-500, 500), prob = T)
+abline(v = 0, col = "darkred")
+mixt <- normalmixEM(diffs, lambda = 0.5)
+plot(mixt, whichplots = 2, add = T)
+
+summary(mixt)
+@
+
+%Mean value fitted is \Sexpr{round(mixt$mu[1],3)} - essentially symmetric about 0, suggesting that the data is oscillating.
+
+%\end{figure}
+
+<<diffs-full-panel, eval = F>>=
+p <- panel.edges()
+panel <- pw.m.b.150828[p$x[10]:(p$x[11]-1), p$y[2]:(p$y[3]-1)]
+
+panel.diffs <- panel[, c(1:(ncol(panel)-1))] - panel[, c(2:(ncol(panel)))]
+plot(panel[2,], type = "o", pch = 20, cex = 0.7)
+
+hist(panel.diffs, breaks = c(floor(min(panel.diffs)):ceiling(max(panel.diffs))), 
+     xlim = c(-500, 500), prob = T)
+
+panel.mixt <- normalmixEM(panel.diffs, lambda = 0.5)
+plot(panel.mixt, whichplots = 2, add = T)
+@
+
+<<get-diffs>>=
+all.diffs <- pw.m.b.150828[, c(1:1995)] - pw.m.b.150828[, c(2:1996)]
+all.mixt <- normalmixEM(all.diffs, lambda = 0.5)
+@
+
+%\begin{figure}
+%\caption{Histogram of all differences between pixelwise means of vertically-consecutive pixels in black channel, 15-08-28. Mean difference: \Sepxr{round(mean(all.diffs),3)}}
+
+%<<diffs-full-image, out.width = '0.65\\textwidth', out.height = '0.4\\textwidth'>>=
+%hist(all.diffs, breaks = "fd", xlim = c(-500, 500), prob = T)
+%@
+%\end{figure}
+
+%\begin{figure}
+
+%\caption{Normal mixture model fitted using EM algorithm in \texttt{mixtools}; fitted mixture is unimodal, with \Sexpr{all.mixt$lambda[1] * 100}\% of density fitted by $N(\Sexpr{all.mixt$mu[1]}, \Sexpr{all.mixt$sigma[1]})$ and the remainder fitted by  $N(\Sexpr{all.mixt$mu[2]}, \Sexpr{all.mixt$sigma[2]})$. Model log-likelihood is \Sexpr{all.mixt$loglik}}
+
+<<fit2, eval = F>>=
+#hist(all.diffs, breaks = "fd", xlim = c(-500, 500), prob = T)
+
+# fit normal mixture distribution
+#plot(all.mixt, whichplots = 2, add = T)
+
+#m <- 95
+#s <- 60 
+
+#symm.chk <- symm.ll(all.diffs, 95, 60)
+@
+
+%\end{figure}
+
+%\begin{figure}
+%\caption{Symmetric mixture of normal models fitted by eye for now, with $mu = \Sepxr{m}$ and $\sigma = \Sexpr{s}$. Model log-likelihood is \Sexpr{symm.chk$ll}, with  \Sexpr{length(symm.chk$no.density)} points removed because no density could be calculated}
+
+<<test-symmetric, out.width = '0.65\\textwidth', out.height = '0.4\\textwidth'>>=
+#hist(all.diffs, breaks = "fd", xlim = c(-500, 500), prob = T,
+#     main = "All differences, symmetric mixture of normals fitted & simulated")
+#lines(c(-400:400), 0.5 * dnorm(c(-400:400), mean = m, sd = s), col = "purple")
+#lines(c(-400:400), 0.5 * dnorm(c(-400:400), mean = -m, sd = s), col = "purple")
+
+#lines(c(-400:400), 0.5 * dnorm(c(-400:400), mean = m, sd = s) +
+#          0.5 * dnorm(c(-400:400), mean = -m, sd = s), lwd = 2, col = "blue")
+
+#sim <- rnormmix(n = 100000, lambda = 0.5, mu = m, sigma = s)
+#hist(rnormmix(n = 100000, lambda = c(0.5, 0.5), mu = c(-m, m), sigma = c(s, s)), breaks  = "fd", col = adjustcolor("cornflowerblue", alpha = 0.5), add = T, prob = T)
+@
+%\end{figure}
 
 \end{document}
