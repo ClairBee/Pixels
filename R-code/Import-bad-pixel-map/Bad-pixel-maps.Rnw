@@ -1,0 +1,50 @@
+\documentclass{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+\begin{document}
+
+\renewenvironment{knitrout}{\vspace{1em}}{\vspace{1em}}
+<<setup, include=FALSE>>=
+opts_chunk$set(size = 'footnotesize',   # smaller font size for chunks
+               out.width = '0.32\\textwidth',   # default figure size = quarter of text width
+               fig.show = 'hold',   # display all figures at end of chunk
+               fig.align='center',
+               echo = F)
+
+library(tiff)
+@
+
+Import of working .tif file (black channel): 'as-is' import of original values may be logarithmically scaled from rescaled values, but base is unclear.
+
+<<get-good-tiff, echo = F>>=
+bpm.131002.asis <- readTIFF("../../Other-data/Old-data/131002-bad-pixel-map/BadPixelMapBlack_stdDev.tif", as.is = T)
+bpm.131002 <- readTIFF("../../Other-data/Old-data/131002-bad-pixel-map/BadPixelMapBlack_stdDev.tif", as.is = F)
+
+hist(bpm.131002.asis, breaks = "fd", ylim = c(0, 1e+05))
+hist(bpm.131002, breaks = "fd", ylim = c(0, 1e+05))
+hist(log(bpm.131002), breaks = "fd", ylim = c(0, 1e+05))
+@
+
+White channel saved on same date, with same functions applied: 
+<<get-bad-tiff, echo = F>>=
+bpm.w.131002.asis <- readTIFF("../../Other-data/Old-data/131002-bad-pixel-map/BadPixelMapWhite_stdDev.tif", as.is = T)
+bpm.w.131002 <- readTIFF("../../Other-data/Old-data/131002-bad-pixel-map/BadPixelMapWhite_stdDev.tif", as.is = F)
+
+hist(bpm.w.131002.asis, breaks = "fd", ylim = c(0, 1e+05))
+hist(bpm.w.131002, breaks = "fd", ylim = c(0, 1e+05))
+hist(log(bpm.w.131002), breaks = "fd", ylim = c(0, 1e+05))
+@
+
+Black channel from 14-01-28 also gives error message, and has similar shape to white error channel:
+<<get-different-bad-tiff, echo = F, warning = F>>=
+bpm.140128.asis <- readTIFF("../../Other-data/Old-data/140128-bad-pixel-map/BadPixelMapBlack_stdDev.tif", as.is = T)
+bpm.140128 <- readTIFF("../../Other-data/Old-data/140128-bad-pixel-map/BadPixelMapBlack_stdDev.tif", as.is = F)
+
+hist(bpm.140128.asis, breaks = "fd", ylim = c(0, 1e+05))
+hist(bpm.140128, breaks = "fd", ylim = c(0, 1e+05))
+hist(log(bpm.140128), breaks = "fd", ylim = c(0, 1e+05))
+@
+
+
+
+\end{document}
