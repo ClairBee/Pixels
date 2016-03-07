@@ -10,7 +10,7 @@
 \renewenvironment{knitrout}{\vspace{1em}}{\vspace{1em}}
 <<setup, include=FALSE>>=
 opts_chunk$set(size = 'footnotesize',   # smaller font size for chunks
-               out.width = '0.45\\textwidth',   # default figure size = quarter of text width
+               out.width = '0.32\\textwidth',   # default figure size = quarter of text width
                fig.show = 'hold',   # display all figures at end of chunk
                fig.align='center',
                echo = F)
@@ -19,28 +19,87 @@ set.seed(24747)
 library(xtable)
 library("IO.Pixels")
 
-# not run as part of compile - takes too long
-x <- c(1151, 1278)
-y <- c(1869, 1996)
+# extract subset of image to process, get pixelwise mean & sd
 load.images(150828, "black")
-pw.m.b.150828 <- pixelwise.mean(b.150828)
-minidat <- b.150828[c(x[1]:x[2]), c(y[1]:y[2]),]
-lvls <- sd.levels(pixelwise.mean(b.150828))
+load.images(150828, "grey")
+load.images(150828, "white")
 
-pw.m <- pixelwise.mean(minidat)
-pw.sd <- pixelwise.sd(minidat)
+x <- c(895, 1022)
+y <- c(863, 992)
+
+mini.b <- b.150828[c(x[1]:x[2]), c(y[1]:y[2]),]
+mini.g <- g.150828[c(x[1]:x[2]), c(y[1]:y[2]),]
+mini.w <- w.150828[c(x[1]:x[2]), c(y[1]:y[2]),]
+
+# get cutoffs for image plotting
+lvls.b <- sd.levels(pixelwise.mean(b.150828))
+lvls.g <- sd.levels(pixelwise.mean(g.150828))
+lvls.w <- sd.levels(pixelwise.mean(w.150828))
+
+# plotting levels for standard deviation are based on sd.levels function
+sd.lvls.b <- c(0, 2.88146, 5.76292, 8.64438, 13.10290, 17.56142, 22.01994, 
+               26.47846, 35.39550, 44.31254, 5880.42203)
+sd.lvls.g <- c(0, 78.58871, 112.18568, 145.78266, 162.58115, 179.37964, 
+               196.17812, 212.97661, 246.57359, 280.17056, 6602.89191)
+sd.lvls.w <- c(0, 122.9439, 177.5490, 232.1541, 259.4567, 286.7593, 314.0618,
+               341.3644, 395.9695, 450.5746, 3958.3641)
+
+# pixelwise mean & SD across small subset of each channel
+pw.m.b <- pixelwise.mean(mini.b)
+pw.sd.b <- pixelwise.sd(mini.b)
+
+pw.m.g <- pixelwise.mean(mini.g)
+pw.sd.g <- pixelwise.sd(mini.g)
+
+pw.m.w <- pixelwise.mean(mini.w)
+pw.sd.w <- pixelwise.sd(mini.w)
 
 org.par <- par()        # save default parameters in case needed later
 @
 
-\section*{Transects of mean \& SD across small subset of image}
+\section*{Small subset of image used to examine behaviour of sequential pixels}
 
 <<plot-images, eval = F>>=
-pixel.image(pw.m.b.150828, title = "Black channel image")
+pixel.image(pixelwise.mean.150828, title = "Black channel image")
 lines(as.matrix(cbind(x = c(x[1], x[1], x[2], x[2], x[1]),
                       y = c(y[1], y[2], y[2], y[1], y[1]))))
 pixel.image(minidat[,,1], break.levels = lvls, title = "Subset")
 @
+
+\section*{Pixelwise mean across subset}
+
+<<subset-images, out.width = '0.32\\textwidth'>>=
+pixel.image(pw.m.b, break.levels = lvls.b, title = "Black channel pw mean")
+pixel.image(pw.m.g, break.levels = lvls.g, title = "Grey channel pw mean")
+pixel.image(pw.m.w, break.levels = lvls.w, title = "White channel pw mean")
+@
+
+Pixelwise SD shows no particular pattern in an area this small
+
+\section*{Transects of mean \& SD across small subset of image}
+
+<<plot-mean-transects>>=
+plot(pw.m.b[2,], type = "o", pch = 20, cex = 0.7, xaxt = "none", xlab = "",
+     main = "Pixelwise mean: black channel, column 2",
+     ylab = "Mean value")
+plot(pw.m.g[2,], type = "o", pch = 20, cex = 0.7, xaxt = "none", xlab = "",
+     main = "Pixelwise mean: grey channel, column 2",
+     ylab = "Mean value")
+plot(pw.m.w[2,], type = "o", pch = 20, cex = 0.7, xaxt = "none", xlab = "",
+     main = "Pixelwise mean: white channel, column 2",
+     ylab = "Mean value")
+@
+
+<<transect-without-offset>>=
+plot(pw.m.g[2,] - pw.m.b[2,], type = "o", pch = 20, cex = 0.7, xaxt = "none", xlab = "",
+     main = "Pixelwise mean without offset: grey channel, column 2",
+     ylab = "Mean value - black channel mean")
+
+plot(pw.m.w[2,] - pw.m.b[2,], type = "o", pch = 20, cex = 0.7, xaxt = "none", xlab = "",
+     main = "Pixelwise mean without offset: white channel, column 2",
+     ylab = "Mean value - black channel mean")
+
+
 
 <<plot-transects-1, out.width = '\\textwidth', caption = "Values across column 1. Plot range is mean pixel value +- 2sd">>=
 par(mfrow = c(5,4), mar = c(1,2,1,1))
@@ -71,6 +130,7 @@ for (i in 1:10) {
 @
 
 \todo{Try smoothing across columns and plotting row-wise transect across smoothed values. Raster function movingFun may be useful.}
+
 
 \todo{Get coordinates of actual dead/hot pixels, move transect across one}
 

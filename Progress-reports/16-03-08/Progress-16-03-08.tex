@@ -1,0 +1,113 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\llap{\parbox{1cm}{\thesubsection}}}{0em}{}
+	
+%----------------------------------------------------------------------
+% SPECIFY BIBLIOGRAPHY FILE & FIELDS TO EXCLUDE
+%\addbibresource{bibfile.bib}
+%\AtEveryBibitem{\clearfield{url}}
+%\AtEveryBibitem{\clearfield{doi}}
+%\AtEveryBibitem{\clearfield{isbn}}
+%\AtEveryBibitem{\clearfield{issn}}
+
+%----------------------------------------------------------------------
+% define code format
+\lstnewenvironment{code}[1][R]{			% default language is R
+	\lstset{language = #1,
+        		columns=fixed,
+    			tabsize = 4,
+    			breakatwhitespace = true,
+			showspaces = false,
+    			xleftmargin = .75cm,
+    			lineskip = {0pt},
+			showstringspaces = false,
+			extendedchars = true
+    }}
+    {}
+    
+%======================================================================
+
+\usepackage{fancyhdr}
+
+\fancyhf{}
+\fancyhead[R]{\textbf{08-Mar-2016}}
+\pagestyle{fancy}
+
+\addtolength{\topmargin}{-0.5cm}
+\addtolength{\textheight}{1.4cm}
+
+\renewcommand{\headrulewidth}{0pt}
+
+\begin{document}
+
+\subsection*{Since last week}
+
+\begin{itemize}
+
+\item Brief literature review carried out. Several broadly different approaches to identification of bad pixels found, but not convinced of their appropriateness/effectiveness: as well as simple thresholding, could try convolution-based method, max-min filtering, or PCA.
+
+\item Recreated (partially) the thresholding approach used in the manual to classify dead, hot, noisy, dim and bright pixels in the first and last acquisition sets. Different channels are more prone to different types of `bad' pixels, and spatial distribution of each seems to differ.
+
+\item Also briefly compared effect of adjusting threshold. No obvious better candidate in terms of absolute cutoff (unsurprisingly) but approach looking at difference between modal value and quartile may be more useful.
+
+\item Transects of pixelwise mean \& pixelwise SD created. Mean shows oscillating behaviour (also discernible in individual tracks)
+\end{itemize}
+
+\subsection*{Current questions/considerations}
+\begin{itemize}
+
+\item There appears to be a degree of oscillation between values of consecutive pixels in the rows - presumably an artefact of the way the data is read. Assuming that this is typical behaviour for this type of array, suggests that a smoothing approach may be appropriate to find the `true' registered value of each pixel, column-wise at least. Suggestions for search terms would be appreciated.
+
+\item Need to understand how local/glocal thresholding works in the manual. Seems to be run on an adjusted image, but exact details aren't clear, so would like to discuss further with Jay (unless this has already been clarified?) \textit{(Tried to run on one channel's data but picked up 800k pixels either side...)}
+
+\item Latest batch of images shows warping in grey and white channels. Note in file says that there are spots on the beryllium window, but does this explain the non-circular pattern shown? Would like to get a new image sample ASAP to see if this effect is repeated.
+
+%\item
+%Not picking up many lines (only at top-left corner of white/grey channel). How concerned should we be about this?
+
+%\item Does purpose of image affect how conservative we want to be in our assessment of `too many' bad pixels? eg. when looking for defects, a bad pixel will signal a false alarm - but is a single isolated pixel enough to signal this? %Need to check whether these methods will work for a high density of bad pixels, and whether they will be able to identify vertical lines of bad pixels (eg. may need to convolve without vertical-line kernel)
+
+%\item Need to decide on a hierarchy of problems: is a noisy pixel worse than one which is consistently too bright or too dim? Or should we treat these as entirely separate (bad value vs too variable, for example)
+
+\item Intra-panel dependency: is this something I should be looking at, or is Audrey tacklng this already?
+\end{itemize}
+
+
+
+
+\subsection*{Next steps}
+
+\begin{itemize}
+
+\item
+Use thresholds based on difference between modal values and quantiles to classify bad pixels of various types as in [Pinto2012]
+
+\item
+Implement convolution-based approach to identifying locally non-uniform points as in [Zhang2002]: again, likely to be confounded by panel edges, but may be useful with appropriate threshold setting.
+
+\item
+Consider plotting evolution of pixel population at each time stage (maybe as a tree diagram? Or is there a better way to visualise this?)
+
+\item
+Look at SD across daily acquisitions - how high is the SD of a `noisy' pixel? Is there any pattern in the variability? 
+%In particular, plot daily time series of pixels with high daily SD - these may be showing short-term 'flickering'/'blipping' behaviour. (Those investigated so far seem fairly constant in the short term)
+
+%For all `bad' pixels identified, plot daily pixelwise mean for full sequence of measurements
+
+%\item
+%For each panel, look at pixelwise mean \& SD - should be a relationship between the two, which will differ across the panels (intra-panel dependency)
+
+\end{itemize}
+
+%\newpage
+%\printbibliography
+\end{document}

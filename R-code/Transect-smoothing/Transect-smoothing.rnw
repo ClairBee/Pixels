@@ -1,0 +1,60 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+% add document-specific packages here
+
+\titleformat{\section}
+    {\normalfont\bfseries}
+    {\llap{\parbox{1cm}{\thesection}}}{0em}{}
+    
+\begin{document}
+\renewenvironment{knitrout}{\vspace{1em}}{\vspace{1em}}
+<<setup, include=FALSE>>=
+opts_chunk$set(size = 'footnotesize',   # smaller font size for chunks
+               out.width = '0.49\\textwidth',   # default figure size = quarter of text width
+               fig.show = 'hold',   # display all figures at end of chunk
+               fig.align='center',
+               echo = F)
+options(width = 80, digits = 4)
+set.seed(24747)
+library(xtable)
+library("IO.Pixels")
+
+# extract subset of image to process, get pixelwise mean & sd
+x <- c(1151, 1278)
+y <- c(993, 1996)
+load.images(150828, "black")
+pw.m.b.150828 <- pixelwise.mean(b.150828)
+minidat <- b.150828[c(x[1]:x[2]), c(y[1]:y[2]),]
+lvls <- sd.levels(pixelwise.mean(b.150828))
+
+pw.m <- pixelwise.mean(minidat)
+pw.sd <- pixelwise.sd(minidat)
+
+org.par <- par()        # save default parameters in case needed later
+@
+
+\section*{Pixelwise mean values with and without columnwise smoothing}
+Pixelwise mean across black channel shows oscillating behaviour between successive pixels: 
+
+<<smoothing-1, out.width = '0.45\\textwidth'>>=
+plot(pw.m[2,], type = "o", pch = 20, cex = 0.7, ylab = "Pixel value", ylim = c(5000, 6000),
+     xlab = "", xaxt = "none", main = "Pixelwise mean & smoothed values: column 2")
+points(filter(pw.m[2,], rep(1/2, 2), sides = 1), type = "l", lwd = 2, col = "blue")
+
+plot(pw.m[3,], type = "o", pch = 20, cex = 0.7, ylab = "Pixel value", ylim = c(5000, 6000),
+     xlab = "", xaxt = "none", main = "Pixelwise mean & smoothed values: column 3")
+points(filter(pw.m[3,], rep(1/2, 2), sides = 1), type = "l", lwd = 2, col = "blue")
+
+plot(pw.m[4,], type = "o", pch = 20, cex = 0.7, ylab = "Pixel value", ylim = c(5000, 6000),
+     xlab = "", xaxt = "none", main = "Pixelwise mean & smoothed values: column 4")
+points(filter(pw.m[4,], rep(1/2, 2), sides = 1), type = "l", lwd = 2, col = "blue")
+
+plot(pw.m[2,], type = "o", pch = 20, cex = 0.7, ylab = "Pixel value", ylim = c(5000, 6000),
+     xlab = "", xaxt = "none", main = "Pixelwise mean & smoothed values: column 2")
+points(filter(pw.m[2,], rep(1/2, 2), sides = 1), type = "l", lwd = 2, col = "blue")
+@
+
+
+
+
+\end{document}
