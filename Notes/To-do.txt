@@ -21,17 +21,17 @@ Intra-panel dependency:
 
 Standing wave pattern in sensor?
     - how to characterise wave? Is there a package that will give frequency & amplitude?
+        - use acf/pacf to check periodicity. Need to look into differences. Also ccf and fft.
     - do signs of differences generally go same way?
         - check Medical Stats notes - may be something in there (like Wilcoxon?)
     - correlation of adjacent differences? (column-wise & row-wise)
     - re mechanism:
         - standing wave in CMOS/CCD sensors
-        - 
+    - should also check for underlying periodicity in grey & white channels
     
 Review Julia's multiple testing notes/literature
 
-
 Try to characterise shape of mean & SD of all data - use as basis for statistical thresholding
 
-
+If using Lowess smoothing, need to understand more about theoretical underpinning
     
