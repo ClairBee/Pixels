@@ -7,14 +7,15 @@ pw.m.b.150828 <- pixelwise.mean(b.150828)
 pw.sd.b.150828 <- pixelwise.sd(b.150828)
 lvls <- sd.levels(pw.m.b.150828)
 
-abs.levels <- function(data) {
+iqr.levels <- function(data) {
     lq <- quantile(data, 0.25)
     med <- median(data)
     uq <- quantile(data, 0.75)
     iqr <- IQR(data)
     
     c(0,
-      lq - 1.5 * iqr, # low outliers
+      max(lq - 1.5 * iqr,         # low outliers
+          lq/2),
       lq,
       lq + (med - lq) / 3,
       med - (med - lq) / 3,
@@ -22,7 +23,8 @@ abs.levels <- function(data) {
       med + (uq - med) / 3,
       uq - (uq - med) / 3,
       uq,
-      uq + 1.5 * iqr,    # high outliers
+      min(uq + 1.5 * iqr,    # high outliers
+          uq + ((65535-uq) / 2)),
       65535)
 }
 a.lvls <- abs.levels(panel)

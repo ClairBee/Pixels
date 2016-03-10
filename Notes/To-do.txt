@@ -1,12 +1,17 @@
 
 TO DO
 
-Break black channel image into components:
-    - model circular spot (assume bivariate Gaussian)
-    - model panelwise variation
-    - model 'standing wave' effect in consecutive readings along columns
-
-Create new set of plotting levels, based on IQR and more even distribution of values
+Spot visible in black channel - why? Thought this related to source, which is switched off here.
+    - spot in black channel is lower in value, while spot in white/grey is higher
+    - are we looking at combination of two spots in grey/white channel?
+    - is residual value related to mean/variance of absolute value at all?
+    
+Modelling the dark current by breaking into components
+    - circular spot of lower values (assume bivariate Gaussian)
+    - panelwise variation (assume linear over panel, starting in one corner)
+    - characteristic 'standing wave' effect along columns
+    - deviations from this pattern will be bad (non-standard) pixels
+When source is added (grey/white channels), second spot in almost the same place
 
 Recreate thresholding used in manual
     - ask Jay to provide bad pixel maps as well as channel images next time
@@ -19,7 +24,13 @@ Intra-panel dependency:
     - check relationship between mean and variance, per-panel. Should be linear?
     - plot residuals - any patterns?
 
+Image correction: should we simply be subtracting black channel from white channel?
+
 Standing wave pattern in sensor?
+    - how to test residuals for consistency along panel: 
+        - test for same distribution in different regions
+        - resampling/bootstrap
+        - summarise using mean/median/SD in blocks (eg 8 x 124-pixel runs)
     - how to characterise wave? Is there a package that will give frequency & amplitude?
         - use acf/pacf to check periodicity. Need to look into differences. Also ccf and fft.
     - do signs of differences generally go same way?
@@ -27,11 +38,15 @@ Standing wave pattern in sensor?
     - correlation of adjacent differences? (column-wise & row-wise)
     - re mechanism:
         - standing wave in CMOS/CCD sensors
-    - should also check for underlying periodicity in grey & white channels
-    
-Review Julia's multiple testing notes/literature
 
 Try to characterise shape of mean & SD of all data - use as basis for statistical thresholding
 
 If using Lowess smoothing, need to understand more about theoretical underpinning
     
+===============================================================================================
+
+READING
+
+    - Review Julia's multiple testing notes/literature
+
+    - Van Nieuwenhove et al on dynamic intensity normalisation

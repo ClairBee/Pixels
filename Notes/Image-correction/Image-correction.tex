@@ -1,0 +1,77 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\thesubsection}{1em}{}
+	
+%----------------------------------------------------------------------
+% SPECIFY BIBLIOGRAPHY FILE & FIELDS TO EXCLUDE
+\addbibresource{refs.bib}
+\AtEveryBibitem{\clearfield{url}}
+\AtEveryBibitem{\clearfield{note}}
+\AtEveryBibitem{\clearfield{doi}}
+
+
+%----------------------------------------------------------------------
+% define code format
+\lstnewenvironment{code}[1][R]{			% default language is R
+	\lstset{language = #1,
+        		columns=fixed,
+    			tabsize = 4,
+    			breakatwhitespace = true,
+			showspaces = false,
+    			xleftmargin = .75cm,
+    			lineskip = {0pt},
+			showstringspaces = false,
+			extendedchars = true
+    }}
+    {}
+    
+%======================================================================
+
+\begin{document}
+
+\section{Flat-field correction \cite{wiki:FlatFieldCorrection}}
+
+\subsection{Terminology}
+
+\begin{description}
+\item[Flat field correction: ]
+ technique used to remove artefacts from 2d printed images, which may be caused by variations in pixel-to-pixel sensitivity. A \textbf{flat field} consists of two numbers per pixel: gain and dark current (or dark frame).
+
+\item[Gain: ] How the signal varies as a function of the amount of `light' - will almost always be a linear function, as this is a ratio of the input and output signals.
+
+\item[Flat field ($F$): ] `Blank' image acquired with x-ray beam on.
+
+\item[Dark field ($D$): ] `Blank' image acquired with x-ray beam off.
+
+\end{description}
+
+\subsection{Application}
+Given a raw image $R$ dark frame $D$, flat field image $F$, and $m$ the average value of $(F-D)$, we have the corrected image $C$ and gain $G$:
+
+\[ C = \frac{m(R-D)}{(F-D)} = G(R-D) \qquad \qquad \qquad G = \frac{m}{(F-D)}\]
+
+Fixed-pattern noise is a known limiting factor in x-ray CT imaging, but can be removed using a flat field correction. A projection image with sample $P$ can be normalised to 
+
+\[N = \frac{(P-D)}{(F-D)} \]
+
+but this method is reliant on the x-ray source, scintillator response and CCD sensitivity remaining constant and stationary - which is generally not true in practice.
+
+\section{Dynamic flat-field correction \cite{vanN2015}}
+Principal component analysis of a set of flat field images is used to compute eigen flat fields, a linear combination of which can be used to individually normalise each x-ray projection.
+
+\section{Noise in CCD sensors \cite{CCD-noise:2009}}
+
+%\newpage
+\hrulefill
+\printbibliography
+
+\end{document}
