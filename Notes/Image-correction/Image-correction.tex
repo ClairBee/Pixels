@@ -43,8 +43,7 @@
 \subsection{Terminology}
 
 \begin{description}
-\item[Flat field correction: ]
- technique used to remove artefacts from 2d printed images, which may be caused by variations in pixel-to-pixel sensitivity. A \textbf{flat field} consists of two numbers per pixel: gain and dark current (or dark frame).
+\item[Flat field correction: ] Technique used to remove artefacts from 2d printed images, which may be caused by variations in pixel-to-pixel sensitivity. A \textbf{flat field} consists of two numbers per pixel: gain and dark current (or dark frame).
 
 \item[Gain: ] How the signal varies as a function of the amount of `light' - will almost always be a linear function, as this is a ratio of the input and output signals.
 
@@ -68,7 +67,41 @@ but this method is reliant on the x-ray source, scintillator response and CCD se
 \section{Dynamic flat-field correction \cite{vanN2015}}
 Principal component analysis of a set of flat field images is used to compute eigen flat fields, a linear combination of which can be used to individually normalise each x-ray projection.
 
+\section{Fixed-Pattern Noise}
+
+\begin{description}
+
+\item[DSNU (dark signal non-uniformity)] The offset from the average across the imaging array at a particular setting (temperature, integration time) but no external illumination
+
+\item[PRNU (photo response non-uniformity)] The gain or ratio between optical power on a pixel versus the electrical signal output. This can be described as the local, pixel dependent photo response non-linearity (\textbf{PRNL}) and is often simplified as a single value measured at 50\% saturation level[2] to permit a linear approximation of the non-linear pixel response.
+
+
+\end{description}
+
+
+
 \section{Noise in CCD sensors \cite{CCD-noise:2009}}
+
+Dark current noise should have a Poisson distribution.\\
+Details on how current is transferred through a CCD at \url{http://www.mssl.ucl.ac.uk/www_detector/ccdgroup/optheory/ccdoperation.html}
+
+\begin{description}
+
+\item[Dark current accumulation] may be responsible for ?linear drift in current towards sensor corner of each panel.
+
+\item[Charge transfer noise: ] \nb{Not yet looked into in detail, but sounds like the likeliest culprit \cite{TransferNoise:Park, TransferNoise:2}}
+
+\item[Shot noise: ] Dark current noise may include \textbf{shot noise \cite{wiki:ShotNoise}} - noise that can be modelled as a Poisson process resulting from random occurrences of photons hitting sensor. When a source is present, this will be drowned out, but when no source is present, shot noise may dominate. \nb{However, this is a random process (white noise): our observed fluctuation is clearly systematic}
+
+\item[Read noise: ] Should supposedly consist of random scatter (\url{http://spiff.rit.edu/classes/phys373/lectures/readout/readout.html} \\
+
+\item[Flicker noise: ]
+
+\item[Johnson-Nyquist noise: ]
+
+\item[TFT gate biases: ]
+
+\end{description}
 
 %\newpage
 \hrulefill

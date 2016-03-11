@@ -12,6 +12,7 @@ Modelling the dark current by breaking into components
     - characteristic 'standing wave' effect along columns
     - deviations from this pattern will be bad (non-standard) pixels
 When source is added (grey/white channels), second spot in almost the same place
+    - dark current is essentially thermal - any variation depending on time of year?
 
 Recreate thresholding used in manual
     - ask Jay to provide bad pixel maps as well as channel images next time
@@ -38,6 +39,12 @@ Standing wave pattern in sensor?
     - correlation of adjacent differences? (column-wise & row-wise)
     - re mechanism:
         - standing wave in CMOS/CCD sensors
+        
+Identifying per-channel offset in dark current:
+    - can per-channel offset be broken into image offset & channel offset?
+    - initially use points with low oscillation SD to give 'fixed-pattern noise'
+    - do differences between these points give a constant per-channel offset?
+    - then extend to regions with less constant oscillation pattern
 
 Try to characterise shape of mean & SD of all data - use as basis for statistical thresholding
 

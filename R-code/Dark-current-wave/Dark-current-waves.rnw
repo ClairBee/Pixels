@@ -1,0 +1,121 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+% add document-specific packages here
+
+\titleformat{\section}
+    {\normalfont\bfseries}
+    {\llap{\parbox{1cm}{\thesection}}}{0em}{}
+    
+\begin{document}
+\renewenvironment{knitrout}{\vspace{1em}}{\vspace{1em}}
+<<setup, include=FALSE>>=
+opts_chunk$set(size = 'footnotesize',   # smaller font size for chunks
+               out.width = '\\textwidth',
+               out.height = '0.5\\textwidth',
+               fig.show = 'hold',   # display all figures at end of chunk
+               fig.align='center',
+               echo = F)
+options(width = 80, digits = 4)
+set.seed(24747)
+library(xtable)
+library("IO.Pixels")
+org.par <- par()        # save default parameters in case needed later
+@
+
+<<get-data>>=
+pw.m.b <- readRDS("../../Other-data/Pixelwise-means-black.rds")
+n <- dim(pw.m.b)[3]
+
+# define panel start
+x <- c(1023, 1150); y <- c(1, 992)
+c <- 4
+
+# get columnwise differences for all panels
+diffs <- diffs <- pw.m.b[, c(1:1995),] - pw.m.b[, c(2:1996),]
+diff.sd <- apply(diffs, c(1,2), sd)
+
+# get subset of transects through all panels
+transects <- pw.m.b[x[1]+c, y[1]:y[2], ]
+
+# Loess-smoothed estimates for all panels
+smoothed <- list()
+for (i in 1:n) {
+    smoothed[[i]] <- lowess(transects[,i], f = 1/15)$y
+}
+
+cols <- c("black", "blue", "purple", "red", "orange", 
+          "gold", "green", "darkgreen", "seagreen", "blue")
+@
+
+\section*{Dark current columnwise oscillation/standing wave}
+
+\begin{figure}[h!]
+\caption{Sample transect showing pixelwise mean values along a single column on each aquisition date \\
+\textit{(0 is panel edge, 992 is panel midline; transect runs along column \Sexpr{x[1] + c})}}
+\vspace{-20pt}
+
+<<plot-pw-means>>=
+
+# plot all pixelwise means
+par(mar = c(2, 4, 2, 0))
+o.plot(transects[,1], xaxt = "n", ylab = "Mean pixel value",
+       ylim = c(floor(min(transects)), ceiling(max(transects))),
+       main = "")
+axis(1, at = pretty(0:(y[2]-y[1]), h = 100), labels = pretty(y[1]:y[2], h = 100))
+
+for (i in 2:n) {
+    o.plot(transects[, i], add = T, col = adjustcolor(cols[i], alpha = 0.3))
+}
+@
+\end{figure}
+
+\begin{figure}[h!]
+\caption{Loess-smoothed values along transects}
+\vspace{-25pt}
+<<loess-transects>>=
+par(mar = c(2, 4, 2, 0))
+o.plot(smoothed[[1]], xaxt = "n", ylab = "Loess smoothed mean pixel value",
+       ylim = c(floor(min(unlist(smoothed))), ceiling(max(unlist(smoothed)))),
+       main = "")
+axis(1, at = pretty(0:(y[2]-y[1]), h = 100), labels = pretty(y[1]:y[2], h = 100))
+
+for (i in 2:n) {
+    o.plot(smoothed[[i]], add = T, col = adjustcolor(cols[i], alpha = 0.3))
+}
+@
+\end{figure}
+
+Loess-smoothed estimates all have similar shape, although absolute value differs. (May differ according to temperature? No information on this variable.)
+
+%\begin{figure}[h!]
+%\caption{Differences between consecutive cells in column}
+%\vspace{-25pt}
+%<<plot-diffs>>=
+%par(mar = c(2, 4, 2, 0))
+%o.plot(diffs[x[1]+c, y[1]:y[2], 1], xaxt = "n", ylim = c(-250,250),
+%       main = "")
+%axis(1, at = pretty(0:(y[2]-y[1]), h = 100), labels = pretty(y[1]:y[2], h = 100))
+%
+%for (i in 2:n) {
+%    o.plot(diffs[x[1]+c, y[1]:y[2], i], add = T, col = adjustcolor(cols[i], alpha = 0.3))
+%}
+%@
+%\end{figure}
+
+
+\begin{figure}[h!]
+\caption{Per-pixel standard deviation of differences between neighbouring cells, calculated across \Sexpr{n} acquisitions\\
+\textit{Gold: SD < 20; red: 20 < SD < 100; black: SD > 100}}
+\vspace{-25pt}
+<<image-diff-sd, out.width = '0.7\\textwidth', out.height = '0.7\\textwidth'>>=
+image(c(1:1996), c(1:1995), diff.sd, # xlim = c(1,100), ylim = c(1,100),
+      col = c("gold", "violetred", "black"), 
+      breaks = c(0, 20, 100, 65535))
+@
+\end{figure}
+
+Pixels in the centre of the image have a fairly constant amplitude (SD across all \Sexpr{n} acquisitions is less than 20): \Sexpr{100 * length(which(diff.sd < 20)) / 3982020}\%
+
+% Does SD of amplitude vary with mean amplitude?
+
+\end{document}
