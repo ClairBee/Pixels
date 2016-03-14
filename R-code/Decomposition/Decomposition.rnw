@@ -1,0 +1,105 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+% add document-specific packages here
+
+\titleformat{\section}
+    {\normalfont\bfseries}
+    {\llap{\parbox{1cm}{\thesection}}}{0em}{}
+    
+\begin{document}
+\renewenvironment{knitrout}{\vspace{1em}}{\vspace{1em}}
+<<setup, include=FALSE>>=
+opts_chunk$set(size = 'footnotesize',   # smaller font size for chunks
+               out.width = '0.25\\textwidth',   # default figure size = quarter of text width
+               fig.show = 'hold',   # display all figures at end of chunk
+               fig.align='center',
+               echo = T)
+options(width = 80, digits = 4)
+set.seed(24747)
+library(xtable)
+library("IO.Pixels")
+library(reshape)
+
+org.par <- par()        # save default parameters in case needed later
+@
+
+\section*{Decomposition of dark current}
+<<load-data, echo = F>>=
+pw.m.b <- readRDS("../../Other-data/Pixelwise-means-black.rds")
+
+p <- panel.edges()
+@
+
+Used linear regression as a quick method to obtain linear gradients across panels (haven't checked for robustness - will do so if we decide that this is an approach worth pursuing)
+
+<<lm-for-panels>>=
+k <- 1
+dt <- dimnames(pw.m.b)[[3]][k]
+dt <- paste0(substring(dt,1,2), "-", substring(dt,3,4), "-", substring(dt,5,6))
+
+panel.lm <- list()
+smoothed.panels <- array(dim = c(1996, 1996))
+lm.coeffs <- array(dim = c(32, 3), dimnames = list(NULL, c("Intercept", "X", "Y")))
+
+for (i in c(2,1)) {
+    for (j in c(1:16)) {
+        m <- length(panel.lm) + 1
+        melted.panel <- melt(pw.m.b[p$x[j] : (p$x[j+1]-1),
+                                    p$y[i] : (p$y[i+1]-1), 
+                                    k])
+        
+        panel.lm[[m]] <- lm(value ~ X1 + X2, data = melted.panel)
+        lm.coeffs[m,] <- panel.lm[[m]]$coefficients
+        
+        smoothed.panels[p$x[j] : (p$x[j+1]-1), p$y[i] : (p$y[i+1]-1)] <- 
+            predict(panel.lm[[m]], melted.panel[,1:2]) 
+    }
+}
+
+# adjust by smallest per-panel offset: treat as base level for whole image
+img.offset <- min(lm.coeffs[,1]) 
+panels.removed <- pw.m.b[,,k] - smoothed.panels + img.offset
+lm.coeffs[,1] <- lm.coeffs[,1] + img.offset
+@
+
+<<plot-org-panels, echo = F, out.width = '0.4\\textwidth'>>=
+par(mar = c(2,2,3,1))
+image(c(1:1996), c(1:1996), pw.m.b[,,k], xlab = "", ylab = "", asp = T, 
+      breaks = sd.levels(pw.m.b[,,k]), col = sd.colours(), 
+      main = paste0("Pixelwise mean values: dark images acquired on ", dt))
+
+image(c(1:1996), c(1:1996), smoothed.panels, xlab = "", ylab = "", asp = T, 
+      breaks = sd.levels(pw.m.b[,,k]), col = sd.colours(), 
+      main = "Planar surface fitted to each panel")
+@
+
+
+<<plot-remainder, eval = T, echo = F, out.width = '0.4\\textwidth'>>=
+par(mar = c(2,2,3,1))
+image(c(1:1996), c(1:1996), panels.removed, xlab = "", ylab = "", asp = T, 
+      breaks = sd.levels(panels.removed), col = sd.colours(), 
+      main = "Pixelwise mean value: panel offsets removed")
+draw.panels()
+
+xl <- c(floor(qnorm(0.025, mean(panels.removed), sd(panels.removed))/10)*10,
+        ceiling(qnorm(0.975, mean(panels.removed), sd(panels.removed))/10)*10)
+    
+hist(panels.removed, breaks = "fd", xlim = xl, 
+     main = "Pixel values after linear panelwise variation removed")
+
+# add colours to indicate scale of pixel map
+cl <- cut(xl[1]:xl[2], sd.levels(panels.removed))
+points(xl[1]:xl[2], rep(-600, length(xl[1]:xl[2])), pch = 15, col = sd.colours()[cl])
+@
+
+Further decomposition:
+\begin{itemize}
+
+\item Model per-channel offset as a regular oscillation using differences along columns
+
+\item Model ring that is still visible (persp plot may make this clearer)
+
+\item Also seems to be some subdivision across middle of panels. Any physical reason that this might be?
+
+\end{itemize}
+\end{document}
