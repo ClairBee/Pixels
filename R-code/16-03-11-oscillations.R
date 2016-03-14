@@ -1,4 +1,6 @@
 
+library("IO.Pixels")
+
 # How does dark current oscillation vary across different acquisition dates? 
 #   - does oscillation always go same way?
 #   - does amplitude change with date?
@@ -25,7 +27,7 @@ remove(i, pb)
 saveRDS(pw.m.b, file = "./Other-data/Pixelwise-means-black.rds")
 
 #########################################################################################
-#                               LOAD PXIELWISE MEAN MATRIX                              #
+#                               LOAD PIXELWISE MEAN MATRIX                              #
 #########################################################################################
 
 pw.m.b <- readRDS("./Other-data/Pixelwise-means-black.rds")
@@ -50,6 +52,79 @@ axis(1, at = pretty(0:(y[2]-y[1]), h = 100), labels = pretty(y[1]:y[2], h = 100)
 for (i in 2:n) {
     o.plot(pw.m.b[x[1]+c, y[1]:y[2], i], add = T, col = adjustcolor(cols[i], alpha = 0.3))
 }
+
+#########################################################################################
+#                   IMAGE OFFSET: COMPARE SUCCESSIVE ACQUISITIONS                       #
+#########################################################################################
+# panel offsets are not consistent, neither is change between image sets.
+# change within panels isn't even consistent (see histograms)
+
+pw.m.diffs <- pw.m.b[ , , 2:n] - pw.m.b[ , , 1:(n-1)]
+
+# set parameters
+p <- panel.edges()
+q <- c(0.025,  0.159, 0.841, 0.975)
+q.cols <- c("cyan", "green", "darkgreen", "red", "gold")
+hist.cols <- c("blue", "red", "darkgreen", "gold", 
+               "blueviolet", "chartreuse4", "cyan2", "cornflowerblue")
+
+# image plots of differences in mean pixelwise values between consecutive acquisition dates
+for (k in 1:(n-1)) {
+    qn <- round(qnorm(q, mean(pw.m.diffs[,,k]), sd(pw.m.diffs[,,k])),0)
+    
+    pdf(paste0("./Plots/Dark-change-image-", dimnames(pw.m.b)[[3]][k+1], ".pdf"))
+    image(c(1:1996), c(1:1996), pw.m.diffs[,,k], asp = T, 
+          breaks = c(-65535, qn, 65535),
+          ylim = c(0, 2100), ylab = "", xlab = "", 
+          col = q.cols,
+          main = paste0("PW mean change between ", dimnames(pw.m.b)[[3]][k],
+                        " and ", dimnames(pw.m.b)[[3]][k+1]))
+    draw.panels()
+    legend("top", cex = 0.8, pch = 15, horiz = T,
+           legend = apply(cbind(round(c(-65535, qn), 0), 
+                                round(c(qn, 65535), 0)),
+                          1, paste, collapse = ":"),
+           col = q.cols)
+    dev.off()
+}
+
+
+# histogram showing per-panel differences and whole-image differences
+for (k in 1:(n-1)) {
+    xl <- c(floor(qnorm(0.005, mean(pw.m.diffs[,,k]), sd(pw.m.diffs[,,k]))/10)*10,
+            ceiling(qnorm(0.995, mean(pw.m.diffs[,,k]), sd(pw.m.diffs[,,k]))/10)*10)
+    qn <- round(qnorm(q, mean(pw.m.diffs[,,k]), sd(pw.m.diffs[,,k])),0)
+    
+    pdf(paste0("./Plots/Dark-change-hist-", dimnames(pw.m.b)[[3]][k+1], ".pdf"))
+    hist(c(pw.m.diffs[,,k]), breaks = "fd", xlim = xl,
+         main = paste0("PW mean change between ", dimnames(pw.m.b)[[3]][k],
+                       " and ", dimnames(pw.m.b)[[3]][k+1]),
+         xlab = "Change in pixelwise mean value", col = "black")
+    abline(v = qn, col = "grey")
+    
+    for (i in c(2,1)) {
+        for (j in c(1:16)) {
+            hist(pw.m.diffs[p$x[j] : (p$x[j+1]-1),
+                            p$y[i] : (p$y[i+1]-1), 
+                            k], 
+                 breaks = "fd", add = T,
+                 col = adjustcolor(hist.cols[(j %% length(hist.cols)) + 1], alpha = 0.3),
+                 border = adjustcolor(hist.cols[(j %% length(hist.cols)) + 1], alpha = 0.5))
+        }
+    }
+    # add colours to match image
+    points(xl[1]:xl[2],
+           rep(-600, length(xl[1]:xl[2])), pch = 15,
+           col = c(rep(q.cols[1], qn[1] - xl[1]),
+                   rep(q.cols[2], qn[2] - qn[1]),
+                   rep(q.cols[3], qn[3] - qn[2]),
+                   rep(q.cols[4], qn[4] - qn[3]),
+                   rep(q.cols[5], xl[2] - qn[4]), q.cols[5]))
+    
+    dev.off()
+}
+
+
 
 #########################################################################################
 #                   COMPARE DIFFS BETWEEN SUCCESSIVE ACQUISITIONS                       #
@@ -90,7 +165,7 @@ for (i in 1:n) {
 o.plot(smoothed[[6]], add = T, col = "gold")
 
 #########################################################################################
-#                       EXTEND SMOOTHING & PLOTTING TO FULL IMAGE                       #
+#                  EXTEND PER-COLUMN SMOOTHING & PLOTTING TO FULL IMAGE                 #
 #########################################################################################
 
 # remove loess-smoothed centre line to leave residuals

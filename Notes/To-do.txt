@@ -1,6 +1,11 @@
 
 TO DO
 
+Test for whole-panel offset on each date: what is per-pixel change over time?
+    - from initial plots, seems to vary from panel to panel
+    - try adjusting absolute value using central point(s) as locus
+        - perhaps take mean of clusters of points from central 4 panels (s/b stable)
+
 Spot visible in black channel - why? Thought this related to source, which is switched off here.
     - spot in black channel is lower in value, while spot in white/grey is higher
     - are we looking at combination of two spots in grey/white channel?
@@ -13,6 +18,16 @@ Modelling the dark current by breaking into components
     - deviations from this pattern will be bad (non-standard) pixels
 When source is added (grey/white channels), second spot in almost the same place
     - dark current is essentially thermal - any variation depending on time of year?
+    
+Panelwise fixed-pattern effect:
+    - use Loess(?) with high smoothing parameter across each panel to obtain planar gradient
+    - take locus as lowest corner of each panel
+    - compare corner-to-corner gradients across panels: is pattern similar?
+    - also get per-panel absolute offset (as well as image offset)
+    - subtract this from overall dark current to get clearer view of spot offset
+Also: look into dark current accumulation during readout/transfer
+Also: spot damage/desensitisation in centre of image 
+    
 
 Recreate thresholding used in manual
     - ask Jay to provide bad pixel maps as well as channel images next time
@@ -39,7 +54,13 @@ Standing wave pattern in sensor?
     - correlation of adjacent differences? (column-wise & row-wise)
     - re mechanism:
         - standing wave in CMOS/CCD sensors
-        
+        - stop looking for 'noise' terms: it's systematic!
+    - should any deviation from normal oscillation be termed a bad pixel?
+      (even if value falls within range of oscillation)
+        - what do those pixels do in the white & grey batches?
+
+Look again at diff-SD: where SD across acquisitions differs (ie. at edges of panels), what is pattern of difference? Erratic oscillation, varying amplitude, or switching of signs?
+    - consider SD of absolute differences to remove sign-switching problem
 Identifying per-channel offset in dark current:
     - can per-channel offset be broken into image offset & channel offset?
     - initially use points with low oscillation SD to give 'fixed-pattern noise'
@@ -50,8 +71,11 @@ Try to characterise shape of mean & SD of all data - use as basis for statistica
 
 If using Lowess smoothing, need to understand more about theoretical underpinning
     
-===============================================================================================
-
+    
+    
+    
+    
+=========================================================================================================
 READING
 
     - Review Julia's multiple testing notes/literature
