@@ -1,10 +1,14 @@
 
 TO DO
 
+Add a function to split image into panels, another to recombine
+
 Test for whole-panel offset on each date: what is per-pixel change over time?
     - from initial plots, seems to vary from panel to panel
     - try adjusting absolute value using central point(s) as locus
         - perhaps take mean of clusters of points from central 4 panels (s/b stable)
+        - already tried linear regression over X and Y coordinates
+        - Linear regression over pixel distance from amplifier: compare results to XY regression
 
 Spot visible in black channel - why? Thought this related to source, which is switched off here.
     - spot in black channel is lower in value, while spot in white/grey is higher
@@ -81,3 +85,5 @@ READING
     - Review Julia's multiple testing notes/literature
 
     - Van Nieuwenhove et al on dynamic intensity normalisation
+    
+    - look into robust statistics: robust SD etc, for thresholding

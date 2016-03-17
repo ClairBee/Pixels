@@ -1,0 +1,161 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\llap{\parbox{1cm}{\thesubsection}}}{0em}{}
+	
+%----------------------------------------------------------------------
+% SPECIFY BIBLIOGRAPHY FILE & FIELDS TO EXCLUDE
+\addbibresource{Refs.bib}
+%\AtEveryBibitem{\clearfield{url}}
+%\AtEveryBibitem{\clearfield{doi}}
+%\AtEveryBibitem{\clearfield{isbn}}
+%\AtEveryBibitem{\clearfield{issn}}
+
+%----------------------------------------------------------------------
+% define code format
+\lstnewenvironment{code}[1][R]{			% default language is R
+	\lstset{language = #1,
+        		columns=fixed,
+    			tabsize = 4,
+    			breakatwhitespace = true,
+			showspaces = false,
+    			xleftmargin = .75cm,
+    			lineskip = {0pt},
+			showstringspaces = false,
+			extendedchars = true
+    }}
+    {}
+    
+%======================================================================
+
+\begin{document}
+
+\section{Dark current accumulation during readout \cite{readoutDark2014}}
+
+\begin{itemize}
+
+\item Considers bias frames (dark images) to consist of two components: 2D \textbf{bias pedestal} and \textbf{dark current} accumulated during readout (readout dark) 
+
+\item Read noise was measured as ~4.0 electrons closest to the amplifiers and ~4.5 electrons at the furthest corner, including readout dark. \nb{Is relative difference across corners similar to this?}
+
+\item Columns of bad pixels are caused by `hot' pixels leaking charge into each successive charge packet. If this profile is stable, can remove as fixed pattern noise.
+
+\item \textbf{Readout dark} accrues as charge packets are transferred toward the serial register across the physical pixels, each of which generates some level of dark current.
+\\
+\\
+Readout dark was found to increase across the detector, with pixels furthest from the amplifiers (last to be read out) subject to the most readout dark. Readout dark will also increase over the lifetime of the detector (in the present paper, an annealing cycle was used to `reset' the readout dark to a lower level). This leads to both additional charge and additional noise, which are consistent.
+
+\begin{figure}[!h]
+\caption{Image showing direction of bad lines and direction of readout in ACS: as in our scanner, bad columns run toward midline, with data read at edge of panel}
+\centering
+\includegraphics[scale=0.7]{ACS-dark-current-fig1.JPEG}
+\end{figure}
+
+\item Successfully uses simulated CCD readout to predict observed pixel noise - an approach we could hopefully replicate? Simulation includes dark current `leakage' along column, with hot pixels depositing excess charge into upstream charge packets, leaving broken columns. Deposition of dark current is Poisson process, with Gaussian read noise uniformly added to the image. Noise increases with distance from amplifier. 
+
+\item Rather than averaging a set of dark images taken at same time, they use a `superbias' image, created by combining 24 full-frame raw bias images obtained during one anneal cycle. This significantly reduced read noise and bias striping. \nb{Could similar approach be applied here, by averaging frames from successive dates?}
+
+\item Paper refers to the \textbf{pre-scan wedge}: the shape of the difference in values between adjacent pixels in `pre-scan' columns (not charge collecting, so insensitive to dark current) and `science' columns (charge collecting, sensitive to dark current). Underlying 'shape' is estimated using averaging over pre-scan columns, with linear fit on remaining measurements taken as a function of distance from the amplifier. Difference between value in corners closest to \& furthest from amplifier gives dark current contribution, which may (should?) increase over lifetime of panel.
+
+\item Increase in wedge/dark current value seems to be v slow  but linear (see fig 5 in paper) - may not be notiecable in our data?
+
+\item Read noise measured by differencing pairs of consecutive bias images to remove 2D gradient \cite{readNoise2013}. Noise was measured close to the amplifier to avoid confounding with readout dark. The two can be separated by differences squares of read noise with and without readout dark.
+
+\item Individual quadrants (panels in our case) were found to have a slightly different read noise, which remained relatively stable over time.
+
+\item A \textbf{bad column} has excess charge (NMAD $3\sigma$ outliers) at its upper edge.
+
+\item Averaging of pre-scan columns also removes bias striping \cite{biasStriping2011}
+
+\item A \textbf{superdark} image is a combination of 20-30 dark images (1000-second exposure, as opposed to bias image, 0-second exposure). CTE-corrected superdark image provides best representation of dark current released by each pixel, including `hot' and `warm' pixels which generate dark current at higher rates than other pixels.
+\end{itemize}
+
+\section{Image adjustment}
+
+\begin{figure}[!h]
+\caption{Image correction as given in \cite{aSiPanelDamage}, which seems to echo formula used in tech report \& found on Wikipedia. \\
+(a) Dark field image $DF(i,j)$; (b) Flood field image $FF(i,j)$; (c) Bad pixel map. \\
+(d) Raw image $I_{raw}(i,j)$ is corrected and normalised to (e) using equation \ref{eq:image-processing}}
+\centering
+
+\includegraphics[scale=0.7]{Image-correction.jpeg}
+\end{figure}
+
+\begin{equation}
+\label{eq:image-processing}
+I(i,j) = \left(\frac{I_{raw}(i,j) - DF(i,j)}{FF(i,j)} \right) FF_{mean}
+\end{equation}
+
+\section{Bias striping \cite{biasStriping2011}}
+\begin{itemize}
+
+\item Bias striping is usually removed by correlated double sampling, but not in all applications. Where visible, it manifests as ``a slow moving variation of the baseline''. The `striping' noise observed is almost uniform across both amplifier readouts (all columns). Low-level $1/f$ noise (\textbf{flicker noise}), with amplitude well approximated by Gaussian with $\sigma_G = 0.75\text{e}^-$, less than 20\% of total read noise. Distribution has an enhanced negative tail.
+
+\begin{figure}[!h]
+\caption{Amplitude of observed bias stripes: $1/f$ `flicker' noise}
+\centering
+\includegraphics[scale=0.7]{ACS-bias-stripe-amplitude.jpeg}
+\end{figure}
+
+\item Dampened in this application using a best-fit relation to the noise reoving need for frame-by-frame stripe removal.
+
+\item Over the course of a year, amplitude of the bias striping was found to be highly stable ($\pm 0.02\text{e}^-$ - negligible when plotted relative to $4\text{e}^-$ overall readnoise). The standard deviation of the striping noise is $< 25\%$ of the overall read noise.
+\end{itemize}
+
+\section{Bias \& Calibration \cite{darkCalibration2004}}
+
+\begin{itemize}
+
+\item Bias levels and features such as bad columns will change more gradually than dark features such as hot pixels. 
+
+\item Daily reference files consist of a \textbf{`daydark'} (4 daily dark frames taken in same day) and a \textbf{`basedark'} (56 frames from a given two-week period). Basedark has less Poisson noise, while daydarks contain best snapshot of hot pixel population on any given day.\\
+\\
+Every day in the bi-week, a copy of the basedark is taken, and any daydark pixels which are $5\sigma$ hotter than in the basedark are added.\\
+\\ Same superbias image is used to correct daydarks and basedark, so would expect to see no bias features in either. However, a small bias offset may still be visible between quadrants. These offsets are not constant, but show random variations.
+
+\item Threshold for `hot' (as opposed to warm) pixels is roughly where the Poisson noise approaches the read noise: 25 times daydark rms, or 50 times the reference dark rms. Somewhat arbitrary in that `warm' pixels below this threshold are deemed to be correctable by reference file, while those above are not.
+
+\item Bias features are not generally tracked; they are adequately identified by the weekly superbias images 
+\end{itemize}
+
+\section{Charge transfer efficiency }
+
+\begin{itemize}
+
+\item In ACS, charge transfer inefficiency leads to vertical deferred-charge trails extending away from bright objects. \nb{Not a problem in our data until bad columns appear, and would need to check whether those columns are `trails' or simply blocked altogether - would need to check pixelwise mean in old data to check}
+
+\item \cite{CTEevolution2012} is mainly concerned with evaluating numbers of electrons in cells above hot pixels, to see how they change over time. Not really present in refurbished screen but may be worth passing on to JB.
+
+\item Charge transfer efficiency was found to decline over time, but change appears to be gradual, not sudden and absolute as in our detector.
+\end{itemize}
+
+\section{Glossary \& Definitions}
+
+\begin{description}
+
+\item[NMAD: ] normalised mean absolute deviation. More robust measure of SD, less susceptible to outliers. $NMAD(x) = 1.4825  \text{ median} \left( |x - \text{median} (x)| \right)$ 
+
+\item[Bias image: ] Image taken with no exposure (equivalent to our black images)
+
+\item[Dark image: ] Image taken with 1000 seconds' exposure (no equivalent - `dark grey' image)
+
+\item[Hot pixels: ] Pixels with a discernible dark current excess (as defined in spec/handbook):
+\begin{itemize}
+\item Pixel has a dark current value greater than 0.08 electrons/second
+\item Pixel appears consistently in at least 80\% of flat-fielded images (removes effect of cosmic rays from sample)
+\item Pixel should be isolated within a 4-pixel radius, to avoid contamination between hot pixel and overlapping trails.
+\end{itemize}
+\end{description}
+
+%\newpage
+\hrulefill
+\printbibliography
+\end{document}
