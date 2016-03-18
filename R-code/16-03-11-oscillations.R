@@ -6,27 +6,7 @@ library("IO.Pixels")
 #   - does amplitude change with date?
 #   - does mean value change with date?
 
-#########################################################################################
 
-# import all black images, get pixelwise means (elapsed: 291.958 for 10 dates)
-dates <- list.dirs("./Image-data/", full.names = F, recursive = F)
-dates <- dates[dates != "150702"]
-n <- length(dates)
-
-pw.m.b <- array(dim = c(1996, 1996, n), dimnames = list(NULL, NULL, dates))
-
-pb <- txtProgressBar(min = 0, max = n, style = 3)
-for (i in 1:n) {
-    load.images(dates[i], "black")
-    pw.m.b[,,i] <- pixelwise.mean(eval(parse(text = paste0("b.",dates[i]))))
-    setTxtProgressBar(pb, i)
-}
-close(pb)
-remove(i, pb)
-
-saveRDS(pw.m.b, file = "./Other-data/Pixelwise-means-black.rds")
-
-#########################################################################################
 #                               LOAD PIXELWISE MEAN MATRIX                              #
 #########################################################################################
 
@@ -165,21 +145,43 @@ for (i in 1:n) {
 o.plot(smoothed[[6]], add = T, col = "gold")
 
 #########################################################################################
-#                  EXTEND PER-COLUMN SMOOTHING & PLOTTING TO FULL IMAGE                 #
+#           EXTEND PER-COLUMN SMOOTHING & PLOTTING TO FULL IMAGE (SINGLE DATE)          #
 #########################################################################################
+# remove by Loess smoothing
+# apply to whole plot, treating upper and lower panels as discontinuous
+smoothed <- array(dim = c(1996, 1996, 20))
+for (i in 1:20) {
+    smoothed[, 993:1996, i] <- do.call(rbind, lapply(apply(b.150828[ , 993:1996, i],
+                                                           1, lowess, f = 1/15), "[[", 2))
+    smoothed[, 1:992, i] <- do.call(rbind, lapply(apply(b.150828[ , 1:992, i], 
+                                                        1, lowess, f = 1/15), "[[", 2))
+}
+smoothed.sd <- pixelwise.sd(smoothed)
+sd.levels(smoothed.sd)
+pixel.image(smoothed.sd)
+draw.panels()
 
+smoothed.mean <- pixelwise.mean(smoothed)
+sd.levels(smoothed.mean)
+pixel.image(smoothed.mean)
+
+# circular shape still clear, but panel offsets & gradients dominate
+
+# compare smoothed vs unsmoothed sd & mean
+pw.sd <- pixelwise.sd(b.150828)
+
+hist(pw.sd, breaks = "fd", xlim = c(0,40), main = "Pixelwise SD before and after oscillation smoothing")
+hist(smoothed.sd, breaks = "fd", add = T, col = adjustcolor("darkblue", alpha = 0.5),
+     border = adjustcolor("darkblue", alpha = 0.3))
+
+############################################################################################
 # remove loess-smoothed centre line to leave residuals
-smoothed <- list()
-res <- list()
-for (i in 1:n) {
-    smoothed[[i]] <- do.call(rbind, lapply(apply(pw.m.b[,,i], 1, lowess, f = 1/15), "[[", 2))
-    res[[i]] <- pw.m.b[,,i] - smoothed[[i]]
-}   # ideally, adjust this to use apply in 3 dimensions
-
-o.plot(smoothed[[1]][x[1]+c, y[1]:y[2]], xaxt = "n",
+o.plot(smoothed[x[1]+c, y[1]:y[2], 1], xaxt = "n",
        main = paste0("Loess smoothed values along column ", c+x[1]))
 
 # plot residuals (should all have same/similar magnitude?)
+res <- pw.m - smoothed.mean
+hist(res, breaks = "fd", xlim = c(-500,500))
 
 
 # get differences between loess along column. Is there a constant offset in each channel?

@@ -1,7 +1,10 @@
 
 TO DO
 
-Add a function to split image into panels, another to recombine
+Try removing oscillation from dark current (per-channel) - what is remaining pixelwise/global SD?
+    - mean pixelwise SD is v low in black images - compare to other image batches
+    
+Compare bad pixel maps etc from Jay to figures obtained manually
 
 Test for whole-panel offset on each date: what is per-pixel change over time?
     - from initial plots, seems to vary from panel to panel
@@ -14,6 +17,7 @@ Spot visible in black channel - why? Thought this related to source, which is sw
     - spot in black channel is lower in value, while spot in white/grey is higher
     - are we looking at combination of two spots in grey/white channel?
     - is residual value related to mean/variance of absolute value at all?
+    - model initially as function of distance from centre
     
 Modelling the dark current by breaking into components
     - circular spot of lower values (assume bivariate Gaussian)
@@ -29,11 +33,12 @@ Panelwise fixed-pattern effect:
     - compare corner-to-corner gradients across panels: is pattern similar?
     - also get per-panel absolute offset (as well as image offset)
     - subtract this from overall dark current to get clearer view of spot offset
-Also: look into dark current accumulation during readout/transfer
+    - smooth image further by aligning each corner - if possible
+    - compare gradients across all panels, all colours and all dates. How variable is this?
 Also: spot damage/desensitisation in centre of image 
-    
 
 Recreate thresholding used in manual
+    - characterise distribution of pixelwise mean & SD to identify useful thresholds
     - ask Jay to provide bad pixel maps as well as channel images next time
     - rework thresholding using black as offset image
     - more detail on calculation:
@@ -70,8 +75,6 @@ Identifying per-channel offset in dark current:
     - initially use points with low oscillation SD to give 'fixed-pattern noise'
     - do differences between these points give a constant per-channel offset?
     - then extend to regions with less constant oscillation pattern
-
-Try to characterise shape of mean & SD of all data - use as basis for statistical thresholding
 
 If using Lowess smoothing, need to understand more about theoretical underpinning
     

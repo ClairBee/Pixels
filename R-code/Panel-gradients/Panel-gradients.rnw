@@ -1,0 +1,156 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+% add document-specific packages here
+
+\titleformat{\section}
+    {\normalfont\bfseries}
+    {\llap{\parbox{1cm}{\thesection}}}{0em}{}
+    
+\begin{document}
+\renewenvironment{knitrout}{\vspace{1em}}{\vspace{1em}}
+<<setup, include=FALSE>>=
+opts_chunk$set(size = 'footnotesize',   # smaller font size for chunks
+               out.width = '0.25\\textwidth',   # default figure size = quarter of text width
+               fig.show = 'hold',   # display all figures at end of chunk
+               fig.align='center',
+               echo = F)
+options(width = 80, digits = 4)
+set.seed(24747)
+library(xtable)
+library("IO.Pixels")
+org.par <- par()        # save default parameters in case needed later
+@
+
+<<load-and-prep>>=
+wedges.b <- readRDS("../../Other-data/Panel-gradients-black.rds")
+n <- dim(wedges.b)[[3]]
+
+cols <- rep(c("blue", "green4", "gold", "red"), 4)
+pchs <- c(rep(15, 4), rep(17, 4), rep(18, 4), rep(20, 4))
+@
+
+
+\section*{Panelwise linear gradients}
+Linear models were fitted to each panel individually, using the X and Y coordinates as explanatory variables. The plots below show changes in the X and Y coefficients across the panels in successive acquisitions.
+
+Next step: repeat this analysis on white images and see if gradients are constant/consistent with changing intensity.
+
+\begin{figure}[!h]
+\caption{Change in gradients over time in dark images}
+<<plot-gradient-in-time, out.width = '\\textwidth'>>=
+#legend("top", pch = pchs, col = cols, legend = rep("", 16), horiz = T, bty = "n")
+
+par(mfrow = c(3, 2), mar = c(3, 3, 2, 1))
+
+#----------------------------------------------------------------------------------------
+
+plot(abs(wedges.b[1,"x",]), type = "o", xaxt = "none", ylim = c(0, 5.5), xlab = "", ylab = "",
+     col = cols[1], pch = pchs[1], main = "X-gradient change over time: upper panels")
+axis(1, at = c(1:n), labels = dimnames(wedges.b)[[3]])
+for (i in 2:16) {
+    points(abs(wedges.b[i, "x", ]), type = "o", col = cols[i], pch = pchs[i])
+}
+
+plot(abs(wedges.b[17,"x",]), type = "o", xaxt = "none", ylim = c(0, 5.5), xlab = "", ylab = "",
+     col = cols[1], pch = pchs[1], main = "X-gradient change over time: lower panels")
+axis(1, at = c(1:n), labels = dimnames(wedges.b)[[3]])
+for (i in 18:32) {
+    points(abs(wedges.b[i, "x", ]), type = "o", col = cols[i-16], pch = pchs[i-16])
+}
+
+#----------------------------------------------------------------------------------------
+
+plot(abs(wedges.b[1,"y",]), type = "o", xaxt = "none", ylim = c(0, 2), xlab = "", ylab = "",
+     col = cols[1], pch = pchs[1], main = "Y-gradient change over time: upper panels")
+axis(1, at = c(1:n), labels = dimnames(wedges.b)[[3]])
+for (i in 2:16) {
+    points(abs(wedges.b[i, "y", ]), type = "o", col = cols[i], pch = pchs[i])
+}
+
+plot(abs(wedges.b[17,"y",]), type = "o", xaxt = "none", ylim = c(0, 2), xlab = "", ylab = "",
+     col = cols[1], pch = pchs[1], main = "Y-gradient change over time: lower panels")
+axis(1, at = c(1:n), labels = dimnames(wedges.b)[[3]])
+for (i in 18:32) {
+    points(abs(wedges.b[i, "y", ]), type = "o", col = cols[i-16], pch = pchs[i-16])
+}
+
+#----------------------------------------------------------------------------------------
+
+plot(wedges.b[1,4,], type = "o", xaxt = "none", ylim = c(1, 100),
+     col = cols[1], pch = pchs[1], main = "X-Y ratio change over time: upper panels")
+axis(1, at = c(1:n), labels = dimnames(wedges.b)[[3]])
+for (i in 2:16) {
+    points(wedges.b[i, 4, ], type = "o", col = cols[i], pch = pchs[i])
+}
+
+plot(wedges.b[17,4,], type = "o", xaxt = "none", main = "X-Y ratio change over time: lower panels",
+     col = cols[1], pch = pchs[1], ylim = c(1, 100))
+axis(1, at = c(1:n), labels = dimnames(wedges.b)[[3]])
+for (i in 18:32) {
+    points(wedges.b[i, 4, ], type = "o", col = cols[i-16], pch = pchs[i-16])
+}
+
+@
+\end{figure}
+
+\begin{figure}[!h]
+\caption{Change in gradients across panels in dark images}
+<<plot-gradient-across-panels, out.width = '\\textwidth'>>=
+
+par(mfrow = c(3, 2), mar = c(3, 3, 2, 1))
+cols <- c("darkblue", "blue", "purple", "violetred", "red", "orangered",
+          "orange", "gold", "green", "chartreuse4", "cyan4")
+
+#----------------------------------------------------------------------------------------
+
+plot(abs(wedges.b[1:16, "x", 1]), type = "o", xaxt = "none", ylim = c(0, 5.5), xlab = "", ylab = "",
+     col = cols[1], pch = 20, main = "X-gradient change over panels: upper panels")
+axis(1, at = c(1:16), labels = dimnames(wedges.b)[[1]][1:16])
+for (i in 2:n) {
+    points(abs(wedges.b[1:16, "x", i]), type = "o", col = cols[i], pch = 20)
+}
+
+plot(abs(wedges.b[17:32,"x",1]), type = "o", xaxt = "none", ylim = c(0, 5.5), xlab = "", ylab = "",
+     col = cols[1], pch = 20, main = "X-gradient change over time: lower panels")
+axis(1, at = c(1:16), labels = dimnames(wedges.b)[[1]][17:32])
+for (i in 2:n) {
+    points(abs(wedges.b[17:32, "x", i]), type = "o", col = cols[i], pch = 20)
+}
+
+#----------------------------------------------------------------------------------------
+
+plot(abs(wedges.b[1:16, "y", 1]), type = "o", xaxt = "none", ylim = c(0, 2), xlab = "", ylab = "",
+     col = cols[1], pch = 20, main = "Y-gradient change over time: upper panels")
+axis(1, at = c(1:16), labels = dimnames(wedges.b)[[1]][1:16])
+for (i in 2:n) {
+    points(abs(wedges.b[1:16, "y", i]), type = "o", col = cols[i], pch = 20)
+}
+
+plot(abs(wedges.b[17:32,"y",1]), type = "o", xaxt = "none", ylim = c(0, 2), xlab = "", ylab = "",
+     col = cols[1], pch = 20, main = "Y-gradient change over time: lower panels")
+axis(1, at = c(1:16), labels = dimnames(wedges.b)[[1]][17:32])
+for (i in 2:n) {
+    points(abs(wedges.b[17:32, "y", i]), type = "o", col = cols[i], pch = 20)
+}
+
+#----------------------------------------------------------------------------------------
+
+plot(wedges.b[1:16,4,1], type = "o", xaxt = "none", ylim = c(1, 100),
+     col = cols[1], pch = 20, main = "X-Y ratio change over time: upper panels")
+axis(1, at = c(1:16), labels = dimnames(wedges.b)[[1]][1:16])
+for (i in 2:n) {
+    points(wedges.b[1:16, 4, i], type = "o", col = cols[i], pch = 20)
+}
+
+plot(wedges.b[17:32,4,1], type = "o", xaxt = "none", ylim = c(1, 100),
+     col = cols[1], pch = 20, main = "X-Y ratio change over time: lower panels")
+axis(1, at = c(1:16), labels = dimnames(wedges.b)[[1]][17:32])
+for (i in 2:n) {
+    points(wedges.b[17:32, 4, i], type = "o", col = cols[i], pch = 20)
+}
+
+@
+\end{figure}
+
+
+\end{document}
