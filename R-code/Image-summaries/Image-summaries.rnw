@@ -23,44 +23,26 @@ library(xtable)
 library("IO.Pixels")
 org.par <- par()        # save default parameters in case needed later
 
-xml.summ <- summarise.profiles(fpath = "../../Image-data/")
-row.names(xml.summ) <- apply(cbind(lapply(xml.summ$date, substring, 1, 2), "-",
-                                   lapply(xml.summ$date, substring, 3, 4), "-",
-                                   lapply(xml.summ$date, substring, 5, 6), " ",
-                                   xml.summ$batch),
-                             1, paste, collapse = "")
 
 # takes ~10 mins to run - better to do this only once per update, then export & import csv
 # img.summ <- summarise.images(fpath = "../../Image-data/")
 # write.csv(img.summ, "./image-summaries.csv", row.names = F)
-img.summ <- read.csv("./image-summaries.csv", as.is = T)
-row.names(img.summ) <- apply(cbind(lapply(img.summ$img.date, substring, 1, 2), "-",
-                                   lapply(img.summ$img.date, substring, 3, 4), "-",
-                                   lapply(img.summ$img.date, substring, 5, 6), " ",
+img.summ <- read.csv("../../Other-data/Image-summaries.csv", as.is = T)
+row.names(img.summ) <- apply(cbind(lapply(img.summ$date, substring, 1, 2), "-",
+                                   lapply(img.summ$date, substring, 3, 4), "-",
+                                   lapply(img.summ$date, substring, 5, 6), " ",
                                    img.summ$batch),
                              1, paste, collapse = "")
 
-# remove known errors from data, display separately
-bad.dates <- c(150702)
-
-known.errors <- img.summ[img.summ$img.date %in% bad.dates,]
-img.summ <- img.summ[!img.summ$img.date %in% bad.dates,]
-
-# convert numeric back to integer where possible
-for (i in 3:ncol(img.summ)) {
-    if (all(img.summ[,i] == floor(img.summ[,i]))) {
-        img.summ[,i] <- as.integer(img.summ[,i]) 
-    }
-}
+n <- nrow(img.summ) / 3
 @
 
-\section*{Numerical summaries of images}
-
 <<xtable-image-summaries, results = 'asis'>>=
-print(xtable(img.summ[order(img.summ$batch),-c(1:2)], 
-             align = "l|cc|ccccc|c",
+# print pixel values as integers
+print(xtable(data.frame(apply(img.summ[,-c(1:2)], 2, as.integer), row.names = rownames(img.summ)), 
+             align = "l|ccc|c|ccccc|c",
              caption = "Numerical summaries of daily acquisition data"),
-          hline.after = c(0, c(1:3)*(nrow(img.summ) / 3)),
+          hline.after = c(0, c(1:3)*n),
           caption.placement = "top", 
         size = "footnotesize", 
         table.placement = "!h")
@@ -70,12 +52,16 @@ Images from 15-07-02 have been removed due to incorrect scaling.
 
 Grey batch from 15-01-13 recorded at wrong wavelength, so cannot be used. Black and white batches unaffected.
 
-Note from 15-10-15: ``There are some spots on our berylium window!!!!''\\
-Spots visibly worsened in images from 16-03-14.
+Note from 15-10-15: ``There are some spots on our beryllium window!!!!''; grey and white images are also distorted, suggesting that source may have moved.
 
+Spots visibly worsened in images from 16-03-14 (only apparent in grey and white images)
+
+\begin{figure}[!h]
+\caption{Spread of pixel values of image acquisitions}
 <<plot-summaries, out.width = '0.4\\textwidth'>>=
-run <- c(1:(nrow(img.summ)/3))
-dates <- unique(img.summ$img.dates)
+par(mar = c(3,3,2,1))
+run <- c(1:n)
+dates <- unique(img.summ$date)
 batches <- c("black", "grey", "white")
 
 # set up plot axes
@@ -94,129 +80,24 @@ for (i in 1:length(batches)) {
 legend("topright", pch = 20, bty = "n",
        legend = c("Q3", "Median", "Q1"),
        col = c("violetred", "black", "cornflowerblue"))
-text(rep(1.8, 3), c(7450, 22500, 53000), labels = c("Black batch", "Grey batch", "White batch"))
+text(rep(1.8, 3), c(7450, 22500, 53000), labels = c("Black", "Grey", "White"))
 title("Spread of pixel values for each batch")
-axis(1, at = run, labels = unique(img.summ$img.dates))
+axis(1, at = run, labels = unique(img.summ$date))
 
 plot(img.summ$sd,
      img.summ$mean, 
      xlim = c(0, 2500), ylim = c(0, 65535),
-     pch = rep(c(20,20,1), 10), col = rep(c("black", "grey", "black"), 10),
-     xlab = "Standard deviation", ylab = "Mean pixel value", 
-     main = "Mean & SD for each batch")
+     pch = c(rep(20, n), rep(20, n), rep(1, n)), col = c(rep("black", n), rep("grey", n), rep("black", n)),
+     xlab = "Deviation", ylab = "Mean pixel value", 
+     main = "Mean, SD and NMAD for each batch")
+
+points(img.summ$mad,
+     img.summ$mean, 
+     pch = c(rep(20, n), rep(20, n), rep(1, n)), 
+     col = adjustcolor(c(rep("red", n), rep("pink", n), rep("red", n)), alpha = 0.5))
+
+legend("bottomright", pch = 20, col = c("black", "red"), legend = c("SD", "NMAD"), bty = "n")
 @
-
-\newpage
-\section*{Summary of xml profile data}
-
-<<xtable-xml-key, results = 'asis'>>=
-t1 <- c("kV", "uA", "Power", "frames",
-        "CameraProperties.imageOffsetX", "CameraProperties.imageOffsetY",
-        "CameraProperties.imageSizeX", "CameraProperties.imageSizeY",
-        "CameraProperties..attrs.exposure", "CameraProperties..attrs.gain",
-        "CameraProperties..attrs.brightness", "CameraProperties..attrs.digitalGain", 
-        "CameraProperties..attrs.binning", "CameraProperties..attrs.lines",
-        "CameraProperties..attrs.accumulation", "CameraProperties..attrs.WhiteToBlackLatency",
-        "CameraProperties..attrs.BlackToWhiteLatency", "CameraProperties..attrs.WhiteToWhiteLatency")
-t1.cols <- "ccc|c|cc|cc|ccccccc|ccc"
-t1.head <- c("& kV & uA & Power & Frames
-              & \\multicolumn{2}{c|}{Offset} 
-              & \\multicolumn{2}{c|}{Size} 
-              & \\multicolumn{7}{c|}{exp, gain, brightness, binning, lines}
-              & \\multicolumn{3}{c}{Latency} \\\\\n")
-
-print(xtable(xml.summ[order(xml.summ$batch), t1], 
-             align = paste0("l|", t1.cols),
-             caption = "Key attributes of image data"),
-      caption.placement = "top", 
-      size = "footnotesize", 
-      include.colnames = F, 
-      add.to.row = addtorow <- list(pos = list(0), command = t1.head),
-      hline.after = c(0, c(1:3)*(nrow(xml.summ) / 3)),
-      table.placement = "!h")
-@
-
-<<xtable-secondary, results = 'asis'>>=
-t2 <- c("IntensifierField", "IrisDemand", "ExposureTime", "FramesAveraged",
-        "ToneAction.CurvePoints.PointOrdinate", "ToneAction.CurvePoints.PointOrdinate.1",
-        "ToneAction.CurvePoints.PointOrdinate.2", "ToneAction.CurvePoints.PointOrdinate.3",
-        "ToneAction..attrs.CurveName", "ToneAction..attrs.Negated",
-        "EditActions.PadArrayVoidAction..attrs.VoidThreshold",
-        "EditActions.PadArrayVoidAction..attrs.PadVoiding",
-        "EditActions.PadArrayVoidAction..attrs.MaxSingleVoiding",
-        "EditActions.PadArrayVoidAction.ImageSize.Width",
-        "EditActions.PadArrayVoidAction.ImageSize.Height",
-        "EditActions.PadArrayVoidAction.Version",
-        "EditActions.PadArrayVoidAction..attrs.FlattenCount",
-        "MapImage.Width", "MapImage.Height")
-t2.cols <- "cccc|cccccc|ccccccc|cc"
-t2.head <- c("& \\multicolumn{4}{c|}{Iris, frames}
-              & \\multicolumn{6}{c|}{Tone actions}
-              & \\multicolumn{7}{c|}{Voiding} 
-              & \\multicolumn{2}{c}{Image} \\\\\n")
-
-print(xtable(xml.summ[, t2], 
-             align = paste0("l|", t2.cols),
-             caption = "Secondary attributes of image data"),
-      caption.placement = "top", 
-      size = "footnotesize", 
-      include.colnames = F, 
-      add.to.row = addtorow <- list(pos = list(0), command = t2.head),
-      hline.after = c(0, c(1:(nrow(xml.summ)/3)*3)),
-      table.placement = "!h", scalebox = '1')
-@
-
-<<xtable-tertiary, results = 'asis'>>=
-t3 <- c("ManipulatorPosition.AxisPosition", "ManipulatorPosition.AxisPosition.1", 
-        "ManipulatorPosition.AxisPosition.2", "ManipulatorPosition.AxisPosition.3", 
-        "ManipulatorPosition.AxisPosition.4", 
-        "XAxis", "YAxis", "MagnificationAxis", "RotateAxis", "TiltAxis",
-        "SampleHeight", "MeasurementCalibrationH", "MeasurementCalibrationV", 
-        "MeasurementCalibrationValid", "WireSweep.SweepPercentage",
-        "CameraProperties.transform")
-t3.cols <- "ccccc|ccccc|cccc|c|c"
-t3.head <- c("& \\multicolumn{5}{c|}{Manipulator axis position} 
-              & \\multicolumn{5}{c|}{Axes}
-              & \\multicolumn{4}{c|}{Calibration} 
-              & Sweep\\% & Transf \\\\\n")
-
-print(xtable(xml.summ[, t3], 
-             align = paste0("l|", t3.cols),
-             caption = "Poorly-understood attributes of image data"),
-      caption.placement = "top", 
-      size = "footnotesize", 
-      include.colnames = F, 
-      add.to.row = addtorow <- list(pos = list(0), command = t3.head),
-      hline.after = c(0, c(1:(nrow(xml.summ)/3)*3)),
-      table.placement = "!h")
-@
-
-<<xtable-leftovers, results = 'asis', fig.pos = "!h">>=
-ignore <- c("date", "batch", "ImageNotes", "ImageNotes.1", "TimeAcquired",
-            "Time", "Date", ".attrs.FileName", ".attrs.ImageNotesOnlyValid", "XrayCurrentUsed",
-            "WireSweep.Active", "CameraProperties.defaultImagingMode",
-            "SavedImageProfile.FilePath", "ImageDetector")
-leftover <- colnames(xml.summ)[!colnames(xml.summ) %in% c(t1, t2, t3, ignore)]
-
-if (length(leftover) > 0) {
-    # make table of any columns not already picked up, if there are any
-    leftover.head <- paste0(paste(paste0(" & ", c(as.character(1:length(leftover)))), collapse = ""), " \\\\\n")
-    print(xtable(xml.summ[, colnames(xml.summ) %in% leftover], 
-             align = paste(c("l|", rep("c", length(leftover))), collapse = ""),
-             caption = "Unlisted attributes of image data"),
-          caption.placement = "top", 
-          size = "footnotesize", 
-          include.colnames = F, 
-          add.to.row = addtorow <- list(pos = list(0), 
-                                        command = leftover.head),
-          hline.after = c(0, c(1:(nrow(xml.summ)/3)*3)),
-          table.placement = "!h")
-}
-@
-%              caption = paste0("Unlisted attributes of image data :", c(leftover))),
-
-<<leftover>>=
-leftover
-@
+\end{figure}
 
 \end{document}

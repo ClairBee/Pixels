@@ -1,6 +1,11 @@
 
 TO DO
 
+Use robust estimators, not just SD: SD too susceptible to outliers.
+    - SD is fine for pixelwise fluctuation: we want to be susceptible to outliers
+    - measure of dispersion of majority of points: MAD
+    - more efficient alternatives: absolute pairwise differences, biweight midvariance.
+    
 Try removing oscillation from dark current (per-channel) - what is remaining pixelwise/global SD?
     - mean pixelwise SD is v low in black images - compare to other image batches
     
