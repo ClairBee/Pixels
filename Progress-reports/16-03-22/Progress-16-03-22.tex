@@ -1,0 +1,114 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\llap{\parbox{1cm}{\thesubsection}}}{0em}{}
+	
+%----------------------------------------------------------------------
+% SPECIFY BIBLIOGRAPHY FILE & FIELDS TO EXCLUDE
+%\addbibresource{bibfile.bib}
+%\AtEveryBibitem{\clearfield{url}}
+%\AtEveryBibitem{\clearfield{doi}}
+%\AtEveryBibitem{\clearfield{isbn}}
+%\AtEveryBibitem{\clearfield{issn}}
+
+%----------------------------------------------------------------------
+% define code format
+\lstnewenvironment{code}[1][R]{			% default language is R
+	\lstset{language = #1,
+        		columns=fixed,
+    			tabsize = 4,
+    			breakatwhitespace = true,
+			showspaces = false,
+    			xleftmargin = .75cm,
+    			lineskip = {0pt},
+			showstringspaces = false,
+			extendedchars = true
+    }}
+    {}
+    
+%======================================================================
+
+\usepackage{fancyhdr}
+
+\fancyhf{}
+\fancyhead[R]{\textbf{15-Mar-2016}}
+\pagestyle{fancy}
+
+\addtolength{\topmargin}{-0.5cm}
+\addtolength{\textheight}{1.4cm}
+
+\renewcommand{\headrulewidth}{0pt}
+
+\begin{document}
+
+\subsection*{Since last week}
+
+\begin{itemize}
+
+\item ACS (Advanced Survey Camera) on Hubble array has similar problems to our detector. Shows vertical lines of bad pixels, horizontal bias striping, accumulation of dark current as charge is transferred (diagonal gradient across panels), per-panel offset (although only 4 panels, rather than 32). Large repository of technical \& science reports, although most are concerned with image correction.
+
+\item Trying to use Loess smoothing as basis for thresholding to identify pixels that don't behave `normally' per column - may avoid need to make any assumptions about shape of spot/panel distributions. However, identified huge numbers of 'bad' pixels.
+
+\item Also tried parametric approach to fixed-pattern noise, fitting linear gradient across panels \& circular pattern across entire array. Suspect this approach may be overly complicated. In addition, panel offsets/gradients are not consistent between images, and spot damage seems to be ring-shaped rather than smoothly circular.
+
+\item Have succesfully imported the bad pixel maps and calibration parameters. However, not confident that thresholds are as expected, and need to investigate why some pixels appear in the bad pixel map at all (eg. top left corner).
+
+
+\end{itemize}
+
+\subsection*{Current questions/considerations}
+\begin{itemize}
+
+\item Seems to be another horizontal line across the panels, where there is no reason to expect one (512 pixels from midline). Thoughts?
+
+\item What does `mask' mean in bad pixel map? Is it relevant?
+
+\item Probably better to use robust statistic (eg. NMAD) rather than SD when setting thresholds - SD is already affected by extreme values (ie. in column 127 of upper panel on 16-03-14, single pixel with value 65535 gives SD of 1920 vs NMAD of 49. Removing that one point gives SD 39, NMAD 49)
+
+\item Need a specific target. Should I be aiming to identify 'problematic' pixels in thresholding problem (which many of those picked up by Loess smoothing seem not to be - this is more of a noise issue) or would it be more useful to simply pick a threshold and describe spatial distribution that arises from it (could compare spatial distribution \& temporal development of bad/dead pixels using different thresholds, perhaps - rather than picking a single `definitive' threshold) 
+
+\item How to fit a smooth (Gaussian?) ring - not with its peak in the centre, but with the peak rotated around the centre? May fit spot pattern better, if not too complex.
+
+\end{itemize}
+
+
+
+
+\subsection*{Next steps}
+
+
+\begin{itemize}
+
+\item
+Thresholding: use thresholds based on difference between modal values and quantiles to classify bad pixels of various types as in [Pinto2012]
+
+\item Look in more detail at distribution of pixel values \& deviations to try to come up with thresholding.
+
+\item When fitting linear panels, break vertically into 4 as well as horizontally into 16. Gradients are not constant and there appears to be another offset at this point, albeit a smaller one.
+
+\item Per-column thresholding with raw residuals, not taking abs. value to get amplitude
+
+\item
+Consider plotting evolution of pixel population at each time stage (maybe as a tree diagram? Or is there a better way to visualise this?)
+
+
+%In particular, plot daily time series of pixels with high daily SD - these may be showing short-term 'flickering'/'blipping' behaviour. (Those investigated so far seem fairly constant in the short term)
+
+%For all `bad' pixels identified, plot daily pixelwise mean for full sequence of measurements
+
+%\item
+%For each panel, look at pixelwise mean \& SD - should be a relationship between the two, which will differ across the panels (intra-panel dependency)
+
+\end{itemize}
+
+%\newpage
+%\printbibliography
+\end{document}
