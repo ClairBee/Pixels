@@ -1,0 +1,166 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+% add document-specific packages here
+
+\titleformat{\section}
+    {\normalfont\bfseries}
+    {\llap{\parbox{1cm}{\thesection}}}{0em}{}
+    
+\begin{document}
+\renewenvironment{knitrout}{\vspace{1em}}{\vspace{1em}}
+<<setup, include=FALSE>>=
+opts_chunk$set(size = 'footnotesize',   # smaller font size for chunks
+               out.width = '0.25\\textwidth',   # default figure size = quarter of text width
+               fig.show = 'hold',   # display all figures at end of chunk
+               fig.align='center',
+               echo = F)
+options(width = 80, digits = 4)
+set.seed(24747)
+library(xtable)
+library("IO.Pixels")
+org.par <- par()        # save default parameters in case needed later
+@
+
+<<load-data>>=
+col <- 992
+panel <- c(1, 992)
+if (panel[1] == 1) {panel.lab <- "<-- lower panel edge"} else {panel.lab <- "Upper panel edge -->"}
+
+img.date <- "150828"
+
+k.lim <- 0.99
+
+pw.b <- readRDS("../../Other-data/Pixelwise-means-black.rds")
+pw.g <- readRDS("../../Other-data/Pixelwise-means-grey.rds")
+pw.w <- readRDS("../../Other-data/Pixelwise-means-white.rds")
+
+@
+
+<<removed, eval = F>>=
+hist(zz$res, breaks = c(floor(min(zz$res)):ceiling(max(zz$res))), prob = F, col = "black",
+     main = "Residuals after Loess smoothing")
+
+abline(v = c(-1,1) * mean(abs(zz$res)), col = "blue", lwd = 2)
+abline(v = c(-1,1) * (mean(abs(zz$res)) + 2.58 * sd(abs(zz$res))), col = "purple", lwd = 2)
+
+hist(zz$res[zz$flagged], breaks = c(floor(min(zz$res)):ceiling(max(zz$res))), add = T,
+     col = "red", border = "red")
+
+zz <- bp.by.res.nmad(pw.w[col, c(panel[1]:panel[2]), img.date], keep = 0.99, ylab = "", 
+                   xlab = panel.lab, main = "Flagged values in white images")
+@
+
+Use Loess smoothing to find central spline along column, then subtract this from the measured pixel values to obtain a set of residuals. Any points falling further than a prescribed distance from the smoothed spline are flagged as potentially problematic.
+
+\begin{figure}[!h]
+\caption{Outliers identified as $> 2.58\sigma$ from mean amplitude of oscillation in column \Sexpr{col} (99\% of distribution)}
+<<plot-smoothed-sd, out.width = '0.31\\textwidth'>>=
+par(mar = c(3,3,2,1))
+z.b <- bp.by.res.sd(pw.b[col, c(panel[1]:panel[2]), img.date], keep = k.lim, ylab = "", 
+                   xlab = panel.lab, main = "Flagged values in dark images")
+
+z.g <- bp.by.res.sd(pw.g[col, c(panel[1]:panel[2]), img.date], keep = k.lim, ylab = "", 
+                   xlab = panel.lab, main = "Flagged values in grey images")
+
+z.w <- bp.by.res.sd(pw.w[col, c(panel[1]:panel[2]), img.date], keep = k.lim, ylab = "", 
+                   xlab = panel.lab, main = "Flagged values in white images")
+
+col <- 927; panel <- c(993, 1996)
+@
+\end{figure}
+
+\begin{figure}[!h]
+\caption{However, for a column containing a `hot' pixel stuck at 65535, eg. column \Sexpr{col}....}
+<<plot-with-hot-pixel, out.width = '0.31\\textwidth'>>=
+col <- 927; panel <- c(993, 1996)
+if (panel[1] == 1) {panel.lab <- "<-- lower panel edge"} else {panel.lab <- "Upper panel edge -->"}
+
+par(mar = c(3,3,2,1))
+
+z.b <- bp.by.res.sd(pw.b[col, c(panel[1]:panel[2]), img.date], keep = k.lim, ylab = "", 
+                   xlab = panel.lab, main = "Flagged values in dark images")
+
+z.g <- bp.by.res.sd(pw.g[col, c(panel[1]:panel[2]), img.date], keep = k.lim, ylab = "", 
+                   xlab = panel.lab, main = "Flagged values in grey images")
+
+z.w <- bp.by.res.sd(pw.w[col, c(panel[1]:panel[2]), img.date], keep = k.lim, ylab = "", 
+                   xlab = panel.lab, main = "Flagged values in white images")
+@
+\end{figure}
+
+\begin{figure}[!h]
+\caption{Removing that single `hot' pixel gives a very different result:}
+<<plot-rm-hot-pixel, out.width = '0.31\\textwidth'>>=
+col <- 927; panel <- c(993, 1996)
+if (panel[1] == 1) {panel.lab <- "<-- lower panel edge"} else {panel.lab <- "Upper panel edge -->"}
+bp <- which(pw.b[col, c(panel[1]:panel[2]), img.date] == 65535)
+
+par(mar = c(3,3,2,1))
+z.b <- bp.by.res.sd(pw.b[col, c(panel[1]:panel[2])[-bp], img.date], keep = k.lim, ylab = "", 
+                   xlab = panel.lab, main = "Flagged values in dark images")
+
+z.g <- bp.by.res.sd(pw.g[col, c(panel[1]:panel[2])[-bp], img.date], keep = k.lim, ylab = "", 
+                   xlab = panel.lab, main = "Flagged values in grey images")
+
+z.w <- bp.by.res.sd(pw.w[col, c(panel[1]:panel[2])[-bp], img.date], keep = k.lim, ylab = "", 
+                   xlab = panel.lab, main = "Flagged values in white images")
+@
+\end{figure}
+
+\begin{figure}[!h]
+\caption{Outliers identified as > 2.58 NMAD from mean amplitude of oscillation in column \Sexpr{col}: v similar to SD method, slightly narrower bounds because distribution of absolute residuals is truncated, not normal distribution}
+<<plot-smoothed-nmad, out.width = '0.31\\textwidth'>>=
+col <- 992; panel <- c(1, 992)
+if (panel[1] == 1) {panel.lab <- "<-- lower panel edge"} else {panel.lab <- "Upper panel edge -->"}
+
+par(mar = c(3,3,2,1))
+z.b <- bp.by.res.nmad(pw.b[col, c(panel[1]:panel[2]), img.date], keep = k.lim, ylab = "", 
+                   xlab = panel.lab, main = "Flagged values in dark images")
+
+z.g <- bp.by.res.nmad(pw.g[col, c(panel[1]:panel[2]), img.date], keep = k.lim, ylab = "", 
+                   xlab = panel.lab, main = "Flagged values in grey images")
+
+z.w <- bp.by.res.nmad(pw.w[col, c(panel[1]:panel[2]), img.date], keep = k.lim, ylab = "", 
+                   xlab = panel.lab, main = "Flagged values in white images")
+
+col <- 927; panel <- c(993, 1996)
+@
+\end{figure}
+
+\begin{figure}[!h]
+\caption{In a column containing a `hot' pixel, eg. column \Sexpr{col}, NMAD still gives a useful boundary:}
+<<plot-with-hot-pixel-nmad, out.width = '0.31\\textwidth'>>=
+col <- 927; panel <- c(993, 1996)
+if (panel[1] == 1) {panel.lab <- "<-- lower panel edge"} else {panel.lab <- "Upper panel edge -->"}
+
+par(mar = c(3,3,2,1))
+
+z.b <- bp.by.res.nmad(pw.b[col, c(panel[1]:panel[2]), img.date], keep = k.lim, ylab = "", 
+                   xlab = panel.lab, main = "Flagged values in dark images")
+
+z.g <- bp.by.res.nmad(pw.g[col, c(panel[1]:panel[2]), img.date], keep = k.lim, ylab = "", 
+                   xlab = panel.lab, main = "Flagged values in grey images")
+
+z.w <- bp.by.res.nmad(pw.w[col, c(panel[1]:panel[2]), img.date], keep = k.lim, ylab = "", 
+                   xlab = panel.lab, main = "Flagged values in white images")
+
+#------------------------------------------------------------------------------------------------
+
+z.b <- bp.by.res.nmad(pw.b[col, c(panel[1]:panel[2]), img.date], keep = k.lim, ylab = "", 
+                   xlab = panel.lab, main = "Flagged values in dark images (rescaled)",
+                   ylim = c(floor(min(pw.b[col, c(panel[1]:panel[2])[-bp], img.date])/1000)*1000,
+                            ceiling(max(pw.b[col, c(panel[1]:panel[2])[-bp], img.date])/1000)*1000))
+
+z.g <- bp.by.res.nmad(pw.g[col, c(panel[1]:panel[2]), img.date], keep = k.lim, ylab = "", 
+                   xlab = panel.lab, main = "Flagged values in grey images (rescaled)",
+                   ylim = c(floor(min(pw.g[col, c(panel[1]:panel[2])[-bp], img.date])/1000)*1000,
+                            ceiling(max(pw.g[col, c(panel[1]:panel[2])[-bp], img.date])/1000)*1000))
+
+z.w <- bp.by.res.nmad(pw.w[col, c(panel[1]:panel[2]), img.date], keep = k.lim, ylab = "", 
+                   xlab = panel.lab, main = "Flagged values in white images (rescaled)",
+                   ylim = c(floor(min(pw.w[col, c(panel[1]:panel[2])[-bp], img.date])/1000)*1000,
+                            ceiling(max(pw.w[col, c(panel[1]:panel[2])[-bp], img.date])/1000)*1000))
+@
+\end{figure}
+
+\end{document}

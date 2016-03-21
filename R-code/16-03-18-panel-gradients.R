@@ -115,6 +115,9 @@ pw.m <- pw.m.b[,,"150828"]
 
 zz <- cbind(melt(pw.m), z.dist)[,c(4,5,6,3)]
 
+# what is relationship between value and distance?
+plot(zz$z, zz$value)
+
 circ.lm <- lm(value ~ z, zz)
 coef(circ.lm)
 

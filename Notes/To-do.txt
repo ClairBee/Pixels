@@ -1,6 +1,17 @@
 
 TO DO
 
+Definite jump at centre line of vertical panel. Thoughts?
+
+Plot pixel value vs panel-x, panel-y, detector-z. Try to identify patterns
+
+Per-column identification of bad pixels?
+    - subtract pixel value from loess-smoothed value to get residuals
+    - treat +ve/-ve residuals the same (ie. use abs) or segregate?
+    - could simply use SD of all values (without correcting for oscillation)
+    - instead of SD, use MAD?
+Instead of thresholding, return value for all bad pixels: how 'bad' are they? May be patterns.
+    
 Use robust estimators, not just SD: SD too susceptible to outliers.
     - SD is fine for pixelwise fluctuation: we want to be susceptible to outliers
     - measure of dispersion of majority of points: MAD
