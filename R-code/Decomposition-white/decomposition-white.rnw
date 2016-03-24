@@ -1,0 +1,170 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+% add document-specific packages here
+
+\titleformat{\section}
+    {\normalfont\bfseries}
+    {\llap{\parbox{1cm}{\thesection}}}{0em}{}
+    
+\begin{document}
+\renewenvironment{knitrout}{\vspace{1em}}{\vspace{1em}}
+<<setup, include=FALSE>>=
+opts_chunk$set(size = 'footnotesize',   # smaller font size for chunks
+               out.width = '0.24\\textwidth',   # default figure size = quarter of text width
+               fig.show = 'hold',   # display all figures at end of chunk
+               fig.align='center',
+               echo = F)
+options(width = 80, digits = 4)
+set.seed(24747)
+library(xtable)
+library("IO.Pixels")
+@
+
+<<load-data>>=
+img.date <- "150828"
+
+pw.w <- readRDS("../../Other-data/Pixelwise-means-white.rds")
+pw.m <- pw.w[,,img.date]
+@
+\section*{Decomposition of white image}
+
+\begin{figure}[!h]
+\caption{Fit linear gradient to circular spot, then fit linear gradient across each panel.}
+<<linear-linear, eval = F, warning = F>>=
+circ.lm.lin <- fit.circular.lm(pw.m)
+circ.res.lin <- matrix(circ.lm.lin$residuals, ncol = 1996)
+
+panel.lm.lin <- fit.panel.lm(circ.res.lin)
+panel.res.lin <- circ.res.lin - panel.lm.lin$fitted.values
+
+# profile of fitted model
+#plot(c(0:1433), predict(circ.lm.lin, data.frame(z = (c(0:1433)))), type = "l",
+#     xlab = "Distance from centre of panel", ylab = "Fitted value",
+#     main = "Profile of fitted circular spot")
+pdf("./figure/circ-lm-lin.pdf")
+    pixel.image(matrix(circ.lm.lin$fitted.values, ncol = 1996), title = "Circular spot fitted")
+dev.off()
+
+pdf("./figure/circ-res-lin.pdf")
+    pixel.image(circ.res.lin, title = "Residuals after circular spot removed")
+dev.off()
+
+pdf("./figure/panel-lm-lin.pdf")
+    pixel.image(matrix(panel.lm.lin$fitted.values, ncol = 1996), title = "Panel gradients fitted")
+dev.off()
+
+pdf("./figure/panel-res-lin.pdf")
+    pixel.image(panel.res.lin, title = "Residuals after panels also removed")
+dev.off()
+@
+
+%\includegraphics[width = .24\textwidth]{./figure/circ-lm-lin.pdf}
+%\includegraphics[width = .24\textwidth]{./figure/circ-res-lin.pdf}
+%\includegraphics[width = .24\textwidth]{./figure/panel-lm-lin.pdf}
+%\includegraphics[width = .24\textwidth]{./figure/panel-res-lin.pdf}
+
+\end{figure}
+
+\begin{figure}[!h]
+\caption{Fit linear gradient to circular spot using quadratic terms, then fit linear gradient across each panel.}
+
+<<o2-linear, warning = F, eval = F>>=
+circ.lm.2 <- fit.circular.lm.poly(pw.m, o = 2)
+circ.res.2 <- matrix(circ.lm.2$residuals, ncol = 1996)
+
+panel.lm.2 <- fit.panel.lm(circ.res.2)
+panel.res.2 <- circ.res.2 - panel.lm.2$fitted.values
+
+# profile of fitted model
+#plot(c(0:1433), predict(circ.lm.2, data.frame(z = (c(0:1433)))), type = "l",
+#     xlab = "Distance from centre of panel", ylab = "Fitted value",
+#     main = "Profile of fitted circular spot")
+
+pdf("./figure/circ-lm-2.pdf")
+    pixel.image(matrix(circ.lm.2$fitted.values, ncol = 1996), title = "Circular spot fitted")
+dev.off()
+
+pdf("./figure/circ-res-2.pdf")
+    pixel.image(circ.res.2, title = "Residuals after circular spot removed")
+dev.off()
+
+pdf("./figure/panel-lm-2.pdf")    
+    pixel.image(matrix(panel.lm.2$fitted.values, ncol = 1996), title = "Panel gradients fitted")
+dev.off()
+
+pdf("./figure/panel-res-2.pdf")  
+    pixel.image(panel.res.2, title = "Residuals after panels also removed")
+dev.off()
+@
+
+%\includegraphics[width = .24\textwidth]{./figure/circ-lm-2.pdf}
+%\includegraphics[width = .24\textwidth]{./figure/circ-res-2.pdf}
+%\includegraphics[width = .24\textwidth]{./figure/panel-lm-2.pdf}
+%\includegraphics[width = .24\textwidth]{./figure/panel-res-2.pdf}
+
+\end{figure}
+
+\begin{figure}[!h]
+\caption{Fit linear gradient to circular spot using quadratic terms, then fit quadratic gradient across each panel.}
+
+<<o2-o2, warning = F, eval = F>>=
+panel.lm.2.2 <- fit.panel.lm.poly(circ.res.2, o = 2)
+panel.res.2.2 <- circ.res.2 - panel.lm.2.2$fitted.values
+
+# profile of fitted model
+#plot(c(0:1433), predict(circ.lm.3, data.frame(z = (c(0:1433)))), type = "l",
+#     xlab = "Distance from centre of panel", ylab = "Fitted value",
+#     main = "Profile of fitted circular spot")
+
+pdf("./figure/panel-lm-2-2.pdf")
+    pixel.image(matrix(panel.lm.2.2$fitted.values, ncol = 1996), title = "Panel gradients fitted")
+dev.off()
+
+pdf("./figure/panel-res-2-2.pdf")
+    pixel.image(panel.res.2.2, title = "Residuals after panels also removed")
+dev.off()
+@
+
+%\includegraphics[width = .24\textwidth]{./figure/circ-lm-2.pdf}
+%\includegraphics[width = .24\textwidth]{./figure/circ-res-2.pdf}
+%\includegraphics[width = .24\textwidth]{./figure/panel-lm-2-2.pdf}
+%\includegraphics[width = .24\textwidth]{./figure/panel-res-2-2.pdf}
+
+\end{figure}
+
+\begin{figure}[!h]
+\caption{Comparison of residuals in each method after per-column Loess smoothing}
+<<loess-comparison>>=
+smoothed.image <- lowess.per.column(pw.m)
+smoothed.res <- pw.m - smoothed.image
+
+
+smoothed.lin <- lowess.per.column(panel.res.lin)
+smoothed.res.lin <- panel.res.lin - smoothed.lin
+
+smoothed.2 <- lowess.per.column(panel.res.2)
+smoothed.res.2 <- panel.res.2 - smoothed.2
+
+smoothed.2.2 <- lowess.per.column(panel.res.2.2)
+smoothed.res.2.2 <- panel.res.2.2 - smoothed.2.2
+
+pixel.image(smoothed.res, title = "Residuals from direct image smoothing")
+pixel.image(smoothed.res.lin, title = "Residuals from linear-linear fit")
+pixel.image(smoothed.res.2, title = "Residuals from quadratic-linear fit")
+pixel.image(smoothed.res.2.2, title = "Residuals from quadratic-quadratic fit")
+@
+
+<<loess-hists>>=
+s.hist(smoothed.res, col = "black", main = "Residuals from direct smoothing")
+s.hist(smoothed.res.lin, col = "black", main = "Residuals from linear-linear fit")
+s.hist(smoothed.res.2, col = "black", main = "Residuals from quadratic-linear fit")
+s.hist(smoothed.res.2.2, col = "black", main = "Residuals from quadratic-quadratic fit")
+@
+\end{figure}
+
+%sqrt(mean(smoothed.res^2)); sqrt(mean(smoothed.res.lin^2)); sqrt(mean(smoothed.res.2^2)); sqrt(mean(smoothed.res.2.2^2))
+    
+%sd(smoothed.res); sd(smoothed.res.lin); sd(smoothed.res.2); sd(smoothed.res.2.2)
+%mad(smoothed.res); mad(smoothed.res.lin); mad(smoothed.res.2); mad(smoothed.res.2.2)
+
+\end{document}
