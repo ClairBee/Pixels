@@ -3,6 +3,28 @@ library("IO.Pixels")
 pw.b <- readRDS("./Other-data/Pixelwise-means-black.rds")
 image <- pw.b[,,"160314"]
 
+c <- 974; r <- c(1, 992)
+transect <- pw.b[c, r[1]:r[2], "150828"]
+sm <- lowess(transect, f = 1/15)$y
+res <- transect - sm
+abline(h = mad(res) * c(1,-1), col = "red")
+
+o.plot(res)
+illness <- res / mad(res)
+
+which(illness > 2)
+o.plot(transect)
+hist(illness, breaks = "fd", xlim = c(-10,10))
+
+points(cbind(which(illness > 2), transect[which(illness > 2)]), col = "purple")
+points(cbind(which(illness > 10), transect[which(illness > 10)]), col = "red")
+
+abline(v = c(992 - (1024 * c(0.25, 0.5, 0.75))), col = "blue")
+
+abline(h = mean(transect), col = "green3")
+
+###################################################################################################
+
 bp <- get.bad.pixels(pw.b[,,"160314"])
 bp <- get.bad.pixels(pw.b[,,"160314"], method = "mad")
 

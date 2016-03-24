@@ -1,6 +1,16 @@
 
 TO DO
 
+Methods of smoothing to compare & assess:
+    - flat field comparison
+    - thresholding as given in manual
+    - parametric noise model (dome & panels)
+    - loess smoothing along columns
+Best to remove points with max & min values right from the start: these are almost too easy...
+
+Have looked briefly at progression of hot pixels over time. Some appear to worsen over successive acquisitions, others do not.
+    - Useful to normalise (subtract per-image mean value) before plotting.
+    
 Definite jump at centre line of vertical panel. Thoughts?
 
 Plot pixel value vs panel-x, panel-y, detector-z. Try to identify patterns
