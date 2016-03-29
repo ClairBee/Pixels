@@ -1,0 +1,202 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+% add document-specific packages here
+
+\titleformat{\section}
+    {\normalfont\bfseries}
+    {\llap{\parbox{1cm}{\thesection}}}{0em}{}
+    
+\begin{document}
+\renewenvironment{knitrout}{\vspace{1em}}{\vspace{1em}}
+<<setup, include=FALSE>>=
+opts_chunk$set(size = 'footnotesize',   # smaller font size for chunks
+               out.width = '0.32\\textwidth',   # default figure size = quarter of text width
+               fig.show = 'hold',   # display all figures at end of chunk
+               fig.align='center',
+               echo = F)
+options(width = 80, digits = 4)
+set.seed(24747)
+library(xtable)
+
+org.par <- par()        # save default parameters in case needed later
+@
+
+<<load-data>>=
+img.date <- "141009"
+# load 'official' bad pixel map
+bpm <- read.csv("../../Other-data/BadPixelMap-160314.csv", as.is = T)
+
+# identify pixels not on bad pixel map, take sample of same length
+all <- merge(merge(x = c(1:1996), y = c(1:1996)), bpm, by.x = c(1:2), by.y = c(1:2), all.x = T)
+good.pix <- all[is.na(all$Mask),]
+samp <- good.pix[sample(1:nrow(good.pix), nrow(bpm), replace = F),]
+
+# load all data
+pw.w <- readRDS("../../Other-data/Pixelwise-means-white.rds")
+pw.g <- readRDS("../../Other-data/Pixelwise-means-grey.rds")
+pw.b <- readRDS("../../Other-data/Pixelwise-means-black.rds")
+
+pw.sd.w <- readRDS("../../Other-data/Pixelwise-sds-white.rds")
+pw.sd.g <- readRDS("../../Other-data/Pixelwise-sds-grey.rds")
+pw.sd.b <- readRDS("../../Other-data/Pixelwise-sds-black.rds")
+
+# apply bad pixel map to each image set
+bpm.b <- apply(pw.b, 3, "[", as.matrix(bpm[,c("X", "Y")]))
+bpm.g <- apply(pw.g, 3, "[", as.matrix(bpm[,c("X", "Y")]))
+bpm.w <- apply(pw.w, 3, "[", as.matrix(bpm[,c("X", "Y")]))
+
+# get 'healthy' pixel sample from each image set 
+gpm.b <- apply(pw.b, 3, "[", as.matrix(samp[, c("x", "y")]))
+gpm.g <- apply(pw.g, 3, "[", as.matrix(samp[, c("x", "y")]))
+gpm.w <- apply(pw.w, 3, "[", as.matrix(samp[, c("x", "y")]))
+
+good.b <- apply(pw.b, 3, "[", as.matrix(good.pix[, c("x", "y")]))
+good.g <- apply(pw.g, 3, "[", as.matrix(good.pix[, c("x", "y")]))
+good.w <- apply(pw.w, 3, "[", as.matrix(good.pix[, c("x", "y")]))
+
+
+# set colour parameters for easier updating
+b.col <- adjustcolor("blue", alpha = 0.5)
+g.col <- adjustcolor("green3", alpha = 0.5)
+w.col <- adjustcolor("gold", alpha = 0.5)
+bad.col <- adjustcolor("red", alpha = 0.5)
+
+@
+
+\begin{figure}[!h]
+\caption{Pixelwise mean values on \Sexpr{img.date} of 'bad' pixels identified by official bad pixel map from 2016-03-14, with a sample of `healthy' pixels for comparison.}
+<<plot-healthy-vs-bad>>=
+
+# overlay sample of 'normal' pixels with 'bad' pixels
+    plot(gpm.b[,img.date], pch = 20, ylim = c(0, 65535), col = adjustcolor(b.col, alpha = 0.2),
+         xlab = "", ylab = "", main = "Black images")
+    points(bpm.b[,img.date], pch = 20, ylim = c(0, 65535), col = adjustcolor(bad.col, alpha = 0.2))
+    abline(h = c(3532, 9360), , lty = 3)
+    
+    plot(gpm.g[,img.date], pch = 20, ylim = c(0, 65535), col = adjustcolor(g.col, alpha = 0.2),
+         xlab = "", ylab = "", main = "Grey images")
+    points(bpm.g[,img.date], pch = 20, ylim = c(0, 65535), col = adjustcolor(bad.col, alpha = 0.2))
+    abline(h = c(9933, 10978), , lty = 3)
+
+    
+    plot(gpm.w[,img.date], pch = 20, ylim = c(0, 65535), col = adjustcolor(w.col, alpha = 0.2),
+         xlab = "", ylab = "", main = "White images")
+    points(bpm.w[,img.date], pch = 20, ylim = c(0, 65535), col = adjustcolor(bad.col, alpha = 0.2))
+    abline(h = c(40649, 52774), , lty = 3)
+
+    @
+    
+<<plot-hist>>=
+# set up histograms: flip values of 'bad' pixel counts
+    h.bg <- hist(good.b[,img.date], breaks = "fd", plot = F)
+    h.bb <- hist(bpm.b[,img.date], breaks = c(0:65535), plot = F)
+    h.bb$counts <- - h.bb$counts
+
+    h.gg <- hist(good.g[,img.date], breaks = "fd", plot = F)
+    h.gb <- hist(bpm.g[,img.date], breaks = c(0:65535), plot = F)
+    h.gb$counts <- - h.gb$counts
+
+    h.wg <- hist(good.w[,img.date], breaks = "fd", plot = F)
+    h.wb <- hist(bpm.w[,img.date], breaks = c(0:65535), plot = F)
+    h.wb$counts <- - h.wb$counts
+    
+
+# plot histograms
+hist.lim <- c(-20,20)
+    
+plot(h.bg, ylim = hist.lim, col = b.col, xlim = c(0, 65535), border = b.col,
+     main = "Black images", xlab = "")
+lines(h.bb, col = bad.col, border = bad.col)
+abline(h = 0)
+    abline(v = c(3532, 9360), lty = 3)
+
+
+plot(h.gg, ylim = hist.lim, col = g.col, xlim = c(0, 65535), border = g.col,
+     main = "Grey images", xlab = "")
+lines(h.gb, col = bad.col, border = bad.col)
+abline(h = 0)
+    abline(v = c(9933, 10978), lty = 3)
+
+
+plot(h.wg, ylim = hist.lim, col = w.col, xlim = c(0, 65535), border = w.col,
+     main = "White images", xlab = "")
+lines(h.wb, col = bad.col, border = bad.col)
+abline(h = 0)
+    abline(v = c(40649, 52774), lty = 3)
+
+@
+\end{figure}
+
+\begin{figure}[!h]
+\caption{Pixelwise SDs on \Sexpr{img.date} of 'bad' pixels identified by official bad pixel map from 2016-03-14, with a sample of `healthy' pixels for comparison.}
+
+<<plot-SDs>>=
+# get SDs at points of interest
+# apply bad pixel map to each image set
+bpsd.b <- apply(pw.sd.b, 3, "[", as.matrix(bpm[,c("X", "Y")]))
+bpsd.g <- apply(pw.sd.g, 3, "[", as.matrix(bpm[,c("X", "Y")]))
+bpsd.w <- apply(pw.sd.w, 3, "[", as.matrix(bpm[,c("X", "Y")]))
+
+# get 'healthy' pixel sample from each image set 
+gpsd.b <- apply(pw.sd.b, 3, "[", as.matrix(samp[, c("x", "y")]))
+gpsd.g <- apply(pw.sd.g, 3, "[", as.matrix(samp[, c("x", "y")]))
+gpsd.w <- apply(pw.sd.w, 3, "[", as.matrix(samp[, c("x", "y")]))
+
+good.sd.b <- apply(pw.sd.b, 3, "[", as.matrix(good.pix[, c("x", "y")]))
+good.sd.g <- apply(pw.sd.g, 3, "[", as.matrix(good.pix[, c("x", "y")]))
+good.sd.w <- apply(pw.sd.w, 3, "[", as.matrix(good.pix[, c("x", "y")]))
+    
+# overlay sample of 'normal' pixels with 'bad' pixels
+    plot(gpsd.b[,img.date], pch = 20, ylim = c(0, 7000), col = adjustcolor(b.col, alpha = 0.2),
+         xlab = "", ylab = "", main = "Black images")
+    points(bpsd.b[,img.date], pch = 20, col = adjustcolor(bad.col, alpha = 0.2))
+    abline(h = 3 * sd(pw.sd.b[,,img.date]), lty = 3)
+    
+    plot(gpsd.g[,img.date], pch = 20, ylim = c(0, 7000), col = adjustcolor(g.col, alpha = 0.2),
+         xlab = "", ylab = "", main = "Grey images")
+    points(bpsd.g[,img.date], pch = 20, col = adjustcolor(bad.col, alpha = 0.2))
+    abline(h = 3 * sd(pw.sd.g[,,img.date]), lty = 3)
+    
+    plot(gpsd.w[,img.date], pch = 20, ylim = c(0, 7000), col = adjustcolor(w.col, alpha = 0.2),
+         xlab = "", ylab = "", main = "White images")
+    points(bpsd.w[,img.date], pch = 20, col = adjustcolor(bad.col, alpha = 0.2))
+    abline(h = 3 * sd(pw.sd.w[,,img.date]), lty = 3)
+@
+
+<<hist-SD>>=
+# set up histograms: flip values of 'bad' pixel counts
+    h.bg.sd <- hist(good.sd.b[,img.date], breaks = "fd", plot = F)
+    h.bb.sd <- hist(bpsd.b[,img.date], breaks = c(0:65535), plot = F)
+    h.bb.sd$counts <- - h.bb.sd$counts
+
+    h.gg.sd <- hist(good.sd.g[,img.date], breaks = "fd", plot = F)
+    h.gb.sd <- hist(bpsd.g[,img.date], breaks = c(0:65535), plot = F)
+    h.gb.sd$counts <- - h.gb.sd$counts
+
+    h.wg.sd <- hist(good.sd.w[,img.date], breaks = "fd", plot = F)
+    h.wb.sd <- hist(bpsd.w[,img.date], breaks = c(0:65535), plot = F)
+    h.wb.sd$counts <- - h.wb.sd$counts
+    
+
+# plot histograms
+plot(h.bg.sd, ylim = hist.lim, col = b.col, xlim = c(0, 7000), border = b.col,
+     main = "Black images", xlab = "")
+lines(h.bb.sd, col = bad.col, border = bad.col)
+abline(h = 0)
+        abline(v = 3 * sd(pw.sd.b[,,img.date]), lty = 3)
+        
+plot(h.gg.sd, ylim = hist.lim, col = g.col, xlim = c(0, 7000), border = g.col,
+     main = "Black images", xlab = "")
+lines(h.gb.sd, col = bad.col, border = bad.col)
+abline(h = 0)
+        abline(v = 3 * sd(pw.sd.g[,,img.date]), lty = 3)
+        
+plot(h.wg.sd, ylim = hist.lim, col = w.col, xlim = c(0, 7000), border = w.col,
+     main = "Black images", xlab = "")
+lines(h.wb.sd, col = bad.col, border = bad.col)
+abline(h = 0)
+        abline(v = 3 * sd(pw.sd.w[,,img.date]), lty = 3)
+@
+\end{figure}
+
+\end{document}

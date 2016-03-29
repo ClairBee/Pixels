@@ -149,6 +149,7 @@ hot.w.adj[hot.w == 65535] <- 65535  # reset absolute values
 }
 
 ###################################################################################################
+# 'OFFICIAL' BAD PIXEL MAP
 
 # load bad pixel map provided by Jay to compare
 fpath <- "./Other-data/Other-images/BadPixelMap_160314/"
@@ -162,6 +163,9 @@ for (i in 1:3) bpm[,i] <- as.integer(bpm[,i])
 
 bpm$Y <- 1996 - bpm$Y       # Y-coordinates are measured from top axis: invert
 bpm$X <- bpm$X + 1          # X-coordinates are measured from 0: add 1
+
+write.csv(bpm, "./Other-data/BadPixelMap-160314.csv", row.names = F)
+bpm <- read.csv("./Other-data/BadPixelMap-160314.csv", as.is = T)
 
 bpm.b <- apply(pw.b, 3, "[", as.matrix(bpm[,c("X", "Y")]))
 bpm.g <- apply(pw.g, 3, "[", as.matrix(bpm[,c("X", "Y")]))
@@ -207,6 +211,36 @@ for (i in 1:11) {
     points(bpm.w[,i], pch = 20, col = adjustcolor("red", alpha = 1/11))
 }
 
+###################################################################################################
+# plot non-bad pixels: what should 'normal' behaviour be?
+all <- merge(merge(x = c(1:1996), y = c(1:1996)), bpm, by.x = c(1:2), by.y = c(1:2), all.x = T)
+good.pix <- all[is.na(all$Mask),]
+
+samp <- good.pix[sample(1:nrow(good.pix), nrow(bpm), replace = F),]
+
+gpm.b <- apply(pw.b, 3, "[", as.matrix(samp[, c("x", "y")]))
+gpm.g <- apply(pw.g, 3, "[", as.matrix(samp[, c("x", "y")]))
+gpm.w <- apply(pw.w, 3, "[", as.matrix(samp[, c("x", "y")]))
+
+# plot sample of 'normal' pixels (plotting all pixels takes too long)
+    plot(gpm.b[,1], pch = 20, ylim = c(0, 65535), col = adjustcolor("blue", alpha = 1/11),
+         xlab = "", ylab = "", main = "Sample of 'healthy' pixels")
+    points(gpm.g[,1], pch = 20, ylim = c(0, 65535), col = adjustcolor("green3", alpha = 1/11))
+    points(gpm.w[,1], pch = 20, ylim = c(0, 65535), col = adjustcolor("gold", alpha = 1/11))
+
+# overlay sample of 'normal' pixels with 'bad' pixels
+    plot(gpm.b[,1], pch = 20, ylim = c(0, 65535), col = adjustcolor("blue", alpha = 1/11),
+         xlab = "", ylab = "", main = "Healthy vs 'bad' pixels - black images")
+    points(bpm.b[,1], pch = 20, ylim = c(0, 65535), col = adjustcolor("red", alpha = 1/11))
+    
+    plot(gpm.g[,1], pch = 20, ylim = c(0, 65535), col = adjustcolor("green3", alpha = 1/11),
+         xlab = "", ylab = "", main = "Healthy vs 'bad' pixels - grey images")
+    points(bpm.g[,1], pch = 20, ylim = c(0, 65535), col = adjustcolor("red", alpha = 1/11))
+    
+    plot(gpm.w[,1], pch = 20, ylim = c(0, 65535), col = adjustcolor("gold", alpha = 1/11),
+         xlab = "", ylab = "", main = "Healthy vs 'bad' pixels - white images")
+    points(bpm.w[,1], pch = 20, ylim = c(0, 65535), col = adjustcolor("red", alpha = 1/11))
+    
 ###################################################################################################
 
 o.plot(bpm.g[550,], ylim = c(0,65535), col = adjustcolor("green3", alpha = 0.3))
