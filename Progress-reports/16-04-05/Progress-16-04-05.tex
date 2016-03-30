@@ -1,0 +1,94 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\llap{\parbox{1cm}{\thesubsection}}}{0em}{}
+	
+%----------------------------------------------------------------------
+% SPECIFY BIBLIOGRAPHY FILE & FIELDS TO EXCLUDE
+%\addbibresource{bibfile.bib}
+%\AtEveryBibitem{\clearfield{url}}
+%\AtEveryBibitem{\clearfield{doi}}
+%\AtEveryBibitem{\clearfield{isbn}}
+%\AtEveryBibitem{\clearfield{issn}}
+
+%----------------------------------------------------------------------
+
+%======================================================================
+
+\usepackage{fancyhdr}
+
+\fancyhf{}
+\fancyhead[R]{\textbf{4-Apr-2016}}
+\pagestyle{fancy}
+
+\addtolength{\topmargin}{-0.5cm}
+\addtolength{\textheight}{1.4cm}
+
+\renewcommand{\headrulewidth}{0pt}
+
+\begin{document}
+
+\subsection*{Since last week}
+
+\begin{itemize}
+
+\item Fitted linear models to white, grey \& black images, allowing polynomial terms of parameters. Residuals have much lower SD/MAD than previously (esp. in white channel) but still show signs of systematic variation - dip in values at edges of panels and possible diagonal `wave' effect (possible $1/f$ noise?)?
+ 
+\item Started to consider movement of pixels between states, beginning with pixels that settle at 65535 pixels for a full day's acquisitions (eg. pixelwise mean value == 65535, pixelwise SD = 0). Need to consider how to account for whole-panel offset when comparing between acquisitions.
+
+\item Implemented flat field correction, but some panelwise variation still remains - linear gradient per panel seems to help, reducing NMAD to 55 (starting NMAD for white channel is ~1800)
+
+\item Using two approaches to thresholding after fitting a distribution to the residuals: either cutting at a quantile (maybe using a variant of the boxplot outlier calculation: $Q_{0.001} - 1.5 \cdot IQR$, $Q_{0.999} + 1.5 \cdot IQR$) or using quartiles of the \textbf{Johnson distribution}.
+
+\item Loess smoothing is particularly ineffective at edges of panels, failing to identify columns of bad pixels particularly at LHS. Anything involving differencing/smoothing against neighbours will likely suffer the same effect.
+
+\end{itemize}
+
+\subsection*{Current questions/considerations}
+\begin{itemize}
+
+\item At what point is the model sufficient? Four potential candidates so far:
+
+\begin{itemize}
+\item flat field correction (plus panelwise/spot correction?)
+\item thresholding as given in manual
+\item parametric noise model fitted to white/grey images (dome \& panels at least)
+\item direct loess smoothing along columns \& rows, identify any `outlier' points that don't belong to usual pattern. (likely to be confounded by panel edges to some degree) 
+\end{itemize}
+
+\end{itemize}
+
+
+\subsection*{Next steps}
+
+\begin{itemize}
+
+\item Finish tuning parametric model
+
+\begin{itemize}
+\item Try fitting per-panel parametric model across distance from top-left corner of panel, rather than by x and y coordinates
+\item May need curved fit across Y axis of panel
+
+\end{itemize}
+
+\item Compare results with each given approach (both in terms of residuals \& in terms of `official' bad pixels identified)
+
+\item When fitting linear panels, break vertically into 4 as well as horizontally into 16. Gradients are not constant and there appears to be another offset at this point, albeit a smaller one.
+
+\item Per-column thresholding with raw residuals, not taking abs. value to get amplitude
+
+\item Go back and look at daily SD again - any points with high daily SD are of interest, as are any with high mean value
+
+
+\end{itemize}
+
+
+\end{document}
