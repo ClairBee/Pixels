@@ -1,32 +1,22 @@
 
 library("IO.Pixels")
-library(mixtools); library(SuppDists)
 
-load.pixel.maps()
-bpm.params <- xmlToList(xmlParse("./Other-data/Other-images/BadPixelMap_160314/CalibrationParameters.xml"))
+library(mixtools)       # fitting normal mixture model to residuals
+library(SuppDists)      # fitting Johnson distribution to residuals
+
+# automatically create single array containing all pixel means
+load.pixel.means()
+bpm <- read.csv("./Other-data/BadPixelMap-160314.csv", as.is = T)
 
 # extract bad pixel map using alternative methods, compare to 'official' map
 # 'official' map is from 16-03-14, so apply tests to same data set initially
-im <- readRDS("./Other-data/Pixelwise-means-white.rds")[,,"160314"]
+im <- pw.m[ , , "black", "160314"]
 
-
-# start by getting absolute max & min points
-reset.bp <- function(img.dt) {
-    img.dt <- toString(img.dt)
-    bp <<- rbind(data.frame(which(pw.b[,,img.dt] == 0, arr.ind = T), src = "black", type = "dead"),
-                data.frame(which(pw.b[,,img.dt] == 65535, arr.ind = T), src = "black", type = "hot"),
-                data.frame(which(pw.g[,,img.dt] == 0, arr.ind = T), src = "grey", type = "dead"),
-                data.frame(which(pw.g[,,img.dt] == 65535, arr.ind = T), src = "grey", type = "hot"),
-                data.frame(which(pw.w[,,img.dt] == 0, arr.ind = T), src = "white", type = "dead"),
-                data.frame(which(pw.w[,,img.dt] == 65535, arr.ind = T), src = "white", type = "hot"))
-}
-
-    
 # tmp function to quickly overlay 'official' & found points        
 compare.maps <- function() {
     bp.coords <- bp[!duplicated(bp[,c(1,2)]),c(1,2,4)]
     
-    if (nrow(bp.coords) > 5000) {
+    if (nrow(bp.coords) > 10000) {
         print("Too many rows. Check data manually first")
 
     } else {
@@ -43,17 +33,20 @@ compare.maps <- function() {
 }
 
 ###################################################################################################
-#                          COMPARING & ASSESSING EFFECTIVENESS OF METHODS                         #
+#                          COMPARING & ASSESSING EFFECTIVENESS OF METHODS                      ####
 ###################################################################################################
 # simple by-eye plots
 # remove 'bad' points & check MAD/SD of remainder: should be v similar
 # compare to 'official' map: behaviour of points extracted?
 
 ###################################################################################################
-#                      IDENTIFY BAD PIXELS BY COMPARISON TO BAD PIXEL MAP                         #
+
+#                      IDENTIFY BAD PIXELS BY COMPARISON TO BAD PIXEL MAP                      ####
 ###################################################################################################
 
 {
+bpm.params <- xmlToList(xmlParse("./Other-data/Other-images/BadPixelMap_160314/CalibrationParameters.xml"))
+    
 # get 'bright offset corrected image' using flat field correction
     corr <- 60000 * (m.g - m.b) / (m.w - m.b)
     corr[is.na(corr)] <- 0      # otherwise get NA where FF == D
@@ -116,8 +109,28 @@ compare.maps <- function() {
 }
 
 
+# per-panel plots of pixels not identified as 'bad': anything obvious?
+    # U1: clear streaks of low-valued pixels in white/grey
+    # U2-4: some odd-looking values in white channel (spots on screen?)
+
+{
+    tmp <- pw.m[,,"black", "160314"];  tmp[as.matrix(bpm[,1:2])] <- NA; sp.b <- subpanels(tmp)
+    tmp <- pw.m[,,"grey", "160314"];  tmp[as.matrix(bpm[,1:2])] <- NA; sp.g <- subpanels(tmp)
+    tmp <- pw.m[,,"white", "160314"];  tmp[as.matrix(bpm[,1:2])] <- NA; sp.w <- subpanels(tmp)
+    
+#    for (p in dimnames(sp.b)[[3]]) {
+#        pdf(paste0("./Plots/BPM-check/160314-", p, ".pdf"))
+            plot(c(sp.b[,,p]), ylim = c(0,65535), pch = 20, main = paste0("Panel ", p), 
+                 col = adjustcolor("slateblue1", alpha = 0.5), xlab = "", ylab = "")
+            points(c(sp.g[,,p]), ylim = c(0,65535), pch = 20, col = adjustcolor("chartreuse3", alpha = 0.5))
+            points(c(sp.w[,,p]), ylim = c(0,65535), pch = 20, col = adjustcolor("gold", alpha = 0.5))
+#        dev.off()
+    }
+}
+
 ###################################################################################################
-#                               IDENTIFY BAD PIXELS BY QUANTILES                                  #
+
+#                               IDENTIFY BAD PIXELS BY QUANTILES                               ####
 ###################################################################################################
 
 # use ECDF of each image, cut quantiles to get most extreme values
@@ -125,7 +138,8 @@ compare.maps <- function() {
 
 
 ###################################################################################################
-#              IDENTIFY BAD PIXELS BY LOWESS-SMOOTHING & FINDING OUTLYING RESIDUALS               #
+
+#              IDENTIFY BAD PIXELS BY LOWESS-SMOOTHING & FINDING OUTLYING RESIDUALS            ####
 ###################################################################################################
 
 # use column-wise Loess smoothing (not crossing panel boundaries) to find outliers
@@ -189,7 +203,7 @@ compare.maps <- function() {
     bp.lq.g <- bp.lowess.quantiles(160314, "grey", lq = 0.0005, uq = 0.9995, details = T)
     bp.lq.b <- bp.lowess.quantiles(160314, "black", lq = 0.0005, uq = 0.9995, details = T)
     
-    reset.bp(160314)
+    bp <- reset.bp(160314)
     
     bp <- rbind(bp,
                 data.frame(bp.lq.w$low, src = "white", type = "low"),
@@ -282,7 +296,7 @@ compare.maps <- function() {
     bp.lq.g <- bp.lowess.quantiles(160314, "grey", lq = 0.0005, uq = 0.9995, span = 1, details = T)
     bp.lq.b <- bp.lowess.quantiles(160314, "black", lq = 0.0005, uq = 0.9995, span = 1, details = T)
     
-    reset.bp(160314)
+    bp <- reset.bp(160314)
     
     bp <- rbind(bp,
                 data.frame(bp.lq.w$low, src = "white", type = "low"),
@@ -375,21 +389,141 @@ compare.maps <- function() {
 
 
 ###################################################################################################
-#                    FIT FULL PARAMETRIC MODELS AND USE TO IDENTIFY BAD PIXELS                    #
+
+#                    FIT FULL PARAMETRIC MODELS AND USE TO IDENTIFY BAD PIXELS                 ####
+###################################################################################################
+im <- pw.m[,,"white","160314"]
+library(SuppDists)
+
+# circular spot (o = 2) & linear panel model
+{
+    circ.lm <- fit.circular.lm.poly(im, o = 3)
+    circ.res <- matrix(circ.lm$residuals, ncol = 1996)
+    
+    panel.lm <- fit.panel.lm(circ.res)
+    panel.res <- circ.res - panel.lm$fitted.values
+    
+    mad(panel.res)
+    s.hist(panel.res, prob = T)
+    lines(c(-1000:1000), dnorm(c(-1000:1000), mean = mean(panel.res), sd = sd(panel.res)), lwd = 3, col = "cornflowerblue")
+    lines(c(-1000:1000), dnorm(c(-1000:1000), mean = mean(panel.res), sd = mad(panel.res)), lwd = 3, col = "orange")
+    
+    parms <- JohnsonFit(c(panel.res), moment = "quant")
+    lines(c(-1000:1000), dJohnson(c(-1000:1000), parms), lwd = 3, col = "green3")
+    
+    # try to transform Johnson distribution to standard normal (for fit checking etc)
+    {
+        # transform Johnson data to approx.normality (easier to check fit)
+        u <- (c(panel.res) - parms$xi) / parms$lambda
+        f <- u + sqrt(1+u^2)    # because parms$type == "SU" - see details
+        z <- parms$gamma + (parms$delta * log(f))
+        
+        z <- parms$gamma + (parms$delta * asinh(u))     # alternative definition - check diffs
+        
+        hist(z, breaks = "fd", prob = T)
+        lines(c(-1000:1000)/100, dnorm(c(-1000:1000)/100, mean = 0, sd = 1), lwd = 2, col = "red")
+        
+        shapiro.test(sample(z, 5000))
+        
+        # not normal after Johnson transformation. Possibly due to lower values in LH edge panels?
+        
+        # check residuals per panel
+        sp <- subpanels(matrix(z, ncol = 1996))
+        
+        hist(sp[,,1], breaks = "fd", col = "black", prob = T)
+        lines(c(-1000:1000)/100, dnorm(c(-1000:1000)/100, mean = 0, sd = 1), lwd = 2, col = "red")
+        
+        hist(sp[,,8], breaks = "fd", col = "black", prob = T)
+        lines(c(-1000:1000)/100, dnorm(c(-1000:1000)/100, mean = 0, sd = 1), lwd = 2, col = "red")
+        
+        # transformation hasn't accounted for all of the skewness... Need to look at distribution further
+    }
+    # transformation hasn't accounted for all of the skewness - need to look at distribution further
+    
+    
+
+}
+
+# automated version to allow easy comparison of multiple models
+{
+    zz <- rbind(bp.parametric.quantiles(160314, "white", circ.o = NA, panel.o = NA),
+                bp.parametric.quantiles(160314, "white", circ.o = 1, panel.o = NA),
+                bp.parametric.quantiles(160314, "white", circ.o = NA, panel.o = 1),
+                bp.parametric.quantiles(160314, "white", circ.o = 1, panel.o = 1),
+                bp.parametric.quantiles(160314, "white", circ.o = NA, panel.o = 2),
+                bp.parametric.quantiles(160314, "white", circ.o = 2, panel.o = NA),
+                bp.parametric.quantiles(160314, "white", circ.o = 1, panel.o = 2),
+                bp.parametric.quantiles(160314, "white", circ.o = 2, panel.o = 1),
+                bp.parametric.quantiles(160314, "white", circ.o = 2, panel.o = 2))
+                
+    # more of an effect after panel fitting (second operation - unsurprising?)
+    # might be worth considering a model in which only panel offsets are fitted, no gradient?
+    
+    # 4 models have similar residual MAD (< 300), simplest being 2-spot with linear panels
+    # compare results over all image sets - is model always applicable?
+    bp.w <- bp.parametric.quantiles(160314, "white",  circ.o = 2, panel.o = 1, details = T)
+    bp.g <- bp.parametric.quantiles(160314, "grey",  circ.o = 2, panel.o = 1, details = T)
+    bp.b <- bp.parametric.quantiles(160314, "black",  circ.o = 2, panel.o = 1, details = T)
+    
+    comp <- rbind(bp.w$details, bp.g$details, bp.b$details)
+    
+    bp <- rbind(reset.bp(160314),
+                data.frame(bp.w$low, src = bp.w$details$batch, type = "low"),
+                data.frame(bp.w$high, src = bp.w$details$batch, type = "high"),
+                data.frame(bp.g$low, src = bp.g$details$batch, type = "low"),
+                data.frame(bp.g$high, src = bp.g$details$batch, type = "high"),
+                data.frame(bp.b$low, src = bp.b$details$batch, type = "low"),
+                data.frame(bp.b$high, src = bp.b$details$batch, type = "high"))
+    bp <- bp[!duplicated(bp[,1:2]),]
+
+    compare.maps()
+    all.bp <- combine.maps(bp, bpm)
+    plot.map.comparison(all.bp, 160314)
+    
+    # far more bad pixels picked up even using simplest parametric approach (4801 pixels vs 2842)
+    # still a cluster of red pixels not identified, although many seem to display 'normal' values
+    missing.bp <- all.bp[all.bp$map == "old",]
+    plot(missing.bp[,1:2]); draw.panels()
+    summary(pw.m[,,"white", "160314"][as.matrix(missing.bp[,1:2])])
+    
+    # plot remaining pixels per panel - do they look ok?
+    {
+        tmp <- pw.m[,,"black", "160314"];  tmp[as.matrix(all.bp[,1:2])] <- NA; sp.b <- subpanels(tmp)
+        tmp <- pw.m[,,"grey", "160314"];  tmp[as.matrix(all.bp[,1:2])] <- NA; sp.g <- subpanels(tmp)
+        tmp <- pw.m[,,"white", "160314"];  tmp[as.matrix(all.bp[,1:2])] <- NA; sp.w <- subpanels(tmp)
+        
+        #for (p in dimnames(sp.b)[[3]]) {
+        #pdf(paste0("./Plots/BPM-check/160314-", p, ".pdf"))
+        plot(c(sp.b[,,p]), ylim = c(0,65535), pch = 20, main = paste0("Panel ", p), 
+             col = adjustcolor("slateblue1", alpha = 0.5), xlab = "", ylab = "")
+        points(c(sp.g[,,p]), ylim = c(0,65535), pch = 20, col = adjustcolor("chartreuse3", alpha = 0.5))
+        points(c(sp.w[,,p]), ylim = c(0,65535), pch = 20, col = adjustcolor("gold", alpha = 0.5))
+        #        dev.off()
+    }
+}
+}
+
+
+
+###################################################################################################
+
+#               COMPARE VALUES IN SINGLE PANEL AT A TIME: IS PARAMETRIC MODEL NEEDED?          ####
+###################################################################################################
+
+# TRY WITH & WITHOUT CIRCULAR SPOT FITTED, BUT WITHOUT PER-PANEL CORRECTION
+
+
+###################################################################################################
+
+#                      IDENTIFY BAD PIXELS IN OFFSET CORRECTION WITH PANEL ADJ                 ####
 ###################################################################################################
 
 
 
 
 ###################################################################################################
-#                      IDENTIFY BAD PIXELS IN OFFSET CORRECTION WITH PANEL ADJ                    #
-###################################################################################################
 
-
-
-
-###################################################################################################
-#                      IDENTIFY BAD PIXELS BY DIFFERENCING & FINDING OUTLIERS                     #
+#                      IDENTIFY BAD PIXELS BY DIFFERENCING & FINDING OUTLIERS                  ####
 ###################################################################################################
 # problem with differencing, rather than Loess-smoothing: effect is dispersed over neighbouring cells.
 

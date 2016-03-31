@@ -1,6 +1,22 @@
 
 TO DO
 
+===================================================================================================
+
+Iterative model fitting process: circular spot, then per-panel gradient, usw.
+(possibly removing most egregious points at each step as well?)
+
+Check that current model is appropriate for all image sets: further processing needed?
+
+Fit per-panel model, breaking horizontally as well as vertically
+
+Compare effectiveness of each approach: how many 'bad' pixels acquired? MAD/mean/SD of residuals?
+
+Categorise bad pixels according to type/severity. Plot behaviour over time.
+    - try automatic categorisation based on all observations?
+
+===================================================================================================
+
 Methods of smoothing to compare & assess:
     - flat field comparison
     - thresholding as given in manual
@@ -108,7 +124,7 @@ If using Lowess smoothing, need to understand more about theoretical underpinnin
     
     
     
-=========================================================================================================
+========================================================================================================
 READING
 
     - Review Julia's multiple testing notes/literature

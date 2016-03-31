@@ -50,10 +50,14 @@
 
 \item Loess smoothing is particularly ineffective at edges of panels, failing to identify columns of bad pixels particularly at LHS. Anything involving differencing/smoothing against neighbours will likely suffer the same effect.
 
+\item Simple parametric model (even with only circular spot or only panels) picks up large proportion of bad pixels missed by official map.
+
 \end{itemize}
 
 \subsection*{Current questions/considerations}
 \begin{itemize}
+
+\item What size of image defect are we looking for? (ie. do we want to ignore spots on screen etc, or should those be picked up as error areas as well?) 
 
 \item At what point is the model sufficient? Four potential candidates so far:
 
