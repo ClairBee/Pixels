@@ -1,0 +1,182 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+% add document-specific packages here
+
+
+\titleformat{\section}
+    {\normalfont\bfseries}
+    {\llap{\parbox{1cm}{\thesection}}}{0em}{}
+    
+\begin{document}
+
+
+
+\renewenvironment{knitrout}{\vspace{1em}}{\vspace{1em}}
+<<setup, include=FALSE>>=
+opts_chunk$set(size = 'footnotesize',   # smaller font size for chunks
+               out.width = '0.95\\textwidth',   # default figure size = quarter of text width
+               fig.show = 'hold',   # display all figures at end of chunk
+               fig.align = 'center',
+               warning = F,
+               echo = F)
+
+knit_hooks$set(pdfcrop = hook_pdfcrop)
+
+options(width = 80, digits = 4)
+set.seed(24747)
+library(xtable)
+library("IO.Pixels")
+org.par <- par()        # save default parameters in case needed later
+@
+
+<<load-data-etc>>=
+load.pixel.means(fpath = "../../Other-data/")
+cp <- subpanels(pw.m[,,"white", "150828"])[3:128,1:1004,1]
+
+plot.models <- function(terms) {
+    
+    # run models: robust, non-robust, with and without column 1
+    cp.lm <- lm(as.formula(paste0("value ~ ", terms)), data = melt(cp))
+    cp.rlm <- rlm(as.formula(paste0("value ~ ", terms)), data = melt(cp))
+    
+    cp.lm.2 <- lm(as.formula(paste0("value ~ ", terms)), data = melt(cp[,-1]))
+    cp.rlm.2 <- rlm(as.formula(paste0("value ~ ", terms)), data = melt(cp[,-1]))
+    
+    cp.lm.2.pred <- predict(cp.lm.2, melt(cp))
+    cp.rlm.2.pred <- predict(cp.rlm.2, melt(cp))
+
+    frame <- array(dim = c(280, 2030))
+    frame[1:126, 1:1004] <- matrix(cp.lm$fitted.values, nrow = 126)         # basic
+    frame[1:126, 1027:2030] <- matrix(cp.rlm$fitted.values, nrow = 126)     # robust
+    frame[155:280, 1:1004] <- matrix(cp.lm.2.pred, nrow = 126)              # col 1 removed, basic
+    frame[155:280, 1027:2030] <- matrix(cp.rlm.2.pred, nrow = 126)          # col 1 removed, robust
+    
+    frame <- t(frame[nrow(frame):1, ])
+
+    filenm <- gsub(' ', '', 
+                   gsub('[*]', '++', 
+                        gsub('[()]', '', 
+                             gsub(',', '-', paste0("./figure/", terms, ".pdf")))))
+    pdf(filenm)
+    
+    image(c(1:2030), c(1:280), frame, asp = T, xaxt = "none", yaxt = "none", bty = "n",
+      xlab = "", ylab = "", col = sd.colours(), breaks = sd.levels(cp.lm$fitted.values, "mean"))
+    
+    text(c(500, 500, 1500, 1500), c(-40, 330, 330, -40), cex = 0.6,
+         c("Col 1 removed", "Basic model", "Robust model", "Robust, col 1 removed"))
+    
+    dev.off()
+    
+    df <- rbind(c(coef(cp.lm), sd = sd(cp.lm$residuals), mad = mad(cp.lm$residuals),
+                  c.mean = mean(matrix(cp.lm$residuals, nrow = 126)[,-1]),
+                  c.sd = sd(matrix(cp.lm$residuals, nrow = 126)[,-1]),
+                  c.mad = mad(matrix(cp.lm$residuals, nrow = 126)[,-1])),
+                c(coef(cp.rlm), sd = sd(cp.rlm$residuals), mad = mad(cp.rlm$residuals),
+                  c.mean = mean(matrix(cp.rlm$residuals, nrow = 126)[,-1]),
+                  c.sd = sd(matrix(cp.rlm$residuals, nrow = 126)[,-1]),
+                  c.mad = mad(matrix(cp.rlm$residuals, nrow = 126)[,-1])),
+                c(coef(cp.lm.2), sd = sd(cp - cp.lm.2.pred), mad = mad(cp - cp.lm.2.pred),
+                  c.mean = mean((cp - cp.lm.2.pred)[,-1]),
+                  c.sd = sd((cp - cp.lm.2.pred)[,-1]),
+                  c.mad = mad((cp - cp.lm.2.pred)[,-1])),
+                c(coef(cp.rlm.2), sd = sd(cp - cp.rlm.2.pred), mad = mad(cp - cp.rlm.2.pred),
+                  c.mean = mean((cp - cp.rlm.2.pred)[,-1]),
+                  c.sd = sd((cp - cp.rlm.2.pred)[,-1]),
+                  c.mad = mad((cp - cp.rlm.2.pred)[,-1])))
+    rownames(df) <- c("Basic", "Robust", "Cropped", "Robust cropped")
+    
+    return(list(df = df, file = filenm))
+}
+@
+
+\section*{Per-panel model fitting: robustness to patch of defective pixels (as seen in top-left corner)}
+
+%####################################################################################################
+
+\begin{figure}[!h]
+\caption{Models with linear X and Y, no interaction}
+\centering
+<<plots-1>>=
+x.1.y.1 <- plot.models("X1 + X2")
+system2('pdfcrop', c(x.1.y.1$file, x.1.y.1$file))
+@
+\includegraphics{\Sexpr{x.1.y.1$file}}
+\end{figure}
+
+<<xtable-1, results = 'asis'>>=
+print(xtable(x.1.y.1$df, align = "l|ccc|cc|ccc"), size = "footnotesize", table.placement = "!h")
+@
+
+\hrulefill
+\FloatBarrier
+%####################################################################################################
+
+\begin{figure}[!h]
+\caption{Models with quadratic X and linear Y, no interaction}
+\centering
+<<plots-2>>=
+x.2.y.1 <- plot.models("poly(X1, 2) + X2")
+system2('pdfcrop', c(x.2.y.1$file, x.2.y.1$file))
+@
+\includegraphics{\Sexpr{x.2.y.1$file}}
+\end{figure}
+
+<<xtable-2, results = 'asis'>>=
+print(xtable(x.2.y.1$df, align = "l|cccc|cc|ccc"), size = "footnotesize", table.placement = "!h")
+@
+
+\hrulefill
+\FloatBarrier
+%####################################################################################################
+
+\begin{figure}[!h]
+\caption{Models with linear X and quadratic Y, no interaction}
+\centering
+<<plots-3>>=
+x.1.y.2 <- plot.models("X1 + poly(X2, 2)")
+system2('pdfcrop', c(x.1.y.2$file, x.1.y.2$file))
+@
+\includegraphics{\Sexpr{x.1.y.2$file}}
+\end{figure}
+
+<<xtable-3, results = 'asis'>>=
+print(xtable(x.1.y.2$df, align = "l|cccc|cc|ccc"), size = "footnotesize", table.placement = "!h")
+@
+
+\hrulefill
+\FloatBarrier
+%####################################################################################################
+
+\begin{figure}[!h]
+\caption{Models with quadratic X and Y, no interaction}
+\centering
+<<plots-4>>=
+x.2.y.2 <- plot.models("poly(X1, 2) + poly(X2, 2)")
+system2('pdfcrop', c(x.2.y.2$file, x.2.y.2$file))
+@
+\includegraphics{\Sexpr{x.2.y.2$file}}
+\end{figure}
+
+<<xtable-4, results = 'asis'>>=
+print(xtable(x.2.y.2$df, align = "l|ccccc|cc|ccc"), size = "footnotesize", table.placement = "!h")
+@
+
+\hrulefill
+\FloatBarrier
+%####################################################################################################
+
+\begin{figure}[!h]
+\caption{Models with linear X and Y, with interaction}
+\centering
+<<plots-5>>=
+x.1.y.1.int <- plot.models("X1 * X2")
+system2('pdfcrop', c(x.1.y.1.int$file, x.1.y.1.int$file))
+@
+\includegraphics{\Sexpr{x.1.y.1.int$file}}
+\end{figure}
+
+<<xtable-5, results = 'asis'>>=
+print(xtable(x.1.y.1.int$df, align = "l|cccc|cc|ccc"), size = "footnotesize", table.placement = "!h")
+@
+
+\end{document}
