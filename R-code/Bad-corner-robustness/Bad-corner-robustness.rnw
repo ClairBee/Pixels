@@ -42,21 +42,33 @@ plot.models <- function(terms) {
     cp.lm.2 <- lm(as.formula(paste0("value ~ ", terms)), data = melt(cp[,-1]))
     cp.rlm.2 <- rlm(as.formula(paste0("value ~ ", terms)), data = melt(cp[,-1]))
     
-    cp.lm.2.pred <- predict(cp.lm.2, melt(cp))
-    cp.rlm.2.pred <- predict(cp.rlm.2, melt(cp))
+    cp.lm.pred <- matrix(predict(cp.lm, melt(cp)), nrow = 126)
+    cp.rlm.pred <- matrix(predict(cp.rlm, melt(cp)), nrow = 126)
+    cp.lm.2.pred <- matrix(predict(cp.lm.2, melt(cp)), nrow = 126)
+    cp.rlm.2.pred <- matrix(predict(cp.rlm.2, melt(cp)), nrow = 126)
+    
+    r1 <- cbind(cp[1,], cp.lm.pred[1,], cp.rlm.pred[1,], cp.lm.2.pred[1,], cp.rlm.2.pred[1,])
+    r126 <- cbind(cp[126,], cp.lm.pred[126,], cp.rlm.pred[126,], cp.lm.2.pred[126,], cp.rlm.2.pred[126,])
+    c400 <- cbind(cp[,400], cp.lm.pred[,400], cp.rlm.pred[,400], cp.lm.2.pred[,400], cp.rlm.2.pred[,400])
+
 
     frame <- array(dim = c(280, 2030))
     frame[1:126, 1:1004] <- matrix(cp.lm$fitted.values, nrow = 126)         # basic
     frame[1:126, 1027:2030] <- matrix(cp.rlm$fitted.values, nrow = 126)     # robust
-    frame[155:280, 1:1004] <- matrix(cp.lm.2.pred, nrow = 126)              # col 1 removed, basic
-    frame[155:280, 1027:2030] <- matrix(cp.rlm.2.pred, nrow = 126)          # col 1 removed, robust
+    frame[155:280, 1:1004] <- cp.lm.2.pred                                  # col 1 removed, basic
+    frame[155:280, 1027:2030] <- cp.rlm.2.pred                              # col 1 removed, robust
     
     frame <- t(frame[nrow(frame):1, ])
 
-    filenm <- gsub(' ', '', 
+    terms <- gsub(' ', '', 
                    gsub('[*]', '++', 
                         gsub('[()]', '', 
-                             gsub(',', '-', paste0("./figure/", terms, ".pdf")))))
+                             gsub(',', '-', terms))))
+    
+    filenm <- paste0("./figure/", terms, ".pdf")
+    filenm2 <- paste0("./figure/", terms, "-2.pdf")
+    
+    #-------------------------------------------------------------------------------------------
     pdf(filenm)
     
     image(c(1:2030), c(1:280), frame, asp = T, xaxt = "none", yaxt = "none", bty = "n",
@@ -66,26 +78,68 @@ plot.models <- function(terms) {
          c("Col 1 removed", "Basic model", "Robust model", "Robust, col 1 removed"))
     
     dev.off()
+    #-------------------------------------------------------------------------------------------
+    cols <- c("blue", "green3", "slateblue1", "gold")
+    pdf(filenm2, width = 10, height = 2)
+    par(mfrow = c(1,3), pch = 20, mar = c(2,2,3,1))
     
-    df <- rbind(c(coef(cp.lm), sd = sd(cp.lm$residuals), mad = mad(cp.lm$residuals),
+    plot(r1[,1], type = "o", xlab = "", ylab = "", cex = 0.5, 
+         ylim = range(pretty(r1)), cex.lab = 1, cex.main = 1, cex.axis = 1,
+         main = "Transect along left-hand column")
+    points(r1[,2], type = "o", col = adjustcolor(cols[1], alpha = 0.5), cex = 0.5)
+    points(r1[,3], type = "o", col = adjustcolor(cols[2], alpha = 0.5), cex = 0.5)
+    points(r1[,4], type = "o", col = adjustcolor(cols[3], alpha = 0.5), cex = 0.5)
+    points(r1[,5], type = "o", col = adjustcolor(cols[4], alpha = 0.5), cex = 0.5)
+    
+    legend("bottomleft", bty = "n", pch = 20, cex = 0.8,
+       col = c("black", adjustcolor(cols, alpha = 0.5)),
+       legend = c("Column 1", "Basic model", "Robust model", "Col 1 removed", "Robust, col 1 removed"))
+
+
+    plot(r126[,1], type = "o", ylim = range(pretty(r126)), xlab = "", ylab = "", cex = 0.5,
+         cex.lab = 1, cex.main = 1, cex.axis = 1,
+         main = "Transect along right-hand column")
+    points(r126[,2], type = "o", col = adjustcolor(cols[1], alpha = 0.5), cex = 0.5)
+    points(r126[,3], type = "o", col = adjustcolor(cols[2], alpha = 0.5), cex = 0.5)
+    points(r126[,4], type = "o", col = adjustcolor(cols[3], alpha = 0.5), cex = 0.5)
+    points(r126[,5], type = "o", col = adjustcolor(cols[4], alpha = 0.5), cex = 0.5)
+    
+    legend("bottomleft", bty = "n", pch = 20, cex = 0.8,
+       col = c("black", adjustcolor(cols, alpha = 0.5)),
+       legend = c("Column 126", "Basic model", "Robust model", "Col 1 removed", "Robust, col 1 removed"))
+    
+    plot(c400[,1], type = "o", ylim = range(pretty(c400)), xlab = "", ylab = "", cex = 0.5,
+         main = "", cex.lab = 1, cex.main = 1, cex.axis = 1)
+    points(c400[,2], type = "o", col = adjustcolor(cols[1], alpha = 0.5), cex = 0.5)
+    points(c400[,3], type = "o", col = adjustcolor(cols[2], alpha = 0.5), cex = 0.5)
+    points(c400[,4], type = "o", col = adjustcolor(cols[3], alpha = 0.5), cex = 0.5)
+    points(c400[,5], type = "o", col = adjustcolor(cols[4], alpha = 0.5), cex = 0.5)
+    
+    legend("bottomright", bty = "n", pch = 20, cex = 0.8,
+       col = c("black", adjustcolor(cols, alpha = 0.5)),
+       legend = c("Row 400", "Basic model", "Robust model", "Col 1 removed", "Robust, col 1 removed"))
+    
+    dev.off()
+    #-------------------------------------------------------------------------------------------
+    df <- rbind(c(sd = sd(cp.lm$residuals), mad = mad(cp.lm$residuals),
                   c.mean = mean(matrix(cp.lm$residuals, nrow = 126)[,-1]),
                   c.sd = sd(matrix(cp.lm$residuals, nrow = 126)[,-1]),
-                  c.mad = mad(matrix(cp.lm$residuals, nrow = 126)[,-1])),
-                c(coef(cp.rlm), sd = sd(cp.rlm$residuals), mad = mad(cp.rlm$residuals),
+                  c.mad = mad(matrix(cp.lm$residuals, nrow = 126)[,-1]), coef(cp.lm)),
+                c(sd = sd(cp.rlm$residuals), mad = mad(cp.rlm$residuals),
                   c.mean = mean(matrix(cp.rlm$residuals, nrow = 126)[,-1]),
                   c.sd = sd(matrix(cp.rlm$residuals, nrow = 126)[,-1]),
-                  c.mad = mad(matrix(cp.rlm$residuals, nrow = 126)[,-1])),
-                c(coef(cp.lm.2), sd = sd(cp - cp.lm.2.pred), mad = mad(cp - cp.lm.2.pred),
+                  c.mad = mad(matrix(cp.rlm$residuals, nrow = 126)[,-1]), coef(cp.rlm)),
+                c(sd = sd(cp - cp.lm.2.pred), mad = mad(cp - cp.lm.2.pred),
                   c.mean = mean((cp - cp.lm.2.pred)[,-1]),
                   c.sd = sd((cp - cp.lm.2.pred)[,-1]),
-                  c.mad = mad((cp - cp.lm.2.pred)[,-1])),
-                c(coef(cp.rlm.2), sd = sd(cp - cp.rlm.2.pred), mad = mad(cp - cp.rlm.2.pred),
+                  c.mad = mad((cp - cp.lm.2.pred)[,-1]), coef(cp.lm.2)),
+                c(sd = sd(cp - cp.rlm.2.pred), mad = mad(cp - cp.rlm.2.pred),
                   c.mean = mean((cp - cp.rlm.2.pred)[,-1]),
                   c.sd = sd((cp - cp.rlm.2.pred)[,-1]),
-                  c.mad = mad((cp - cp.rlm.2.pred)[,-1])))
+                  c.mad = mad((cp - cp.rlm.2.pred)[,-1]), coef(cp.rlm.2)))
     rownames(df) <- c("Basic", "Robust", "Cropped", "Robust cropped")
     
-    return(list(df = df, file = filenm))
+    return(list(df = df, file = filenm, file2 = filenm2))
 }
 @
 
@@ -99,12 +153,16 @@ plot.models <- function(terms) {
 <<plots-1>>=
 x.1.y.1 <- plot.models("X1 + X2")
 system2('pdfcrop', c(x.1.y.1$file, x.1.y.1$file))
+system2('pdfcrop', c(x.1.y.1$file2, x.1.y.1$file2))
 @
 \includegraphics{\Sexpr{x.1.y.1$file}}
+\vspace{20pt}
+
+\includegraphics[scale = 0.6]{\Sexpr{x.1.y.1$file2}}
 \end{figure}
 
 <<xtable-1, results = 'asis'>>=
-print(xtable(x.1.y.1$df, align = "l|ccc|cc|ccc"), size = "footnotesize", table.placement = "!h")
+print(xtable(x.1.y.1$df, align = "l|cc|ccc|ccc"), size = "footnotesize", table.placement = "!h")
 @
 
 \hrulefill
@@ -117,16 +175,20 @@ print(xtable(x.1.y.1$df, align = "l|ccc|cc|ccc"), size = "footnotesize", table.p
 <<plots-2>>=
 x.2.y.1 <- plot.models("poly(X1, 2) + X2")
 system2('pdfcrop', c(x.2.y.1$file, x.2.y.1$file))
+system2('pdfcrop', c(x.2.y.1$file2, x.2.y.1$file2))
 @
 \includegraphics{\Sexpr{x.2.y.1$file}}
+\vspace{20pt}
+
+\includegraphics[scale = 0.6]{\Sexpr{x.2.y.1$file2}}
 \end{figure}
 
 <<xtable-2, results = 'asis'>>=
-print(xtable(x.2.y.1$df, align = "l|cccc|cc|ccc"), size = "footnotesize", table.placement = "!h")
+print(xtable(x.2.y.1$df, align = "l|cc|ccc|cccc"), size = "footnotesize", table.placement = "!h")
 @
 
-\hrulefill
 \FloatBarrier
+\newpage
 %####################################################################################################
 
 \begin{figure}[!h]
@@ -135,12 +197,16 @@ print(xtable(x.2.y.1$df, align = "l|cccc|cc|ccc"), size = "footnotesize", table.
 <<plots-3>>=
 x.1.y.2 <- plot.models("X1 + poly(X2, 2)")
 system2('pdfcrop', c(x.1.y.2$file, x.1.y.2$file))
+system2('pdfcrop', c(x.1.y.2$file2, x.1.y.2$file2))
 @
 \includegraphics{\Sexpr{x.1.y.2$file}}
+\vspace{20pt}
+
+\includegraphics[scale = 0.6]{\Sexpr{x.1.y.2$file2}}
 \end{figure}
 
 <<xtable-3, results = 'asis'>>=
-print(xtable(x.1.y.2$df, align = "l|cccc|cc|ccc"), size = "footnotesize", table.placement = "!h")
+print(xtable(x.1.y.2$df, align = "l|cc|ccc|cccc"), size = "footnotesize", table.placement = "!h")
 @
 
 \hrulefill
@@ -153,16 +219,21 @@ print(xtable(x.1.y.2$df, align = "l|cccc|cc|ccc"), size = "footnotesize", table.
 <<plots-4>>=
 x.2.y.2 <- plot.models("poly(X1, 2) + poly(X2, 2)")
 system2('pdfcrop', c(x.2.y.2$file, x.2.y.2$file))
+system2('pdfcrop', c(x.2.y.2$file2, x.2.y.2$file2))
 @
 \includegraphics{\Sexpr{x.2.y.2$file}}
+\vspace{20pt}
+
+\includegraphics[scale = 0.6]{\Sexpr{x.2.y.2$file2}}
 \end{figure}
 
 <<xtable-4, results = 'asis'>>=
-print(xtable(x.2.y.2$df, align = "l|ccccc|cc|ccc"), size = "footnotesize", table.placement = "!h")
+print(xtable(x.2.y.2$df, align = "l|cc|ccc|ccccc"), size = "footnotesize", table.placement = "!h")
 @
 
-\hrulefill
 \FloatBarrier
+\newpage
+
 %####################################################################################################
 
 \begin{figure}[!h]
@@ -171,12 +242,83 @@ print(xtable(x.2.y.2$df, align = "l|ccccc|cc|ccc"), size = "footnotesize", table
 <<plots-5>>=
 x.1.y.1.int <- plot.models("X1 * X2")
 system2('pdfcrop', c(x.1.y.1.int$file, x.1.y.1.int$file))
+system2('pdfcrop', c(x.1.y.1.int$file2, x.1.y.1.int$file2))
 @
 \includegraphics{\Sexpr{x.1.y.1.int$file}}
+\vspace{20pt}
+
+\includegraphics[scale = 0.6]{\Sexpr{x.1.y.1.int$file2}}
 \end{figure}
 
 <<xtable-5, results = 'asis'>>=
-print(xtable(x.1.y.1.int$df, align = "l|cccc|cc|ccc"), size = "footnotesize", table.placement = "!h")
+print(xtable(x.1.y.1.int$df, align = "l|cc|ccc|cccc"), size = "footnotesize", table.placement = "!h")
+@
+
+\hrulefill
+\FloatBarrier
+%####################################################################################################
+
+\begin{figure}[!h]
+\caption{Models with quadratic X and linear Y, with interaction}
+\centering
+<<plots-6>>=
+x.2.y.1.int <- plot.models("poly(X1, 2) * X2")
+system2('pdfcrop', c(x.2.y.1.int$file, x.2.y.1.int$file))
+system2('pdfcrop', c(x.2.y.1.int$file2, x.2.y.1.int$file2))
+@
+\includegraphics{\Sexpr{x.2.y.1.int$file}}
+\vspace{20pt}
+
+\includegraphics[scale = 0.6]{\Sexpr{x.2.y.1.int$file2}}
+\end{figure}
+
+<<xtable-6, results = 'asis'>>=
+print(xtable(x.2.y.1.int$df, align = "l|cc|ccc|cccccc"), size = "footnotesize", table.placement = "!h")
+@
+
+
+\FloatBarrier
+\newpage
+%####################################################################################################
+
+\begin{figure}[!h]
+\caption{Models with linear X and quadratic Y, with interaction}
+\centering
+<<plots-7>>=
+x.1.y.2.int <- plot.models("X1 * poly(X2, 2)")
+system2('pdfcrop', c(x.1.y.2.int$file, x.1.y.2.int$file))
+system2('pdfcrop', c(x.1.y.2.int$file2, x.1.y.2.int$file2))
+@
+\includegraphics{\Sexpr{x.1.y.2.int$file}}
+\vspace{20pt}
+
+\includegraphics[scale = 0.6]{\Sexpr{x.1.y.2.int$file2}}
+\end{figure}
+
+<<xtable-7, results = 'asis'>>=
+print(xtable(x.1.y.2.int$df, align = "l|cc|ccc|cccccc"), size = "footnotesize", table.placement = "!h")
+@
+
+\hrulefill
+\FloatBarrier
+%####################################################################################################
+
+\begin{figure}[!h]
+\caption{Models with quadratic X and Y, with interaction}
+\centering
+<<plots-8>>=
+x.2.y.2.int <- plot.models("poly(X1, 2) * poly(X2, 2)")
+system2('pdfcrop', c(x.2.y.2.int$file, x.2.y.2.int$file))
+system2('pdfcrop', c(x.2.y.2.int$file2, x.2.y.2.int$file2))
+@
+\includegraphics{\Sexpr{x.2.y.2.int$file}}
+\vspace{20pt}
+
+\includegraphics[scale = 0.6]{\Sexpr{x.2.y.2.int$file2}}
+\end{figure}
+
+<<xtable-8, results = 'asis'>>=
+print(xtable(x.2.y.2.int$df, align = "l|cc|ccc|ccccccccc"), size = "footnotesize", table.placement = "!h")
 @
 
 \end{document}

@@ -1,0 +1,156 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+% add document-specific packages here
+
+\titleformat{\section}
+    {\normalfont\bfseries}
+    {\llap{\parbox{1cm}{\thesection}}}{0em}{}
+    
+\begin{document}
+\renewenvironment{knitrout}{\vspace{1em}}{\vspace{1em}}
+<<setup, include=FALSE>>=
+opts_chunk$set(size = 'footnotesize',   # smaller font size for chunks
+               out.width = '0.25\\textwidth',   # default figure size = quarter of text width
+               fig.show = 'hold',   # display all figures at end of chunk
+               fig.align='center',
+               echo = F)
+options(width = 80, digits = 4)
+set.seed(24747)
+library(xtable)
+library("IO.Pixels")
+org.par <- par()        # save default parameters in case needed later
+@
+
+\section*{Parametric modelling of noise}
+Fit a robust circular and panelwise model to each power setting in turn. (Residual plots are produced but not included in the report)
+
+<<prep>>=
+load.pixel.means(fpath = "../../Other-data/")
+zz <- read.csv("./Model-results.csv", as.is = T)
+
+fit.model <- function(img.date, batch, spot.order, panel.model) {
+    
+    img.date <- toString(img.date)
+    modelnm <- paste0(spot.order, "-spot and ", panel.model)
+    
+    # check if line already exists in zz dataframe
+    ext <- apply(zz[,1:3], 1, paste, collapse = " ")
+    m <- paste(batch, img.date, modelnm, collapse = " ")
+    
+    if (m %in% ext) {
+        # exit and return nothing
+       return(data.frame("image" = character(),
+               "date" = character(),
+               "model" = character()))
+    }
+    
+    im <- pw.m[,,batch, img.date]
+
+    cropped <- im[51:1946, 51:1946]
+
+    spot <- spot.lm(im, o = spot.order, robust = T)
+    spot.res <- matrix(spot$residuals, ncol = 1996)
+    
+    panel <- panel.lm(spot.res, terms = panel.model, robust = T)
+    res <- spot.res - panel$fitted.values
+    cropped.res <- res[51:1946, 51:1946]
+    
+    JF <- JohnsonFit(res, moment = "quant")
+    JF.cropped <- JohnsonFit(cropped.res, moment = "quant")
+
+    
+    
+        panel.model <- gsub(' ', '', 
+                   gsub('[*]', '++', 
+                        gsub('[()]', '', 
+                             gsub(',', '', panel.model))))
+    
+        filenm <- paste0("./plots/", img.date, "-", batch, "-", spot.order, "spot-", panel.model, "-residuals.pdf")
+    
+        pdf(filenm, width = 10, height = 3)
+        par(mfrow = c(1,3))
+        
+            # image of residuals
+            pixel.image(res, title = "Residuals showing crop line", panels = F)
+            abline(h = c(51, 1946)); abline(v = c(51, 1946))
+            
+            s.hist(res, main = "Before (black) and after (blue) cropping", xlab = "", ylab = "")
+            hist(cropped.res, breaks = "fd", add = T, col = "skyblue", border = "skyblue")
+            
+            plot(qJohnson((c(1:999)/1000), JF), quantile(res,(c(1:999)/1000)), 
+                 pch = 20, ylab = "Observed quantile", xlab = "Johnson quantile",
+                 main = "Johnson Q-Q plot", col = adjustcolor("blue", alpha = 0.5), asp = T)
+            points(qJohnson((c(1:999)/1000), JF.cropped), quantile(cropped.res,(c(1:999)/1000)), 
+                   pch = 20, col = adjustcolor("orange", alpha = 0.5))
+            points(qJohnson((c(1:999)/1000), JF.cropped), quantile(res,(c(1:999)/1000)), 
+                   pch = 20, col = adjustcolor("red", alpha = 0.5))
+            abline(0,1,col = "red")
+
+            legend("topleft", legend = c("Quantiles of all data", "Quantiles of cropped data", "All data vs Johnson (cropped)"), 
+                   pch = 20, col = adjustcolor(c("blue", "orange", "red"), alpha = 0.5), bty = "n")
+            
+            mtext(paste0("Residual plots for ", batch, "images, ", img.date, " after fitting ", 
+                         modelnm), outer = TRUE, cex = 1)
+        dev.off()
+        
+        
+    data.frame("image" = batch,
+               "date" = img.date,
+               "model" = modelnm,
+               "n.params" = (spot.order + 1) + length(c(panel$models)),
+               "image.sd" = sd(im),
+               "image.mad" = mad(im),
+               "cropped.mean" = mean(cropped),
+               "cropped.sd" = sd(cropped),
+               "cropped.mad" = mad(cropped),
+               "res.mean" = mean(res),
+               "res.sd" = sd(res),
+               "res.mad" = mad(res),
+               "c.res.mean" = mean(cropped.res),
+               "c.res.sd" = sd(cropped.res),
+               "c.res.mad" = mad(cropped.res),
+               "Q.001.cr" = quantile(cropped.res, 0.001),
+               "Q.999.cr" = quantile(cropped.res, 0.999),
+               "LT.Q.001.cr" = length(which(cropped.res < quantile(cropped.res, 0.001))),
+               "GT.Q.999.cr" = length(which(cropped.res > quantile(cropped.res, 0.999))),
+               "JF.c.001" = qJohnson(0.001, JF.cropped),
+               "JF.c.999" = qJohnson(0.999, JF.cropped),
+               "LT.J.c.001" = length(which(cropped.res < qJohnson(0.001, JF.cropped))),
+               "GT.J.c.999" = length(which(cropped.res > qJohnson(0.999, JF.cropped))), 
+               row.names = NULL)
+}
+@
+
+
+<<xtable-res, results = 'asis'>>=
+zz <- rbind.fill(zz,
+                 fit.model(141009, "black", spot.order = 2, panel.model = "x + poly(y, 2)"),
+                 fit.model(141009, "grey", spot.order = 2, panel.model = "x + poly(y, 2)"),
+                 fit.model(141009, "white", spot.order = 2, panel.model = "x + poly(y, 2)"),
+                 fit.model(141009, "black", spot.order = 2, panel.model = "x + y"),
+                 fit.model(141009, "grey", spot.order = 2, panel.model = "x + y"),
+                 fit.model(141009, "white", spot.order = 2, panel.model = "x + y"))
+
+rownames(zz) <- apply(zz[,1:3], 1, paste, collapse = " ")
+
+write.csv(zz, "./Model-results.csv", row.names = F)
+
+print(xtable(zz[,c("n.params","image.sd","image.mad","res.sd","res.mad","c.res.sd","c.res.mad")],
+             align = "l|c|cc|cc|cc",
+             caption = "Residuals after model fitting"),
+      size = "footnotesize", 
+      caption.placement = "top",
+      table.placement = "!h")
+@
+
+
+<<xtable-2, results = 'asis'>>=
+print(xtable(zz[,c("Q.001.cr", "Q.999.cr", "JF.c.001", "JF.c.999", "LT.Q.001.cr", "LT.J.c.001", "GT.J.c.999")],
+             align = "l|cc|cc|c|cc",
+             caption = "Thresholding by quantiles vs by Johnson distribution"),
+      size = "footnotesize", 
+      caption.placement = "top", 
+      table.placement = "!h")
+@
+
+\end{document}

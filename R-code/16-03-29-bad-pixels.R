@@ -391,7 +391,7 @@ bpm.params <- xmlToList(xmlParse("./Other-data/Other-images/BadPixelMap_160314/C
 ###################################################################################################
 
 #                    FIT FULL PARAMETRIC MODELS AND USE TO IDENTIFY BAD PIXELS                 ####
-###################################################################################################
+
 im <- pw.m[,,"white","160314"]
 library(SuppDists)
 

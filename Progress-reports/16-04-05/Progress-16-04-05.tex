@@ -52,10 +52,22 @@
 
 \item Simple parametric model (even with only circular spot or only panels) picks up large proportion of bad pixels missed by official map.
 
+\item Compared robust \& non-robust model fitting in areas of high damage (using top left-hand panel as test case), also cropping edge of panel (since this is more likely to show damage). Robust model fitting consistently better (lower SD, and mean value less affected by outliers) but cropping makes no real difference.
+
+\item Assessment of model fit is being thrown by large numbers of low-valued pixels around edges of panel. May be useful to crop these (say, remove 50px from each edge), fit thresholds to central 'healthy' portion (using whichever method), then apply those thresholds to the whole image again.
+
 \end{itemize}
 
 \subsection*{Current questions/considerations}
 \begin{itemize}
+
+\item In terms of thresholding, would propose using a parametric model to reduce systematic variability (circular spot \& panelwise regression), then fitting a Johnson distribution to the residuals. Quantiles of Johnson distribution can be used to as `sickness' score to assess how far a pixel is from its expected value, and to set a threshold. \textbf{Some danger of circular reasoning:} must make sure we don't identify regions of bad pixels simply because the model doesn't fit the data well enough!
+
+\begin{itemize}
+\item In dark images, distribution is v narrow, picking up large numbers of `bad' pixels on both sides of main distribution; however, same threshold in grey and white images picks up a relatively small number of points.
+
+\item If not Johnson distribution, could use MAD to get a `sickness' score for each pixel as discussed previously
+\end{itemize}
 
 \item What size of image defect are we looking for? (ie. do we want to ignore spots on screen etc, or should those be picked up as error areas as well?) 
 
@@ -78,8 +90,8 @@
 \item Finish tuning parametric model
 
 \begin{itemize}
-\item Try fitting per-panel parametric model across distance from top-left corner of panel, rather than by x and y coordinates
-\item May need curved fit across Y axis of panel
+\item Try fitting per-panel parametric model across distance from top-left corner of panel, rather than by x and y coordinates?
+\item May need curved fit across Y axis of panel, not sure about X-axis
 
 \end{itemize}
 

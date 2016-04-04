@@ -3,6 +3,10 @@ TO DO
 
 ===================================================================================================
 
+When fitting spatial models to assess distribution & evolution of damage, relate to panel offset?
+
+Perhaps fit models excluding panel edges, then extend prediction over panel edges?
+
 Iterative model fitting process: circular spot, then per-panel gradient, usw.
 (possibly removing most egregious points at each step as well?)
 

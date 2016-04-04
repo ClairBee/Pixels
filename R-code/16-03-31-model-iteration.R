@@ -8,7 +8,19 @@ im <- pw.m[,,"white", "150828"]
 # very little change over first few iterations (circular spot is perhaps minutely more accurate)
 # better to concentrate on improving model design instead.
 
-# compare performance of current model set over each image. Is common model appropriate?
+####################################################################################################
+# COMPARE MODEL AT EACH POWER SETTING                                                           ####
+
+circ.o <- 2; panel.o <- 1
+
+#---------------------------------------------------------------------------------------------------
+
+circ.b <- fit.circular.lm.poly(bp.b[,,"black", "150828"], o = 2)
+circ.res <- matrix(circ.lm$residuals, ncol = 1996)
+
+panel.lm <- fit.panel.lm(circ.res)
+panel.res <- circ.res - panel.lm$fitted.values
+
 
 ###################################################################################################
 # FITTING WITHOUT REMOVING EXTREME VALUES                                                      ####
