@@ -7,7 +7,6 @@ library("IO.Pixels")
 par(pch = 20)
 
 load.pixel.means()
-bpm <- read.csv("./Other-data/BadPixelMap-160314.csv", as.is = T)
 
 # use image date for which we have 'official' bad pixel map
 dt <- "160314"    
@@ -37,6 +36,7 @@ dt <- "160314"
     
         # residuals
         pdf(paste0("./Plots/Simple-model-fitting/", dt, "-white-residuals.pdf"))
+        par(mfrow = c(1,2))
             pixel.image(w.res, title = paste0("Residuals after fitting spot and linear panels to white image: ", dt), panels = T)
             s.hist(w.res, col = "black", main = "Histogram of residuals", xlab = "Residual value")
         dev.off()
@@ -90,6 +90,7 @@ dt <- "160314"
     
     # residuals
     pdf(paste0("./Plots/Simple-model-fitting/", dt, "-grey-residuals.pdf"))
+    par(mfrow = c(1,2))
         pixel.image(g.res, title = paste0("Residuals after fitting spot and linear panels to grey image: ", dt), panels = T)
         s.hist(g.res, col = "black", main = "Histogram of residuals", xlab = "Residual value")
     dev.off()
@@ -143,6 +144,7 @@ dt <- "160314"
     
     # residuals
     pdf(paste0("./Plots/Simple-model-fitting/", dt, "-black-residuals.pdf"))
+    par(mfrow = c(1,2))
         pixel.image(b.res, title = paste0("Residuals after fitting spot and linear panels to black image: ", dt), panels = T)
         s.hist(b.res, col = "black", main = "Histogram of residuals", xlab = "Residual value")
     dev.off()
@@ -191,14 +193,75 @@ dt <- "160314"
 write.csv(bp, paste0("./Plots/Simple-model-fitting/", dt, "-bpm-IQR.csv"), row.names = F)
 }
 
-bp <- read.csv(paste0("./Plots/Simple-model-fitting/", dt, "-bpm-IQR.csv"))
-table(bp$src, bp$type)
+# combine bad pixel maps & compare
+    bp <- read.csv(paste0("./Plots/Simple-model-fitting/", dt, "-bpm-IQR.csv"))
+    table(bp$src, bp$type)
 
-####################################################################################################
+    # import 'official' bad pixel map
+    bpm <- read.csv("./Other-data/BadPixelMap-160314.csv", as.is = T)
 
-# POSSIBLE IMPROVEMENTS ETC                                                                     ####
+    # combine into map of all bad pixels identified by both methods
+    bp.all <- combine.maps(bp, bpm)
+    bp.all$type <- ordered(bp.all$type, levels = c("hot", "dead", "bright", "dim"))
+    bp.healthy <- sample.healthy(bp.all)
+
+    # plot bad vs healthy pixels
+    {
+        pdf(paste0("./Plots/Simple-model-fitting/", dt,"-bad-vs-healthy.pdf"), width = 12, height = 4)
+        par(mfrow = c(1,3), pch = 20, mar = c(2,2,3,1))
+            plot(pw.m[,,"black",dt][bp.healthy], ylim = c(0,65535), col = adjustcolor("gold", alpha = 0.2),
+                 ylab = "Pixel value", main = paste0("Bad pixels - black, ", dt))
+            points(pw.m[,,"black",dt][as.matrix(bp.all[,1:2])], col = adjustcolor("blue", alpha = 0.2))
+            
+            plot(pw.m[,,"grey",dt][bp.healthy], ylim = c(0,65535), col = adjustcolor("gold", alpha = 0.2),
+                 ylab = "Pixel value", main = paste0("Bad pixels - grey, ", dt))
+            points(pw.m[,,"grey",dt][as.matrix(bp.all[,1:2])], col = adjustcolor("green3", alpha = 0.2))
+            
+            plot(pw.m[,,"white",dt][bp.healthy], ylim = c(0,65535), col = adjustcolor("gold", alpha = 0.2),
+                 ylab = "Pixel value", main = paste0("Bad pixels - white, ", dt))
+            points(pw.m[,,"white",dt][as.matrix(bp.all[,1:2])], col = adjustcolor("turquoise3", alpha = 0.2))
+        dev.off()
+    }
+    
+    # plot bad pixels by means of identification
+    {
+        pdf(paste0("./Plots/Simple-model-fitting/", dt,"-bad-px-by-source.pdf"), width = 12, height = 4)
+        par(mfrow = c(1,3), pch = 20, mar = c(2,2,3,1))
+        
+            plot(pw.m[,,"black",dt][bp.healthy], ylim = c(0,65535), col = adjustcolor("gold", alpha = 0.2),
+                 ylab = "Pixel value", main = paste0("Bad pixels - black, ", dt))
+            points(pw.m[,,"black",dt][as.matrix(bp.all[,1:2])],
+                   col = adjustcolor(c("slateblue1", "chartreuse3", "red")[bp.all$map], alpha = 0.2))
+            legend("topleft", pch = 20, col = c("slateblue1", "chartreuse3", "red", "gold"), bty = "n",
+                   legend = c("CB map only", "Both maps", "Auto map only", "Healthy sample"))
+        
+            plot(pw.m[,,"grey",dt][bp.healthy], ylim = c(0,65535), col = adjustcolor("gold", alpha = 0.2),
+                 ylab = "Pixel value", main = paste0("Bad pixels - grey, ", dt))
+            points(pw.m[,,"grey",dt][as.matrix(bp.all[,1:2])],
+                   col = adjustcolor(c("slateblue1", "chartreuse3", "red")[bp.all$map], alpha = 0.2))
+            legend("topleft", pch = 20, col = c("slateblue1", "chartreuse3", "red", "gold"), bty = "n",
+                   legend = c("CB map only", "Both maps", "Auto map only", "Healthy sample"))
+            
+            plot(pw.m[,,"white",dt][bp.healthy], ylim = c(0,65535), col = adjustcolor("gold", alpha = 0.2),
+                 ylab = "Pixel value", main = paste0("Bad pixels - white, ", dt))
+            points(pw.m[,,"white",dt][as.matrix(bp.all[,1:2])],
+                   col = adjustcolor(c("slateblue1", "chartreuse3", "red")[bp.all$map], alpha = 0.2))
+            legend("topleft", pch = 20, col = c("slateblue1", "chartreuse3", "red", "gold"), bty = "n",
+                   legend = c("CB map only", "Both maps", "Auto map only", "Healthy sample"))
+        dev.off()
+    }
+    
+    # check line root: zoom to xlim = c(420,440), ylim = c(1180,1220),
+    plot(bp.all[bp.all$map != "old",1:2], asp = T, pch = 20, 
+         col = c("red", "blue", "gold", "green3")[bp.all$type[bp.all$map != "old"]])
+    points(bp.all[bp.all$map != "new",1:2], pch = 1)
+
+    ####################################################################################################
+
+# MISCELLANEOUS                                                                                 ####
 
 # visible line of dead pixels with blooming in black residual image for 160314, panel U4
+# 'root' cluster at [44:46, 206:208, "U4"] == [426:428, 1198:1200]
 {
     pixel.image(subpanels(b.res)[,150:300, "U4"], break.levels = sd.levels(b.res), title = "Dead pixels - black residuals")
     pixel.image(subpanels(g.res)[,150:300, "U4"], break.levels = sd.levels(g.res), title = "Dead pixels - grey residuals")
@@ -207,7 +270,63 @@ table(bp$src, bp$type)
     pixel.image(subpanels(pw.m[,,"black", dt])[,150:300, "U4"], title = "Dead pixels - black image")
     pixel.image(subpanels(pw.m[,,"grey", dt])[,150:300, "U4"], title = "Dead pixels - grey image")
     pixel.image(subpanels(pw.m[,,"white", dt])[,150:300, "U4"], title = "Dead pixels - white image")
+    
+    check.cluster <- function(dt, box = F) {
+        dt <- toString(dt)
+        par(mfrow = c(1,3))
+            
+            pixel.image(subpanels(pw.m[,,"black", dt])[, 150:300, "U4"], title = "Dead pixels - black image")
+            if (box) {
+                lines(matrix(c(30, 45, 30, 72, 60, 72, 60, 45, 30, 45), ncol = 2, byrow = T), lty = 2)
+            }
+            
+            pixel.image(subpanels(pw.m[,,"grey", dt])[, 150:300, "U4"], title = "Dead pixels - grey image")
+            if (box) {
+                lines(matrix(c(30, 45, 30, 72, 60, 72, 60, 45, 30, 45), ncol = 2, byrow = T), lty = 2)
+            }
+            
+            pixel.image(subpanels(pw.m[,,"white", dt])[, 150:300, "U4"], title = "Dead pixels - white image")
+            if (box) {
+                lines(matrix(c(30, 45, 30, 72, 60, 72, 60, 45, 30, 45), ncol = 2, byrow = T), lty = 2)
+            }
+            
+        par(mfrow = c(1,1))
+    }
+    
+    # root seems to have existed since the first images, but line only appeared in latest set.
+    check.cluster(141009)
+    check.cluster(150730)
+    check.cluster(150828)
+    check.cluster(151015)
+    
+    o.plot(pw.m[426, 993:1996,"black", dt])
+    o.plot(pw.m[427, 993:1996,"black", dt], add = T, col = adjustcolor("red", alpha = 0.2))
+    o.plot(pw.m[428, 993:1996,"black", dt], add = T, col = adjustcolor("blue", alpha = 0.2))
+    
 }
+    
+    
+# line isn't picked up - not (yet) sufficiently far from bulk of image.
+# damaged line is currently around 250 higher than it should be
+    {
+        o.plot(pw.m[426, 993:1996,"black", dt])
+        o.plot(pw.m[427, 993:1996,"black", dt], add = T, col = adjustcolor("red", alpha = 0.2))
+        o.plot(pw.m[428, 993:1996,"black", dt], add = T, col = adjustcolor("blue", alpha = 0.2))
+        
+        o.plot(pw.m[427, 993:1996,"black", dt] - pw.m[426, 993:1996,"black", dt], ylim = c(-1000,1000))
+            abline(h = median((pw.m[427, 993:1996,"black", dt] - pw.m[426, 993:1996,"black", dt])[203:1004]), col = "blue")
+        o.plot(pw.m[428, 993:1996,"black", dt] - pw.m[427, 993:1996,"black", dt], add = T, col = adjustcolor("red", alpha = 0.3))
+            abline(h = median((pw.m[428, 993:1996,"black", dt] - pw.m[427, 993:1996,"black", dt])[203:1004]), col = "red")
+
+        sp <- subpanels(pw.m[,,"black", dt])[,1:1004,"U4"]
+        diff <- sp[1:127,] - sp[2:128,]
+        pixel.image(diff)
+        s.hist(diff)
+        o.plot(diff[,566]); abline(v = 44.5, col = "red")
+        med.diff <- apply(diff, 1, median)
+        o.plot(med.diff, title = "med. diff"); abline(v = 44.5, col = "red")
+    }
+
 
 # fit an 'edge curve' to account for dropoff in last 100-200px (single curve for upper, single for lower)
 {
