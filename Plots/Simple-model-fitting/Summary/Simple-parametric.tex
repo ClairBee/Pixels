@@ -1,0 +1,120 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\llap{\parbox{1cm}{\thesubsection}}}{0em}{}
+
+%======================================================================
+
+%\addtolength{\topmargin}{-0.5cm}
+%\addtolength{\textheight}{1.4cm}
+
+%======================================================================
+
+\begin{document}
+
+\section*{Parametric modelling of image data}
+
+\subsection*{Model and residuals}
+To test the viability of this approach, a simple parametric model was fitted to the averaged black, white and grey images for a single acquisition date (16-03-14, the most recent images, for which we also have the bad pixel map stored in the system). Robust linear regression over  $z$ (distance of each pixel to the centre of the panel) and $z^2$ was applied first, followed by linear regression over the $x$ and $y$ coordinates of each of the 32 subpanels.
+
+\begin{figure}[!h]
+\caption{Residuals after circular spot and linear panel fitting. \\
+There is still some systematic variation, suggesting that this model could be improved upon. Close inspection of the white and grey residuals suggests that there may be an additional edge effect (perhaps 60px from all edges of the panel)}
+%\includegraphics[scale=0.3]{../160314-black-residuals.pdf} 
+%\includegraphics[scale=0.3]{../160314-grey-residuals.pdf} 
+%\includegraphics[scale=0.3]{../160314-white-residuals.pdf} \\
+\includegraphics[scale=0.3, page = 2]{../160314-black-residuals.pdf} 
+\includegraphics[scale=0.3, page = 2]{../160314-grey-residuals.pdf} 
+\includegraphics[scale=0.3, page = 2]{../160314-white-residuals.pdf} \\
+\end{figure}
+
+
+\FloatBarrier
+\subsection*{Thresholding of bad pixels using quantiles}
+Choosing a given quantile as a given cutpoint simply extracts the highest or lowest $n$ points, essentially arbitrarily. As an initial alternative, an approach based on outlier identification used in generating boxplots was applied, setting cutpoints at $Q_{0.001}(\text{res}) - 1.5 \times \text{IQR}(\text{res})$ and $Q_{0.999}(\text{res}) + 1.5 \times \text{IQR}(\text{res})$.
+
+Coordinates of bad pixels were identified at each power level using the same modelling and cutpoint formulae, then combined into a single list for comparison to the bad pixel map provided by the machine software.
+
+\begin{figure}[!h]
+\caption{Mean pixel values of bad pixels identified using simple parametric model and quantile thresholding.\\
+Points plotted in purple were not identified by the system bad pixel map; those in red were not identified by the parametric approach.\\
+Values of a sample of the remaining pixels are plotted in yellow to give a reference for `normal' behaviour.\\
+Even in its simplest form, this approach has identified a number of points not included in the `official' dead pixel map.}
+\includegraphics[scale=0.55]{../160314-bad-px-by-source}
+\end{figure}
+
+Bad pixels were classified according to their value: those below the lower cutpoint are \textbf{dim}, with any pixel having a daily pixelwise mean value of 0 at any power setting classed as \textbf{dead}. Any pixels falling above the upper cutpoint are classified as \textbf{bright}, with those achieving a daily pixelwise mean value of 65535 classed as \textbf{hot}.
+
+\begin{figure}[!h]
+\caption{Behaviour of each type of bad pixel over all 11 acquisition dates (shown as 11 different colours in each column). A sample of the remaining pixels is shown on the right-hand side for comparison.}
+\label{fig:badpx-type}
+\includegraphics[scale=0.45]{../160314-dead-px}
+\includegraphics[scale=0.45]{../160314-dim-px}
+\includegraphics[scale=0.45]{../160314-bright-px}
+\includegraphics[scale=0.45]{../160314-hot-px}
+\end{figure}
+
+A few different behaviour patterns can be tentatively identified:
+\begin{itemize}
+
+\item zero value, even in white images (very small number of pixels - these may be truly `dead' pixels, and may be the most likely to `block' and produce a column of dead pixels.)
+
+\item maximum response (always 65535), even in black images: intuitively, these are probably the points most likely to `bloom' and adversely affect neighbouring points, and ultimately to be at the root of a column of bright pixels.
+
+\item zero response: appears normal in black images, but doesn't respond to presence of x-rays in grey and white images (3 small clusters of dim points in \autoref{fig:badpx-type}
+
+\item dim pixels around edges of image - don't vary much between dates, seem to correspond to areas of actual damage.
+
+\item large clusters of dim pixels, not close to edge - most likely spots on the beryllium screen. Can probably discriminate quite easily by cluster size, but if necessary could also use fact that gradient within cluster wil be smooth if necessary.
+
+\item individual dim pixels: need to investigate these further to identify their behaviour among the large numbers of clustered dim pixels. 
+
+\item individual bright pixels throughout image: erratic behaviour over time, but value seems to be consistently well above where it should be. Hard to tell so far whether we should divide into further categories.
+\end{itemize}
+
+It would be useful to make distinction between pixels that need to be mapped so that they can be corrected by median smoothing (ie. pixels not smoothed by the flat-field correction) and pixels that are not behaving `normally', indicating that they may become defective later.
+
+Stricter thresholds would probably be useful; for example, a lot of the pixels covered by spots on the beryllium window were not identified as dim points, despite being clearly visible as such to the eye.
+
+
+\begin{figure}[!h]
+\caption{Second view of behaviour of each type of bad pixel over all 11 acquisition dates. 
+Each plot shows the trajectory of all bad pixels identified, regardless of the power setting at which they were identified.\\
+ Top row: value in black images; second row: value in grey images; third row: value in white images.}
+\includegraphics[scale=0.45]{../160314-badpx-black}
+\includegraphics[scale=0.45]{../160314-badpx-grey}
+\includegraphics[scale=0.45]{../160314-badpx-white}
+\end{figure}
+
+
+
+%\FloatBarrier
+%\subsection*{Possible alternative to quantile thresholding: Johnson distribution?}
+
+
+%\FloatBarrier
+%\subsection*{Dead pixel line}
+It looks as though there are two types of dead pixel line: those caused by oversaturated (hot) pixels, and those caused by dead pixels. An oversaturated pixel may increase the values of the pixels between itself and the outer edge of the panel, while (based on a quick look at the old data) a dead pixel will block the values of the pixels between itself and the centre line of the panel.
+
+%========================================================================================================
+
+% Ref for quantile estimation of Johnson curve parameters 
+% @article{wheeler1980quantile,
+%  title={Quantile estimators of Johnson curve parameters},
+%  author={Wheeler, Robert E},
+%  journal={Biometrika},
+%  pages={725--728},
+%  year={1980},
+%  publisher={JSTOR}
+%}
+
+
+\end{document}

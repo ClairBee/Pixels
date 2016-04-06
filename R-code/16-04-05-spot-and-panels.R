@@ -4,7 +4,7 @@
 # HOW WELL ARE BAD PIXELS IDENTIFIED USING THIS APPROACH?
 
 library("IO.Pixels")
-par(pch = 20)
+library(scatterplot3d)      # for 3d scatterplots (eg. for SVM)
 
 load.pixel.means()
 
@@ -178,20 +178,19 @@ dt <- "160314"
 }
 
 ####################################################################################################
-
 # BAD PIXELS BY QUANTILE                                                                        ####
 
 # use same threshold for all images - 0.1% + 1.5*IQR
-{bp <- rbind(reset.bp(dt),
-             data.frame(which(w.res > (quantile(w.res, 0.999) + (1.5*IQR(w.res))), arr.ind = T), src = "white", type = "bright"),
-             data.frame(which(w.res < (quantile(w.res, 0.001) - (1.5*IQR(w.res))), arr.ind = T), src = "white", type = "dim"),
-             data.frame(which(g.res > (quantile(g.res, 0.999) + (1.5*IQR(g.res))), arr.ind = T), src = "grey", type = "bright"),
-             data.frame(which(g.res < (quantile(g.res, 0.001) - (1.5*IQR(g.res))), arr.ind = T), src = "grey", type = "dim"),
-             data.frame(which(b.res > (quantile(b.res, 0.999) + (1.5*IQR(b.res))), arr.ind = T), src = "black", type = "bright"),
-             data.frame(which(b.res < (quantile(b.res, 0.001) - (1.5*IQR(b.res))), arr.ind = T), src = "black", type = "dim"))
+    bp <- rbind(reset.bp(dt),
+                 data.frame(which(w.res > (quantile(w.res, 0.999) + (1.5*IQR(w.res))), arr.ind = T), src = "white", type = "bright"),
+                 data.frame(which(w.res < (quantile(w.res, 0.001) - (1.5*IQR(w.res))), arr.ind = T), src = "white", type = "dim"),
+                 data.frame(which(g.res > (quantile(g.res, 0.999) + (1.5*IQR(g.res))), arr.ind = T), src = "grey", type = "bright"),
+                 data.frame(which(g.res < (quantile(g.res, 0.001) - (1.5*IQR(g.res))), arr.ind = T), src = "grey", type = "dim"),
+                 data.frame(which(b.res > (quantile(b.res, 0.999) + (1.5*IQR(b.res))), arr.ind = T), src = "black", type = "bright"),
+                 data.frame(which(b.res < (quantile(b.res, 0.001) - (1.5*IQR(b.res))), arr.ind = T), src = "black", type = "dim"))
 
-write.csv(bp, paste0("./Plots/Simple-model-fitting/", dt, "-bpm-IQR.csv"), row.names = F)
-}
+    write.csv(bp, paste0("./Plots/Simple-model-fitting/", dt, "-bpm-IQR.csv"), row.names = F)
+
 
 # combine bad pixel maps & compare
     bp <- read.csv(paste0("./Plots/Simple-model-fitting/", dt, "-bpm-IQR.csv"))
@@ -203,6 +202,9 @@ write.csv(bp, paste0("./Plots/Simple-model-fitting/", dt, "-bpm-IQR.csv"), row.n
     # combine into map of all bad pixels identified by both methods
     bp.all <- combine.maps(bp, bpm)
     bp.all$type <- ordered(bp.all$type, levels = c("hot", "dead", "bright", "dim"))
+    
+    saveRDS(bp.all, paste0("./Plots/Simple-model-fitting/", dt, "-bpm-IQR.rds"))
+    
     bp.healthy <- sample.healthy(bp.all)
 
     # plot bad vs healthy pixels
@@ -256,24 +258,164 @@ write.csv(bp, paste0("./Plots/Simple-model-fitting/", dt, "-bpm-IQR.csv"), row.n
          col = c("red", "blue", "gold", "green3")[bp.all$type[bp.all$map != "old"]])
     points(bp.all[bp.all$map != "new",1:2], pch = 1)
 
-    ####################################################################################################
+####################################################################################################
 
+    
+    
+    
+    
+# DEVELOPMENT OF BAD PIXELS OVER TIME                                                           ####
+    bp <- readRDS(paste0("./Plots/Simple-model-fitting/", dt, "-bpm-IQR.rds"))
+    gp <- sample.healthy(bp)
+    dimnames(gp)[[2]] <- c("row", "col")
+    px <- as.matrix(rbind(bp[,1:2], gp))
+    
+
+    # plot development of bad pixels
+    focus <- "hot"
+    {
+        pdf(paste0("./Plots/Simple-model-fitting/", dt, "-", focus, "-px.pdf"), width = 15, height = 5)
+        px <- as.matrix(rbind(bp[bp$type == focus,1:2], gp[1:nrow(bp[bp$type == focus,1:2]),]))
+        cols <- c("green4", "cyan3", "dodgerblue3", "blue2", "purple", "magenta3", "red",
+                  "orange", "gold", "green", "black")
+        par(mfrow = c(1,3))
+        for (j in 1:3) {
+            plot(0, type = "n", ylim = c(0, 65535), ylab = "Pixel value", xlim = c(0, nrow(px)),
+                 main = paste0("Progression of ", focus, " pixels - ", dimnames(pw.m)[[3]][j]," images"))
+            abline(v = nrow(bp[bp$type == focus,1:2]), col = "red")
+            for (i in 1:11) {
+                points(pw.m[,,j, i][px], pch = 20,
+                       col = adjustcolor(cols[i], alpha = 0.2))
+            }
+        }
+        par(mfrow = c(1,1))
+        dev.off()
+    }
+
+    # transects over time
+    {
+        px <- as.matrix(rbind(bp[,1:2], gp))
+        
+        bp.b <- apply(pw.m[,,"black",], 3, "[", as.matrix(bp[,1:2]))
+        bp.g <- apply(pw.m[,,"grey",], 3, "[", as.matrix(bp[,1:2])
+        bp.w <- apply(pw.m[,,"white",], 3, "[", as.matrix(bp[,1:2])
+                      
+        pdf(paste0("./Plots/Simple-model-fitting/", dt, "-badpx-black.pdf"), width = 15, height = 4)
+        par(mfrow = c(1,5))
+        {
+            matplot(t(apply(pw.m[,,"black",], 3, "[", as.matrix(gp))), ylim = c(0,65535), ylab = "",
+                    type = "l", main = "Healthy pixels", 
+                    xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+            
+            matplot(t(bp.b[bp$type == "dead",]), ylim = c(0,65535), ylab = "",
+                    type = "l", main = "Dead pixels", 
+                    xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+            
+            matplot(t(bp.b[bp$type == "dim",]), ylim = c(0,65535), ylab = "",
+                    type = "l", main = "Dim pixels", 
+                    xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+
+            matplot(t(bp.b[bp$type == "bright",]), ylim = c(0,65535), ylab = "",
+                    type = "l", main = "Bright pixels", 
+                    xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+            
+            matplot(t(bp.b[bp$type == "hot",]), ylim = c(0,65535), ylab = "",
+                    type = "l", main = "Hot pixels", 
+                    xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+            
+
+        }
+        dev.off()
+        
+        pdf(paste0("./Plots/Simple-model-fitting/", dt, "-badpx-grey.pdf"), width = 15, height = 4)
+        par(mfrow = c(1,5))
+        {
+            matplot(t(apply(pw.m[,,"grey",], 3, "[", as.matrix(gp))), ylim = c(0,65535), ylab = "",
+                    type = "l", main = "Healthy pixels", 
+                    xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+            
+            matplot(t(bp.g[bp$type == "dead",]), ylim = c(0,65535), ylab = "",
+                    type = "l", main = "Dead pixels", 
+                    xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+            
+            matplot(t(bp.g[bp$type == "dim",]), ylim = c(0,65535), ylab = "",
+                    type = "l", main = "Dim pixels", 
+                    xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+            
+            matplot(t(bp.g[bp$type == "bright",]), ylim = c(0,65535), ylab = "",
+                    type = "l", main = "Bright pixels", 
+                    xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+            
+            matplot(t(bp.g[bp$type == "hot",]), ylim = c(0,65535), ylab = "",
+                    type = "l", main = "Hot pixels", 
+                    xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+        }
+        dev.off()
+        
+        pdf(paste0("./Plots/Simple-model-fitting/", dt, "-badpx-white.pdf"), width = 15, height = 4)
+        par(mfrow = c(1,5))
+        {
+            matplot(t(apply(pw.m[,,"white",], 3, "[", as.matrix(gp))), ylim = c(0,65535), ylab = "",
+                    type = "l", main = "Healthy pixels", 
+                    xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+            
+            matplot(t(bp.w[bp$type == "dead",]), ylim = c(0,65535), ylab = "",
+                    type = "l", main = "Dead pixels", 
+                    xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+            
+            matplot(t(bp.w[bp$type == "dim",]), ylim = c(0,65535), ylab = "",
+                    type = "l", main = "Dim pixels", 
+                    xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+            
+            matplot(t(bp.w[bp$type == "bright",]), ylim = c(0,65535), ylab = "",
+                    type = "l", main = "Bright pixels", 
+                    xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+            
+            matplot(t(bp.w[bp$type == "hot",]), ylim = c(0,65535), ylab = "",
+                    type = "l", main = "Hot pixels", 
+                    xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+        }
+        dev.off()
+    }
+
+    
+    
+ 
+
+####################################################################################################
+    
+    
 # MISCELLANEOUS                                                                                 ####
 
 # visible line of dead pixels with blooming in black residual image for 160314, panel U4
 # 'root' cluster at [44:46, 206:208, "U4"] == [426:428, 1198:1200]
-{
-    pixel.image(subpanels(b.res)[,150:300, "U4"], break.levels = sd.levels(b.res), title = "Dead pixels - black residuals")
-    pixel.image(subpanels(g.res)[,150:300, "U4"], break.levels = sd.levels(g.res), title = "Dead pixels - grey residuals")
-    pixel.image(subpanels(w.res)[,150:300, "U4"], break.levels = sd.levels(w.res), title = "Dead pixels - white residuals")
+    {
+        pixel.image(subpanels(b.res)[,150:300, "U4"], break.levels = sd.levels(b.res), title = "Dead pixels - black residuals")
+        pixel.image(subpanels(g.res)[,150:300, "U4"], break.levels = sd.levels(g.res), title = "Dead pixels - grey residuals")
+        pixel.image(subpanels(w.res)[,150:300, "U4"], break.levels = sd.levels(w.res), title = "Dead pixels - white residuals")
 
-    pixel.image(subpanels(pw.m[,,"black", dt])[,150:300, "U4"], title = "Dead pixels - black image")
-    pixel.image(subpanels(pw.m[,,"grey", dt])[,150:300, "U4"], title = "Dead pixels - grey image")
-    pixel.image(subpanels(pw.m[,,"white", dt])[,150:300, "U4"], title = "Dead pixels - white image")
+        pixel.image(subpanels(pw.m[,,"black", dt])[,150:300, "U4"], title = "Dead pixels - black image")
+        pixel.image(subpanels(pw.m[,,"grey", dt])[,150:300, "U4"], title = "Dead pixels - grey image")
+        pixel.image(subpanels(pw.m[,,"white", dt])[,150:300, "U4"], title = "Dead pixels - white image")
     
-    check.cluster <- function(dt, box = F) {
-        dt <- toString(dt)
-        par(mfrow = c(1,3))
+        check.cluster <- function(dt, box = F) {
+            dt <- toString(dt)
+            par(mfrow = c(1,3))
             
             pixel.image(subpanels(pw.m[,,"black", dt])[, 150:300, "U4"], title = "Dead pixels - black image")
             if (box) {
@@ -290,21 +432,19 @@ write.csv(bp, paste0("./Plots/Simple-model-fitting/", dt, "-bpm-IQR.csv"), row.n
                 lines(matrix(c(30, 45, 30, 72, 60, 72, 60, 45, 30, 45), ncol = 2, byrow = T), lty = 2)
             }
             
-        par(mfrow = c(1,1))
+            par(mfrow = c(1,1))
+        }
+        
+        # root seems to have existed since the first images, but line only appeared in latest set.
+        check.cluster(141009)
+        check.cluster(150730)
+        check.cluster(150828)
+        check.cluster(151015)
+        
+        o.plot(pw.m[426, 993:1996,"black", dt])
+        o.plot(pw.m[427, 993:1996,"black", dt], add = T, col = adjustcolor("red", alpha = 0.2))
+        o.plot(pw.m[428, 993:1996,"black", dt], add = T, col = adjustcolor("blue", alpha = 0.2))
     }
-    
-    # root seems to have existed since the first images, but line only appeared in latest set.
-    check.cluster(141009)
-    check.cluster(150730)
-    check.cluster(150828)
-    check.cluster(151015)
-    
-    o.plot(pw.m[426, 993:1996,"black", dt])
-    o.plot(pw.m[427, 993:1996,"black", dt], add = T, col = adjustcolor("red", alpha = 0.2))
-    o.plot(pw.m[428, 993:1996,"black", dt], add = T, col = adjustcolor("blue", alpha = 0.2))
-    
-}
-    
     
 # line isn't picked up - not (yet) sufficiently far from bulk of image.
 # damaged line is currently around 250 higher than it should be
@@ -327,7 +467,57 @@ write.csv(bp, paste0("./Plots/Simple-model-fitting/", dt, "-bpm-IQR.csv"), row.n
         o.plot(med.diff, title = "med. diff"); abline(v = 44.5, col = "red")
     }
 
-
+# flat field (offset/gain) correction on damaged area: removes line effect
+    {
+        R <- pw.m[326:528, 1098:1300, "grey", dt]
+        D <- pw.m[326:528, 1098:1300, "black", dt]
+        FF <- pw.m[326:528, 1098:1300, "white", dt]
+        m <- mean(FF - D)
+        
+        corr <- m * (R - D) / (FF - D)
+        corr[is.na(corr)] <- 0      # otherwise get NA where FF == D
+        
+        pixel.image(D)
+        s.hist(corr)
+    }
+    
+####################################################################################################
+# clustering
+    # hierarchical clustering of all bad pixels (+ sample of healthy ones)
+    {
+        px <- as.matrix(rbind(bp[,1:2], gp))
+        #---------------------------------------------------------------------------------
+        
+        bp.vals <- apply(pw.m[,,,dt], 3, "[", px)
+        
+        dist <- dist(bp.vals, method = "euclidean")
+        clust <- hclust(dist)
+        
+        plot(clust, labels = F)
+        abline(h = 40000, col = "red")
+        clust.cat <- cutree(clust, h = 40000)
+        
+        px.match <- cbind(rbind(bp[,1:3], cbind(gp, type = "healthy")), clust = clust.cat)
+        table(px.match$type, px.match$clust)
+        #---------------------------------------------------------------------------------
+        
+    }
+    
+    # could SVM work? Try plotting first 3 images in 3d, or all batches in 3d
+    {    
+        for (i in 1:dim(pw.m)[4]) {
+            nm <- dimnames(pw.m)[[4]][i]
+            nm <- paste0(substring(nm,1,2), "-", substring(nm,3,4), "-", substring(nm,5,6))
+            scatterplot3d(apply(pw.m[,,,i], 3, "[", px),
+                          pch = 20, xlim = c(0,65535), ylim = c(0,65535), zlim = c(0,65535),
+                          color = adjustcolor(c(rep("red", nrow(bp)), rep("gold", nrow(bp))), alpha = 0.2),
+                          main = paste0("Bad (red) vs healthy points: ", nm))
+        }
+    }
+    # only most extreme points are linearly separable - probably not subtle enough
+    
+####################################################################################################
+    
 # fit an 'edge curve' to account for dropoff in last 100-200px (single curve for upper, single for lower)
 {
     lower <- rlm(value ~ poly(X2, 4), melt(w.res[,1:200]))
@@ -348,5 +538,31 @@ write.csv(bp, paste0("./Plots/Simple-model-fitting/", dt, "-bpm-IQR.csv"), row.n
     # lower tail definitely reduced, upper barely affected 
 }
 
+####################################################################################################
 
+# would a higher-order circular regression be more useful?
+    {# spot profiles
+        plot(c(0:1433), predict(spot.lm(pw.m[,,"black", dt], o = 1, robust = T),
+                                data.frame(z = (c(0:1433)))), type = "l", xlab = "z", ylab = "",
+             main = "Spot profiles (black)")
+        
+        for (i in 2:6) {
+            points(c(0:1433), predict(spot.lm(pw.m[,,"black", dt], o = i, robust = T),
+                                      data.frame(z = (c(0:1433)))), type = "l",  
+                   col = c("blue", "red", "green4", "gold", "magenta3")[i-1])
+        }
+        
+        # order 6 actually looks like it might be the best...
+        b.spot <- spot.lm(pw.m[,,"black", dt], o = 2, robust = T)
+        b.spot.res <- matrix(b.spot$residuals, ncol = 1996)
+        
+        # linear panels
+        b.panel <- panel.lm(b.spot.res, "x + y", robust = T)
+        b.res <- b.spot.res - b.panel$fitted.values
+        
+        pixel.image(b.res, title = paste0("Residuals after fitting 6-spot and linear panels to black image: ", dt), panels = T)
+        s.hist(b.res, col = "black", main = "Histogram of residuals", xlab = "Residual value")
+        mad(b.res)          # 98.93546 (101.2448 with 2-spot)
+    } 
+    # didn't give any improvement in residual MAD
     

@@ -59,6 +59,7 @@
 \item Visible line of dead pixels in images from 16-03-14, panel U4. [426:428, 1198:1200] Cluster of bright pixels at root is picked up by simple panel fitting, but not the line itself - suggesting that current method isn't sensitive enough.
 \begin{itemize}
 	\item Perhaps fit a simple parametric model and smoothe the residuals (Gaussian convolution?), then apply a stricter threshold?
+	\item Differencing along columns and finding median difference might flag up lines of damaged pixels. Maybe try running this across some of the old images to test?
 \end{itemize}
 
 \item Seems to be an `edge' in the black residuals after fitting - maybe 50px in? Is there a physical reason for this (mounting panel etc) that might explain \& justify fitting further adjustments?
