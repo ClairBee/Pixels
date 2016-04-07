@@ -207,6 +207,16 @@ dt <- "160314"
     
     bp.healthy <- sample.healthy(bp.all)
 
+    # locations of bad pixels
+    pdf(paste0("./Plots/Simple-model-fitting/", dt, "dim-px-locations.pdf"))
+    par(mfrow = c(1,2))
+        plot(bp[,1:2], col = c("red", "blue", "gold", "green3")[bp$type], pch = 20, asp = T,
+             main = "Distribution of bad pixels")
+        
+        pixel.image(pw.m[,,"white", dt], title = "White pixel image with dim pixels marked")
+        points(bp[bp$type == "dim",1:2])
+    dev.off()
+    
     # plot bad vs healthy pixels
     {
         pdf(paste0("./Plots/Simple-model-fitting/", dt,"-bad-vs-healthy.pdf"), width = 12, height = 4)
@@ -253,16 +263,13 @@ dt <- "160314"
         dev.off()
     }
     
-    # check line root: zoom to xlim = c(420,440), ylim = c(1180,1220),
+    # spatial plot of bad pixels
+    # to check line root: zoom to xlim = c(420,440), ylim = c(1180,1220),
     plot(bp.all[bp.all$map != "old",1:2], asp = T, pch = 20, 
          col = c("red", "blue", "gold", "green3")[bp.all$type[bp.all$map != "old"]])
     points(bp.all[bp.all$map != "new",1:2], pch = 1)
 
 ####################################################################################################
-
-    
-    
-    
     
 # DEVELOPMENT OF BAD PIXELS OVER TIME                                                           ####
     bp <- readRDS(paste0("./Plots/Simple-model-fitting/", dt, "-bpm-IQR.rds"))
@@ -399,9 +406,477 @@ dt <- "160314"
 
 ####################################################################################################
     
+# JOHNSON DISTRIBUTION FITTING                                                                  ####
+  
+    trunc.res <- w.res[w.res > quantile(w.res, 0.01)]
+    trunc.res <- trunc.res[trunc.res < quantile(w.res, 0.99)]
+    
+    JF <- JohnsonFit(w.res, moment = "quant")
+    JF.trunc <- JohnsonFit(trunc.res, moment = "quant")
+    
+    unlist(JF); unlist(JF.trunc)
+    # v similar; has almost no effect, so don't do it.
+
+    hist(w.res, breaks = "fd", prob = T)
+    lines(c(-50000:23000), dJohnson(c(-50000:23000), JF), col = "red", lwd = 2)
+    lines(c(-50000:23000), dJohnson(c(-50000:23000), JF.trunc), col = "blue", lwd = 2)
+    
+    hist(w.res, breaks = c(-49135: 22801), prob = F, xlim = c(-49200, -49000), ylim = c(0,10), col = "black")
+    
+    ordered.res <- sort(c(w.res))
+    ordered.jf <- sort(rJohnson(1996*1996, JF))
+    
+    {
+        pdf("./Plots/Simple-model-fitting/160314-Johnson-residuals.pdf", width = 14, height = 4)
+        par(mfrow = c(1,3))
+            plot(ordered.res[(1:249001) * 16], pch = 20,  ylab = "Residual value", main = "Simulated Johnson distribution vs observed residuals")
+            points(ordered.jf[(1:249001) * 16], col = adjustcolor("gold", alpha = 0.2), pch = 20, cex = 0.7)
+        
+            plot(ordered.res[1:100000], pch = 20, main = "Lowest 2.5% of residuals vs Johnson simulation", ylab = "Residual value")
+            points(ordered.jf[1:100000], col = adjustcolor("gold", alpha = 0.2), pch = 20, cex = 0.7)
+            abline(v = 1996 * 1996* c(.025, .01, .001), col = "red", lty = 2)
+            text(c(94000, 44000, 10000), -40000, labels = c("2.5%", "1%", "0.1%"))
+        
+            plot(ordered.res[(1996*1996) - (100000:1)], pch = 20, main = "Highest 2.5% of residuals vs Johnson simulation", ylab = "Residual value")
+            points(ordered.jf[(1996*1996) - (100000:1)], col = adjustcolor("gold", alpha = 0.2), pch = 20, cex = 0.7)
+            abline(v = 100000 - (1996*1996* c(.025, .01, .001)), col = "red", lty = 2)
+            text(c(7000, 55000, 90000), 20000, labels = c("97.5%", "99%", "99.9%"))
+        
+        dev.off()
+    }
+
+    
+    zz <- which(ordered.res[(1996*1996) - (100000:1)] > ordered.jf[(1996*1996) - (100000:1)])
+    # picks up 1279 bright pixels (vs 1871 by simple quantile)
+    qq <- which(ordered.res[1:100000] < ordered.jf[1:100000])
+    # picks up all points. Hm. Differencing between observed & expected not an option.
+    
+    qJohnson(c(0.001, 0.999), JF)               # -1666.971  1918.321       Johnson (0.1%)
+    quantile(ordered.res, c(0.001, 0.999))      # -2419.099  1443.453       q
+                                                # -2953.000  1977.354       q + IQR
+                                                # -1885.197  909.5518       q - IQR
+    qJohnson(c(0.005, 0.995), JF)               # -1109.598  1258.567       Johnson (0.5%)
+    quantile(ordered.res, c(0.001, 0.999)) + (1.5 * IQR(ordered.res) * c(-1,1))
+    quantile(ordered.res, c(0.001, 0.999)) - (1.5 * IQR(ordered.res) * c(-1,1))     
+    
+    
+    # white image: Johnson cutpoints are stricter on dim pixels, more lenient on white vs plain quantiles
+    # BUT with IQR adjustment, stricter on both
+    
+####################################################################################################  
+    
+# BAD PIXELS BY JOHNSON QUANTILES                                                               ####
+    
+    JF.w <- JohnsonFit(w.res, moment = "quant")
+    JF.g <- JohnsonFit(g.res, moment = "quant")
+    JF.b <- JohnsonFit(b.res, moment = "quant")
+    
+    bp <- rbind(reset.bp(dt),
+                data.frame(which(w.res > qJohnson(0.999, JF.w), arr.ind = T), src = "white", type = "bright"),
+                data.frame(which(w.res < qJohnson(0.001, JF.w), arr.ind = T), src = "white", type = "dim"),
+                data.frame(which(g.res > qJohnson(0.999, JF.g), arr.ind = T), src = "grey", type = "bright"),
+                data.frame(which(g.res < qJohnson(0.001, JF.g), arr.ind = T), src = "grey", type = "dim"),
+                data.frame(which(b.res > qJohnson(0.999, JF.b), arr.ind = T), src = "black", type = "bright"),
+                data.frame(which(b.res < qJohnson(0.001, JF.b), arr.ind = T), src = "black", type = "dim"))
+    table(bp$src, bp$type)
+    
+        # Johnson-fit bad pixels using 1% most extreme values (with duplicates - 47661 unique points)
+        #            dead   hot   bright     dim
+        #    black      5   129    27156    9534
+        #    grey       4   141    14244   14219
+        #    white      3   202     1972    8870
+    
+    # import 'official' bad pixel map
+    bpm <- read.csv("./Other-data/BadPixelMap-160314.csv", as.is = T)
+    
+    # combine into map of all bad pixels identified by both methods
+    bp.all <- combine.maps(bp, bpm)
+    bp.all$type <- ordered(bp.all$type, levels = c("hot", "dead", "bright", "dim"))
+    
+    saveRDS(bp.all, paste0("./Plots/Simple-model-fitting/", dt, "-bpm-Johnson001.rds"))
+    
+    bp.healthy <- sample.healthy(bp.all)
+    
+    # plot bad pixels by means of identification
+    {
+        pdf(paste0("./Plots/Simple-model-fitting/", dt,"-bad-px-by-source-Johnson.pdf"), width = 12, height = 4)
+        par(mfrow = c(1,3), pch = 20, mar = c(2,2,3,1))
+        
+        plot(pw.m[,,"black",dt][bp.healthy], ylim = c(0,65535), col = adjustcolor("gold", alpha = 0.2),
+             ylab = "Pixel value", main = paste0("Bad pixels - black, ", dt))
+        points(pw.m[,,"black",dt][as.matrix(bp.all[,1:2])],
+               col = adjustcolor(c("slateblue1", "chartreuse3", "red")[bp.all$map], alpha = 0.2))
+        legend("topleft", pch = 20, col = c("slateblue1", "chartreuse3", "red", "gold"), bty = "n",
+               legend = c("CB map only", "Both maps", "Auto map only", "Healthy sample"))
+        
+        plot(pw.m[,,"grey",dt][bp.healthy], ylim = c(0,65535), col = adjustcolor("gold", alpha = 0.2),
+             ylab = "Pixel value", main = paste0("Bad pixels - grey, ", dt))
+        points(pw.m[,,"grey",dt][as.matrix(bp.all[,1:2])],
+               col = adjustcolor(c("slateblue1", "chartreuse3", "red")[bp.all$map], alpha = 0.2))
+        legend("topleft", pch = 20, col = c("slateblue1", "chartreuse3", "red", "gold"), bty = "n",
+               legend = c("CB map only", "Both maps", "Auto map only", "Healthy sample"))
+        
+        plot(pw.m[,,"white",dt][bp.healthy], ylim = c(0,65535), col = adjustcolor("gold", alpha = 0.2),
+             ylab = "Pixel value", main = paste0("Bad pixels - white, ", dt))
+        points(pw.m[,,"white",dt][as.matrix(bp.all[,1:2])],
+               col = adjustcolor(c("slateblue1", "chartreuse3", "red")[bp.all$map], alpha = 0.2))
+        legend("topleft", pch = 20, col = c("slateblue1", "chartreuse3", "red", "gold"), bty = "n",
+               legend = c("CB map only", "Both maps", "Auto map only", "Healthy sample"))
+        dev.off()
+    }
+    
+    # spatial plot of bad pixels
+    plot(bp.all[bp.all$map != "old",1:2], asp = T, pch = 20, 
+         col = c("red", "blue", "gold", "green3")[bp.all$type[bp.all$map != "old"]])
+    points(bp.all[bp.all$map != "new",1:2], pch = 1)
+    
+    bp.pts <- bp[!duplicated(bp[, 1:3]),]
+    
+    # more useful if separated by power settings
+    pdf("./Plots/Simple-model-fitting/", dt, "-bpm-Johnson001.pdf")
+    plot(bp.pts[bp.pts$src == "black",1:2], asp = T, pch = 20, main = "Bad pixels by type - black",
+         col = c("red", "blue", "gold", "green3")[bp.pts$type[bp.pts$src == "black"]])
+    
+    plot(bp.pts[bp.pts$src == "grey",1:2], asp = T, pch = 20, main = "Bad pixels by type - grey",
+         col = c("red", "blue", "gold", "green3")[bp.pts$type[bp.pts$src == "grey"]])
+    
+    plot(bp.pts[bp.pts$src == "white",1:2], asp = T, pch = 20, main = "Bad pixels by type - white",
+         col = c("red", "blue", "gold", "green3")[bp.pts$type[bp.pts$src == "white"]])
+    
+# FIT PARAMETRIC MODEL TO OFFSET-CORRECTED IMAGE                                                ####
+
+    # offset correction
+    
+    R <- pw.m[, , "grey", dt]
+    D <- pw.m[, , "black", dt]
+    FF <- pw.m[, , "white", dt]
+    m <- mean(FF - D)
+    
+    corr <- m * (R - D) / (FF - D)
+    corr[is.na(corr)] <- 0      # otherwise get NA where FF == D
+    
+    # try fitting model over corrected image: necessary?
+    c.spot <- spot.lm(corr, o = 2, robust = T)
+    c.spot.res <- matrix(c.spot$residuals, ncol = 1996)
+    
+    c.panel <- panel.lm(c.spot.res, "x + y", robust = T)
+    c.res <- c.spot.res - c.panel$fitted.values
+    
+    pixel.image(c.res)
+    s.hist(c.res)
+    
+    pixel.image(corr)
+    s.hist(corr)
+
+    c.JF <- JohnsonFit(c.res, moment = "quant")
+    
+    hist(c.res, breaks = "fd", prob = T, xlim = c(-500,500))
+    lines(c(-1000:1000), dJohnson(c(-1000:1000), c.JF), col = "chartreuse3", lwd = 2)
+    abline(v = qJohnson(c(0.9999, 0.0001), c.JF), col = "red", lty = 3)
+    
+    c.bp <- rbind(reset.bp(dt),
+                  data.frame(which(c.res > qJohnson(0.999, c.JF), arr.ind = T), src = "corr", type = "bright"),
+                  data.frame(which(c.res < qJohnson(0.001, c.JF), arr.ind = T), src = "corr", type = "dim"))
+
+    c.bp <- c.bp[!duplicated(c.bp[,1:2]),]
+    table(c.bp$src, c.bp$type)
+    # import 'official' bad pixel map
+    bpm <- read.csv("./Other-data/BadPixelMap-160314.csv", as.is = T)
+    
+    # spatial plot of bad pixels identified
+    plot(c.bp[,1:2], asp = T, pch = 20, col = c("red", "blue", "gold", "green3")[c.bp$type])
+    points(bpm[,1:2])
+    
+    pixel.image(corr)
+    points(c.bp[,1:2])
+    
+    # combine into map of all bad pixels identified by both methods
+    bp.corr <- combine.maps(c.bp, bpm)
+    bp.corr$type <- ordered(bp.corr$type, levels = c("hot", "dead", "bright", "dim"))
+    bp.healthy <- sample.healthy(bp.corr)
+    # plot by method of identification
+    {
+        plot(corr[bp.healthy], ylim = c(0,65535), col = adjustcolor("gold", alpha = 0.2),
+             ylab = "Pixel value", main = paste0("Bad pixels - corrected image, ", dt))
+        points(corr[as.matrix(bp.corr[,1:2])], pch = 20,
+               col = adjustcolor(c("slateblue1", "chartreuse3", "red")[bp.corr$map], alpha = 0.2))
+        
+        plot(pw.m[,,"black",dt][bp.healthy], ylim = c(0,65535), col = adjustcolor("gold", alpha = 0.2),
+             ylab = "Pixel value", main = paste0("Bad pixels - black, ", dt))
+        points(pw.m[,,"black",dt][as.matrix(bp.corr[,1:2])], pch = 20,
+               col = adjustcolor(c("slateblue1", "chartreuse3", "red")[bp.corr$map], alpha = 0.2))
+        
+        plot(pw.m[,,"grey",dt][bp.healthy], ylim = c(0,65535), col = adjustcolor("gold", alpha = 0.2),
+             ylab = "Pixel value", main = paste0("Bad pixels - grey, ", dt))
+        points(pw.m[,,"grey",dt][as.matrix(bp.corr[,1:2])], pch = 20,
+               col = adjustcolor(c("slateblue1", "chartreuse3", "red")[bp.corr$map], alpha = 0.2))
+        
+        plot(pw.m[,,"white",dt][bp.healthy], ylim = c(0,65535), col = adjustcolor("gold", alpha = 0.2),
+             ylab = "Pixel value", main = paste0("Bad pixels - white, ", dt))
+        points(pw.m[,,"white",dt][as.matrix(bp.corr[,1:2])], pch = 20,
+               col = adjustcolor(c("slateblue1", "chartreuse3", "red")[bp.corr$map], alpha = 0.2))
+    }
+    
+    # plot by method of identification - sorted by row index
+    {
+        bp.byrow <- bp.corr[order(bp.corr$col, bp.corr$row),]
+
+        plot(corr[bp.healthy], ylim = c(0,65535), col = adjustcolor("gold", alpha = 0.2),
+            ylab = "Pixel value", main = paste0("Bad pixels - corrected image, ", dt), pch = 20)
+        points(corr[as.matrix(bp.byrow[,1:2])], pch = 20,
+            col = adjustcolor(c("slateblue1", "chartreuse3", "red")[bp.byrow$map], alpha = 0.2))
+        
+        plot(pw.m[,,"black",dt][bp.healthy], ylim = c(0,65535), col = adjustcolor("gold", alpha = 0.2),
+             ylab = "Pixel value", main = paste0("Bad pixels - black, ", dt), pch = 20)
+        points(pw.m[,,"black",dt][as.matrix(bp.byrow[,1:2])], pch = 20,
+               col = adjustcolor(c("slateblue1", "chartreuse3", "red")[bp.byrow$map], alpha = 0.2))
+        
+        plot(pw.m[,,"grey",dt][bp.healthy], ylim = c(0,65535), col = adjustcolor("gold", alpha = 0.2),
+             ylab = "Pixel value", main = paste0("Bad pixels - grey, ", dt), pch = 20)
+        points(pw.m[,,"grey",dt][as.matrix(bp.byrow[,1:2])], pch = 20,
+               col = adjustcolor(c("slateblue1", "chartreuse3", "red")[bp.byrow$map], alpha = 0.2))
+        
+        plot(pw.m[,,"white",dt][bp.healthy], ylim = c(0,65535), col = adjustcolor("gold", alpha = 0.2),
+             ylab = "Pixel value", main = paste0("Bad pixels - white, ", dt), pch = 20)
+        points(pw.m[,,"white",dt][as.matrix(bp.byrow[,1:2])], pch = 20,
+               col = adjustcolor(c("slateblue1", "chartreuse3", "red")[bp.byrow$map], alpha = 0.2))
+    }
+    
+    # sorted by column index
+    {
+        bp.bycol <- bp.corr[order(bp.corr$row, bp.corr$col),]
+        
+        plot(corr[bp.healthy], ylim = c(0,65535), col = adjustcolor("gold", alpha = 0.2),
+             ylab = "Pixel value", main = paste0("Bad pixels - corrected image, ", dt), pch = 20)
+        points(corr[as.matrix(bp.bycol[,1:2])], pch = 20,
+               col = adjustcolor(c("slateblue1", "chartreuse3", "red")[bp.bycol$map], alpha = 0.2))
+        
+        plot(pw.m[,,"black",dt][bp.healthy], ylim = c(0,65535), col = adjustcolor("gold", alpha = 0.2),
+             ylab = "Pixel value", main = paste0("Bad pixels - black, ", dt), pch = 20)
+        points(pw.m[,,"black",dt][as.matrix(bp.bycol[,1:2])], pch = 20,
+               col = adjustcolor(c("slateblue1", "chartreuse3", "red")[bp.bycol$map], alpha = 0.2))
+        
+        plot(pw.m[,,"grey",dt][bp.healthy], ylim = c(0,65535), col = adjustcolor("gold", alpha = 0.2),
+             ylab = "Pixel value", main = paste0("Bad pixels - grey, ", dt), pch = 20)
+        points(pw.m[,,"grey",dt][as.matrix(bp.bycol[,1:2])], pch = 20,
+               col = adjustcolor(c("slateblue1", "chartreuse3", "red")[bp.bycol$map], alpha = 0.2))
+        
+        plot(pw.m[,,"white",dt][bp.healthy], ylim = c(0,65535), col = adjustcolor("gold", alpha = 0.2),
+             ylab = "Pixel value", main = paste0("Bad pixels - white, ", dt), pch = 20)
+        points(pw.m[,,"white",dt][as.matrix(bp.bycol[,1:2])], pch = 20,
+               col = adjustcolor(c("slateblue1", "chartreuse3", "red")[bp.bycol$map], alpha = 0.2))
+    }
+    
+####################################################################################################
+    
+# STANDARD DEVIATION OF BAD PIXELS                                                              ####
+    
+    # using Johnson cutpoints, because larger list (tho' 4 are not on new map!)
+    bp <- readRDS(paste0("./Plots/Simple-model-fitting/", dt, "-bpm-Johnson001.rds"))
+    load.pixel.sds()
+    bp.healthy <- sample.healthy(bp)
+    
+    # plot SD of bad pixels by source map
+    {
+        plot(pw.sd[,,"black",dt][bp.healthy], ylim = c(0,13000), col = adjustcolor("gold", alpha = 0.2), pch = 20,
+             ylab = "Pixel value", main = paste0("Bad pixels - black, ", dt))
+        points(pw.sd[,,"black",dt][as.matrix(bp[,1:2])], pch = 20,
+               col = adjustcolor(c("slateblue1", "chartreuse3", "red")[bp$map], alpha = 0.2))
+        legend("topleft", pch = 20, col = c("slateblue1", "chartreuse3", "red", "gold"), bty = "n",
+               legend = c("CB map only", "Both maps", "Auto map only", "Healthy sample"))
+        
+        plot(pw.sd[,,"grey",dt][bp.healthy], ylim = c(0,13000), col = adjustcolor("gold", alpha = 0.2), pch = 20,
+             ylab = "Pixel value", main = paste0("Bad pixels - grey, ", dt))
+        points(pw.sd[,,"grey",dt][as.matrix(bp[,1:2])], pch = 20,
+               col = adjustcolor(c("slateblue1", "chartreuse3", "red")[bp$map], alpha = 0.2))
+        legend("topleft", pch = 20, col = c("slateblue1", "chartreuse3", "red", "gold"), bty = "n",
+               legend = c("CB map only", "Both maps", "Auto map only", "Healthy sample"))
+        
+        plot(pw.sd[,,"white",dt][bp.healthy], ylim = c(0,13000), col = adjustcolor("gold", alpha = 0.2), pch = 20,
+             ylab = "Pixel value", main = paste0("Bad pixels - white, ", dt))
+        points(pw.sd[,,"white",dt][as.matrix(bp[,1:2])], pch = 20,
+               col = adjustcolor(c("slateblue1", "chartreuse3", "red")[bp$map], alpha = 0.2))
+        legend("topleft", pch = 20, col = c("slateblue1", "chartreuse3", "red", "gold"), bty = "n",
+               legend = c("CB map only", "Both maps", "Auto map only", "Healthy sample"))
+    }
+
+    # development of SD of bad pixels over time
+    {
+        cols <- c("green4", "cyan3", "dodgerblue3", "blue2", "purple", "magenta3", "red",
+                  "orange", "gold", "green", "black")
+        
+        focus <- "hot"
+        px <- as.matrix(rbind(setNames(bp[bp$type == focus,1:2], c("x", "y")), 
+                              bp.healthy[bp$type == focus,1:2]))
+        
+        pdf(paste0("./Plots/Simple-model-fitting/", dt, "-", focus, "-sd.pdf"), width = 15, height = 5)
+        par(mfrow = c(1,3))
+            for (j in 1:3) {
+                plot(0, type = "n", ylim = c(0, 13000), ylab = "Pixel value", xlim = c(0, nrow(px)),
+                     main = paste0(focus, " pixels - ", dimnames(pw.sd)[[3]][j]))
+                abline(v = nrow(bp[bp$type == focus,1:2]), col = "red")
+                for (i in 1:11) {
+                    points(pw.sd[,,j, i][px], pch = 20,
+                           col = adjustcolor(cols[i], alpha = 0.2))
+                }
+            }
+        dev.off()
+    }
+    
+    # transects over time
+    {
+        bp.sd.b <- apply(pw.sd[,,"black",], 3, "[", as.matrix(bp[,1:2]))
+        bp.sd.g <- apply(pw.sd[,,"grey",], 3, "[", as.matrix(bp[,1:2]))
+        bp.sd.w <- apply(pw.sd[,,"white",], 3, "[", as.matrix(bp[,1:2]))
+                                    
+        pdf(paste0("./Plots/Simple-model-fitting/", dt, "-badpx-sd-black.pdf"), width = 15, height = 4)
+        par(mfrow = c(1,5))
+        {
+            matplot(t(apply(pw.sd[,,"black",], 3, "[", bp.healthy)), ylim = c(0,13000), ylab = "",
+                    type = "l", main = "Healthy pixel SDs", xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+                                        
+            matplot(t(bp.sd.b[bp$type == "dead",]), ylim = c(0,13000), ylab = "",
+                type = "l", main = "Dead pixel SDs", xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+                                        
+            matplot(t(bp.sd.b[bp$type == "dim",]), ylim = c(0,13000), ylab = "",
+                type = "l", main = "Dim pixel SDs", xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+                                        
+            matplot(t(bp.sd.b[bp$type == "bright",]), ylim = c(0,13000), ylab = "",
+                type = "l", main = "Bright pixel SDs", xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+                                        
+            matplot(t(bp.sd.b[bp$type == "hot",]), ylim = c(0,13000), ylab = "",
+                type = "l", main = "Hot pixel SDs", xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+        }
+        dev.off()
+                                    
+        pdf(paste0("./Plots/Simple-model-fitting/", dt, "-badpx-sd-grey.pdf"), width = 15, height = 4)
+        par(mfrow = c(1,5))
+        {
+            matplot(t(apply(pw.sd[,,"grey",], 3, "[", bp.healthy)), ylim = c(0,13000), ylab = "",
+                    type = "l", main = "Healthy pixel SDs", xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+            
+            matplot(t(bp.sd.g[bp$type == "dead",]), ylim = c(0,13000), ylab = "",
+                    type = "l", main = "Dead pixel SDs", xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+            
+            matplot(t(bp.sd.g[bp$type == "dim",]), ylim = c(0,13000), ylab = "",
+                    type = "l", main = "Dim pixel SDs", xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+            
+            matplot(t(bp.sd.g[bp$type == "bright",]), ylim = c(0,13000), ylab = "",
+                    type = "l", main = "Bright pixel SDs", xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+            
+            matplot(t(bp.sd.g[bp$type == "hot",]), ylim = c(0,13000), ylab = "",
+                    type = "l", main = "Hot pixel SDs", xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+        }
+        dev.off()
+                                    
+        pdf(paste0("./Plots/Simple-model-fitting/", dt, "-badpx-sd-white.pdf"), width = 15, height = 4)
+        par(mfrow = c(1,5))
+        {
+            matplot(t(apply(pw.sd[,,"white",], 3, "[", bp.healthy)), ylim = c(0,13000), ylab = "",
+                    type = "l", main = "Healthy pixel SDs", xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+            
+            matplot(t(bp.sd.w[bp$type == "dead",]), ylim = c(0,13000), ylab = "",
+                    type = "l", main = "Dead pixel SDs", xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+            
+            matplot(t(bp.sd.w[bp$type == "dim",]), ylim = c(0,13000), ylab = "",
+                    type = "l", main = "Dim pixel SDs", xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+            
+            matplot(t(bp.sd.w[bp$type == "bright",]), ylim = c(0,13000), ylab = "",
+                    type = "l", main = "Bright pixel SDs", xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+            
+            matplot(t(bp.sd.w[bp$type == "hot",]), ylim = c(0,13000), ylab = "",
+                    type = "l", main = "Hot pixel SDs", xaxt = "none")
+            axis(1, at = c(1:11), labels = dimnames(pw.m)[[4]], las = 2)
+        }
+        dev.off()
+    }
+    
+    # appears that bad pixels are either more or less variable, depending on type.
+    # worth using as a discriminating feature if not linearly related to value.
+    {
+        plot(pw.m[,,"black",dt][as.matrix(bp[,1:2])], pw.sd[,,"black",dt][as.matrix(bp[,1:2])],
+             pch = 20, col = adjustcolor("slateblue1", alpha = 0.2), xlim = c(0,65335), ylim = c(0,13000))
+        points(pw.m[,,"grey",dt][as.matrix(bp[,1:2])], pw.sd[,,"grey",dt][as.matrix(bp[,1:2])],
+               pch = 20, col = adjustcolor("green3", alpha = 0.2))
+        points(pw.m[,,"white",dt][as.matrix(bp[,1:2])], pw.sd[,,"white",dt][as.matrix(bp[,1:2])],
+               pch = 20, col = adjustcolor("gold", alpha = 0.2))
+        
+        points(pw.m[,,"black",dt][bp.healthy], pw.sd[,,"black",dt][bp.healthy], pch = 20)
+        points(pw.m[,,"grey",dt][bp.healthy], pw.sd[,,"grey",dt][bp.healthy], pch = 20)
+        points(pw.m[,,"white",dt][bp.healthy], pw.sd[,,"white",dt][bp.healthy], pch = 20)
+    }
+    # not linear. Useful to look at both.
+    
+    # fit Johnson dist directly to pixelwise SDs
+    sd.JF.b <- JohnsonFit(pw.sd[,,"black",dt], moment = "quant")
+    sd.JF.g <- JohnsonFit(pw.sd[,,"grey",dt], moment = "quant")
+    sd.JF.w <- JohnsonFit(pw.sd[,,"white",dt], moment = "quant")
+    
+    # plot histograms: fit ok?
+    {
+        hist(pw.sd[,,"black",dt], breaks = "fd", col = "black", xlim = c(0,50), prob = T,
+             main = paste0("SD of black images, ",dt), xlab = "Pixelwise SD")
+        lines(c(0:200)/2, dJohnson(c(0:200)/2, sd.JF.b), col = "cornflowerblue", lwd = 2)
+        
+        hist(pw.sd[,,"grey",dt], breaks = "fd", col = "grey", prob = T, xlim = c(0,300),
+             main = paste0("SD of grey images, ",dt), xlab = "Pixelwise SD")
+        lines(c(0:600)/2, dJohnson(c(0:600)/2, sd.JF.g), col = "cornflowerblue", lwd = 2)
+        
+        hist(pw.sd[,,"white",dt], breaks = "fd", col = "white", prob = T, xlim = c(0,500),
+             main = paste0("SD of white images, ",dt), xlab = "Pixelwise SD")
+        lines(c(0:1000)/2, dJohnson(c(0:1000)/2, sd.JF.w), col = "cornflowerblue", lwd = 2)
+    }
+    # location is a little off in white images, tails are off in black. Grey gives best fit.
+    Johnson.QQ(pw.sd[,,"black", dt], grid.quantiles = c(0.01, 0.05, 0.95, 0.99), title = "Johnson Q-Q plot (black SD)")
+    Johnson.QQ(pw.sd[,,"grey", dt], grid.quantiles = c(0.01, 0.05, 0.95, 0.99), title = "Johnson Q-Q plot (grey SD)")
+    Johnson.QQ(pw.sd[,,"white", dt], grid.quantiles = c(0.01, 0.05, 0.95, 0.99), title = "Johnson Q-Q plot (white SD)")
+    # looks ok for the most part: use cutpoints as usual, see what outcome is.    
+
+# IDENTIFICATION OF SPOTS ON BERYLLIUM SCREEN                                                   ####
+
+    # convert bad pixels coords to integer list
+    bp.int <- rep(NA, 1996^2)
+    bp.int[c((bp[, 1] * 1996) + bp[, 2] - 1996)] <- c(bp$type)
+    
+    # retain all bad pix, then can also identify columns (if sensitive enough)
+    r <- raster((matrix(bp.int, ncol = 1996))[1996:1,], xmn = 1, xmx = 1996, ymn = 1, ymx = 1996)
+    image(r, col = "red", asp = T)
+    points(bp[bp$type == "dim",1:2])
+    
+    # clump
+    cc <- clump(r, directions = 8)
+    zz <- as.data.frame(table(freq(cc)))
+    zz <- zz[zz$Freq > 1,]
+    
+    cc[!(cc %in% zz$Var1)] <- NA
+    plot(cc, col = "red")
+    
+    # get clump 'density' (as per diss) to split into lines and blobs
+    
+
+    
+####################################################################################################
     
 # MISCELLANEOUS                                                                                 ####
 
+####################################################################################################
+# convert dead pixel map to raster and get clumps of dim/hot/dead/bright pixels.
+# any large areas of dimming are most likely spots on the screen, not actual bad pixels.
+    
 # visible line of dead pixels with blooming in black residual image for 160314, panel U4
 # 'root' cluster at [44:46, 206:208, "U4"] == [426:428, 1198:1200]
     {
