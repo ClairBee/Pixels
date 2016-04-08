@@ -3,6 +3,8 @@ TO DO
 
 ===================================================================================================
 
+Need to find (parallel?) way to identify lines of hot pixels, which are more subtle than dead ones.
+
 After fitting circular spot & linear panels (what we 'expect' to see) - what's left? Can we model it?
 
 When fitting spatial models to assess distribution & evolution of damage, relate to panel offset?
