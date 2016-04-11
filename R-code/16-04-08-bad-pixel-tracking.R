@@ -2,7 +2,7 @@
 # PARAMETRIC MODEL & SD USED TO IDENTIFY BAD PIXELS WITH JOHNSON QUANTILES
 
 library("IO.Pixels")
-load.pixel.means(); load.pixel.sds()
+load.pixel.mean?profis(); load.pixel.sds()
 
 fpath <- "./Models/Simple-parametric/"
 
