@@ -10,6 +10,13 @@ load.pixel.means()
 #   No obvious improvement (second spot basically 0, even up to o = 4)
 #   Panel gradients still erratic
 
+# FIT HYPER-ELLIPSE
+# Need to include constraint that terms sum to 1. Check with Julia.
+
+# FIT MINI-PANELS
+#   Not a big improvement on MAD (no change in SD), but changes spatial distribution of bad pixels
+#   Actually makes fit worse in grey & white images because of edges 
+
 # FIT PANELS TO CROPPED DATA
 #   Panel gradients may actually be more erratic using this method
 #   Again, no discernible improvement
@@ -264,6 +271,95 @@ load.pixel.means()
         
 ########################################################################################################
          
+# FIT 32 x 4 SUBPANELS                                                                              ####
+
+    spot <- spot.lm(pw.m[,,"black", "141009"], order = 2, robust = T)
+    pixel.image(matrix(spot$fitted.values, ncol = 1996))
+    spot.res <- matrix(spot$residuals, ncol = 1996)
+    pixel.image(spot.res)
+        
+    panel <- panel.lm(spot.res, "x + y", robust = T)
+    panel.res <- spot.res - panel$fitted.values
+    pixel.image(panel.res)
+    
+    s.hist(panel.res)
+    abline(v = qJohnson(c(0.001, 0.999), JohnsonFit(panel.res, moment = "quant")), col = "red", lty = 2)
+    qJohnson(c(0.001, 0.999), JF)       # -271.4574,  274.5265
+    mad(panel.res); sd(panel.res)       # 89.41521, 407.9843
+    
+    mini.panel <- minipanel.lm(panel.res, terms = "x + y", robust = T)
+    pixel.image(mini.panel$fitted.values)
+    res <- panel.res - mini.panel$fitted.values
+    mad(res); sd(panel.res)             # 77.55518, 405.022
+    pixel.image(res)
+    s.hist(res)
+    abline(v = qJohnson(c(0.001, 0.999), JohnsonFit(res, moment = "quant")), col = "red", lty = 2)
+    
+    # will actually pick up more points as bad pixels: over-fitting.
+    
+#-----------------------------------------------------------------------------------------
+# compare to grey & white images...
+    spot <- spot.lm(pw.m[,,"grey", "141009"], order = 2, robust = T)
+    spot.res <- matrix(spot$residuals, ncol = 1996)
+    panel <- panel.lm(spot.res, "x + y", robust = T)
+    panel.res <- spot.res - panel$fitted.values
+    mini.panel <- minipanel.lm(panel.res, terms = "x + y", robust = T)
+    res <- panel.res - mini.panel$fitted.values
+    mad(panel.res); sd(panel.res)       # 147.8663, 377.3608
+    mad(res); sd(res)                   # 131.8415, 377.3608
+    
+    s.hist(panel.res)
+    hist(res, add = T, breaks = "FD", col = adjustcolor("skyblue", alpha = 0.2), border = adjustcolor("skyblue", alpha = 0.2))
+    abline(v = qJohnson(c(0.001, 0.999), JohnsonFit(panel.res, moment = "quant")), col = "grey", lty = 2)
+    abline(v = qJohnson(c(0.001, 0.999), JohnsonFit(res, moment = "quant")), col = "skyblue", lty = 2)
+    
+#-----------------------------------------------------------------------------------------   
+    spot <- spot.lm(pw.m[,,"white", "141009"], order = 2, robust = T)
+    spot.res <- matrix(spot$residuals, ncol = 1996)
+    panel <- panel.lm(spot.res, "x + y", robust = T)
+    panel.res <- spot.res - panel$fitted.values
+    mini.panel <- minipanel.lm(panel.res, terms = "x + y", robust = T)
+    res <- panel.res - mini.panel$fitted.values
+    mad(panel.res); sd(panel.res)       # 310.528, 542.4823
+    mad(res); sd(res)             # 263.991, 542.4823
+    
+    s.hist(panel.res)
+    hist(res, add = T, breaks = "FD", col = adjustcolor("skyblue", alpha = 0.2), border = adjustcolor("skyblue", alpha = 0.2))
+    abline(v = qJohnson(c(0.001, 0.999), JohnsonFit(panel.res, moment = "quant")), col = "grey", lty = 2)
+    abline(v = qJohnson(c(0.001, 0.999), JohnsonFit(res, moment = "quant")), col = "skyblue", lty = 2)
+    
+########################################################################################################
+    
+# COMPARE MINIPANEL FIT WITH LINEAR VS QUADRATIC PANELS                                             ####
+    
+    spot <- spot.lm(pw.m[,,"black", "141009"], order = 2, robust = T)
+    spot.res <- matrix(spot$residuals, ncol = 1996)
+    panel <- panel.lm(spot.res, "x + y", robust = T)
+    panel.res <- spot.res - panel$fitted.values
+    mini.panel <- minipanel.lm(panel.res, terms = "x + y", robust = T)
+    mp.res <- panel.res - mini.panel$fitted.values
+    
+    mad(panel.res); sd(panel.res)
+    mad(mp.res); sd(mp.res)
+    
+    jpeg("./Plots/Minipanels/Minipanels-after-linear-panels-black-141009.jpg", width = 9000, height = 2400)
+    par(mfrow = c(1,4), mar = c(2,2,4,1))
+        pixel.image(panel$fitted.values, title = "Panels: x + y", cex.main = 10)
+        pixel.image(panel.res, title = paste0("Panel residuals: MAD ", round(mad(panel.res),0), ", SD ", round(sd(panel.res),0)), cex.main = 10)
+        pixel.image(mini.panel$fitted.values, title = paste0("Minipanels: x + y (SD ", round(sd(mini.panel$fitted.values),0), ")"), cex.main = 10)
+        pixel.image(mp.res, title = paste0("Minipanel residuals: MAD ", round(mad(mp.res),0), ", SD ", round(sd(mp.res),0)), cex.main = 10)
+    dev.off()
+
+    # results (over 14-10-09 images)
+    #           panel x + y      minipanel      panel poly(2)    minipanel
+    #           sd      mad     sd      mad      sd      mad    sd      mad
+    # black     408      89     405      78      406      82    405      77
+    # grey      377     148     369     132      370     138    367     120
+    # white     542     311     500     263      500     275    486     255
+    
+
+########################################################################################################
+    
 # FIT PANELS TO CROPPED DATA (EXCLUDE 100PX AROUND PANEL EDGES)                                     ####
     spot <- spot.lm(pw.m[ , , "white", "160314"], o = 2, robust = T)
     spot.res <- matrix(spot$residuals, ncol = 1996)
@@ -364,7 +460,7 @@ ks.test(pw.sd[,,"white", "150828"], "plnorm", mean = mean(p.log.w), sd = mad(p.l
     JF.sim.res <- do.call("rbind", lapply(lapply(JF.res, rJohnson, n = 10000), sort))
     JF.sim.sd <- do.call("rbind", lapply(lapply(JF.sd, rJohnson, n = 10000), sort))
     
-    #150108 not right - somehow managed to get less than 0 SD...
+    #150108 not right - model predicts < 0 SD...
     {
         load.images(150108, "black")
         all(b.150108[,,1] == b.150108[,,10])
@@ -383,18 +479,23 @@ ks.test(pw.sd[,,"white", "150828"], "plnorm", mean = mean(p.log.w), sd = mad(p.l
     cols <- c("green4", "cyan3", "dodgerblue3", "blue2", "purple", "magenta3", "red",
               "orange", "gold", "green", "black")
     
-    par(mfrow = c(5,2), mar = c(1,2,1,1))
-    for (i in c(1:11)[-4]) {
-        plot(JF.sim.sd[i,] - mean(JF.sim.sd[i,]), type = "l", col = cols[i], lwd = 2, ylim = c(-20,30))
-        abline(h = zz[i,] - mean(JF.sim.sd[i,]), lty = 3, col = cols[i])
+    # plot shape of Johnson distribution
+    {
+        par(mfrow = c(5,2), mar = c(1,2,1,1))
+        for (i in c(1:11)[-4]) {
+            plot(JF.sim.sd[i,] - mean(JF.sim.sd[i,]), type = "l", col = cols[i], lwd = 2, ylim = c(-20,30))
+            abline(h = zz[i,] - mean(JF.sim.sd[i,]), lty = 3, col = cols[i])
+        }
+        par(mfrow = c(1,1), mar = org.mar)
+        # location changes - shape is basically same
     }
-    par(mfrow = c(1,1), mar = org.mar)
-    # location changes - shape is basically same
+
 
     # quick estimate of gradient around each point
     sd.quants <- do.call("rbind", lapply(JF.sd, qJohnson, p = sort(rep(c(0.0001, 0.01, 0.1, 0.9, 0.99, 0.999),3)) + rep(c(-.00001, 0, 0.00001), 6)))
     colnames(sd.quants) <- apply(cbind("q.", format(sort(rep(c(0.0001, 0.01, 0.1, 0.9, 0.99, 0.999),3)) + rep(c(-.00001, 0, 0.00001), 6), scientific = F)), 1, paste, collapse = "")
 
+    plot(c(0.1:999.9)/1000, qJohnson(c(0.1:999.9)/1000, JF.sd[[1]]), pch = 20)
     sd.q.grad <- data.frame("g.0001" = do.call("rbind", lapply(JF.sd, qJohnson, p = 0.0001)) - 
                                 do.call("rbind", lapply(JF.sd, qJohnson, p = 0.0002)),
                             "g.001" = do.call("rbind", lapply(JF.sd, qJohnson, p = 0.0010)) - 

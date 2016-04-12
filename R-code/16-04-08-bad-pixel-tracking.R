@@ -2,11 +2,14 @@
 # PARAMETRIC MODEL & SD USED TO IDENTIFY BAD PIXELS WITH JOHNSON QUANTILES
 
 library("IO.Pixels")
-load.pixel.mean?profis(); load.pixel.sds()
+load.pixel.means(); load.pixel.sds()
 
 fpath <- "./Models/Simple-parametric/"
-
 res <- readRDS(paste0(fpath, "Residuals-simple-parametric.rds"))
+
+fpath <- "./Models/Complex-parametric/"
+res <- readRDS(paste0(fpath, "Residuals-panel-int-parametric.rds"))
+
 JF.res <- read.csv(paste0(fpath, "JF-residuals.csv"), as.is = T)
 JF.sd <- read.csv(paste0(fpath, "JF-sd.csv"), as.is = T)
 
@@ -23,7 +26,7 @@ bpm <- read.csv("./Other-data/BadPixelMap-160314.csv", as.is = T)
 #--------------------------------------------------------------------------------------
 # model fit on black-141009 looks particularly poor.
 # SD thresholding seems too strict - picking up a lot of points that aren't really problematic 
-#   - maybe switch to Q0.0001 and Q0.9999 (otherwise v close to tails)
+#   -> switched to Q0.0001 and Q0.9999 (otherwise v close to central peak)
 # hot/dead pixels have 0 SD.
 
 ####################################################################################################
@@ -55,17 +58,17 @@ get.bad.px <- function(dt) {
     bp.sd <- rbind(data.frame(which(pw.sd[,,"black", dt] == 0, arr.ind = T), src = "black", sd.type = "static"),
                    data.frame(which(pw.sd[,,"grey", dt] == 0, arr.ind = T), src = "grey", sd.type = "static"),
                    data.frame(which(pw.sd[,,"white", dt] == 0, arr.ind = T), src = "white", sd.type = "static"),
-                   data.frame(which(pw.sd[,,"black", dt] < JF.sd$q.001[JF.sd$batch == "black" & JF.sd$img.date == dt], arr.ind = T),
+                   data.frame(which(pw.sd[,,"black", dt] < JF.sd$q.0001[JF.sd$batch == "black" & JF.sd$img.date == dt], arr.ind = T),
                               src = "black", sd.type = "quiet"),
-                   data.frame(which(pw.sd[,,"grey", dt] < JF.sd$q.001[JF.sd$batch == "grey" & JF.sd$img.date == dt], arr.ind = T),
+                   data.frame(which(pw.sd[,,"grey", dt] < JF.sd$q.0001[JF.sd$batch == "grey" & JF.sd$img.date == dt], arr.ind = T),
                               src = "grey", sd.type = "quiet"),
-                   data.frame(which(pw.sd[,,"white", dt] < JF.sd$q.001[JF.sd$batch == "white" & JF.sd$img.date == dt], arr.ind = T),
+                   data.frame(which(pw.sd[,,"white", dt] < JF.sd$q.0001[JF.sd$batch == "white" & JF.sd$img.date == dt], arr.ind = T),
                               src = "white", sd.type = "quiet"),
-                   data.frame(which(pw.sd[,,"black", dt] > JF.sd$q.999[JF.sd$batch == "black" & JF.sd$img.date == dt], arr.ind = T),
+                   data.frame(which(pw.sd[,,"black", dt] > JF.sd$q.9999[JF.sd$batch == "black" & JF.sd$img.date == dt], arr.ind = T),
                               src = "black", sd.type = "noisy"),
-                   data.frame(which(pw.sd[,,"grey", dt] > JF.sd$q.999[JF.sd$batch == "grey" & JF.sd$img.date == dt], arr.ind = T),
+                   data.frame(which(pw.sd[,,"grey", dt] > JF.sd$q.9999[JF.sd$batch == "grey" & JF.sd$img.date == dt], arr.ind = T),
                               src = "grey", sd.type = "noisy"),
-                   data.frame(which(pw.sd[,,"white", dt] > JF.sd$q.999[JF.sd$batch == "white" & JF.sd$img.date == dt], arr.ind = T),
+                   data.frame(which(pw.sd[,,"white", dt] > JF.sd$q.9999[JF.sd$batch == "white" & JF.sd$img.date == dt], arr.ind = T),
                               src = "white", sd.type = "noisy"))
     
     # remove duplicates
@@ -83,6 +86,7 @@ get.bad.px <- function(dt) {
     return(bp[order(bp$type, bp$sd.type),])
 }
 
+####################################################################################################
 # FIT MODELS, GET ALL RESIDUALS                                                                 ####
     # all models fitted are robust
     res <- array(dim = c(1996, 1996, 3, 11), dimnames = dimnames(pw.m))
@@ -98,7 +102,7 @@ get.bad.px <- function(dt) {
             spot <- spot.lm(pw.m[ , , batch, dt], o = 2, robust = T)
             spot.res <- matrix(spot$residuals, ncol = 1996)
             
-            panel <- panel.lm(spot.res, "x + y", robust = T)
+            panel <- panel.lm(spot.res, "poly(x,2) * poly(y,2)", robust = T)
             res[ , , batch, dt] <- spot.res - panel$fitted.values
             
             setTxtProgressBar(pb, which(dimnames(pw.m)[[4]] == dt))
@@ -107,12 +111,11 @@ get.bad.px <- function(dt) {
     }
 
     close(pb); close(pb.col)
-    remove(batch, spot, spot.res, panel, pb, pb.col, batch, dt)
+    remove(batch, spot, spot.res, panel, pb, pb.col, dt)
 
-    saveRDS(res, paste0(fpath, "Residuals-simple-parametric.rds"))
+    saveRDS(res, paste0(fpath, "Residuals-panel-int-parametric.rds"))
 
 ####################################################################################################
-
 # FIT JOHNSON DISTRIBUTIONS                                                                     ####
     
     # fit models to residuals & SD for each acquisition batch
@@ -132,14 +135,13 @@ get.bad.px <- function(dt) {
 
     JF.sd <- cbind(JF.sd,
                    do.call("rbind", lapply(split(JF.sd[,3:7], seq(nrow(JF.sd))),
-                                           qJohnson, p = c(0.001, 0.01, 0.99, 0.999))))
-    colnames(JF.sd) <- colnames(JF.res)
+                                           qJohnson, p = c(0.0001, 0.001, 0.999, 0.9999))))
+    colnames(JF.sd) <- c(colnames(JF.sd[,1:7]), c("q.0001", "q.001", "q.999", "q.9999"))
     
     write.csv(JF.res, paste0(fpath, "JF-residuals.csv"), row.names = F)
     write.csv(JF.sd, paste0(fpath, "JF-sd.csv"), row.names = F)
    
 #################################################################################################### 
-
 # BAD PIXELS - 14.10.09                                                                         ####
     
     # get bad pixel map and values at each power setting
@@ -149,48 +151,80 @@ get.bad.px <- function(dt) {
         # get unique coordinates & classification
         px.141009 <- bp.141009[!duplicated(bp.141009[,1:2]),c(1:2, 4:5)]
         table(px.141009$type, px.141009$sd.type)
-        
-        #        static   quiet   noisy      -
-        # dead        5       0       0      0
-        # dim         0     342      14  18160
-        # bright      0      11    2228  13245
-        # hot       131       0       0      0
-        # -           0    8853   13130      0
+
+        # results
+        {
+            # simple parametric model: quadratic spot, linear panels (x + y)
+            #        static   quiet   noisy      -
+            # dead        5       0       0      0
+            # dim         0     166       6  18344
+            # bright      0       4    1803  13677
+            # hot       131       0       0      0
+            # -           0     560    2165      0
+            
+            #--------------------------------------------------------------------------------------
+            
+            # complex parametric model: quadratic spot, o2 panels with int (poly(x,2) * poly(y,2))
+            #        static   quiet   noisy       -
+            # dead        5       0       0       0
+            # dim         0     164       2    9588
+            # bright      0       4    1782   10637
+            # hot       131       0       0       0
+            # -           0     564    2199       0
+            
+            # not much change: small transfer from 'bright'/'dim' to '-'
+            # much stricter classification of 'dim' (less points identified)
+            
+        }
+
         saveRDS(px.141009, paste0(fpath, "Bad-px-141009.rds"))
     }
     px.141009 <- readRDS(paste0(fpath, "Bad-px-141009.rds"))
     
-    # are these cutpoints appropriate for SD discrimination?
-    hist(pw.sd[,,"grey", "141009"], breaks = "fd", prob = T, xlim = c(0, 500))
-    lines(c(0:500), dJohnson(c(0:500), list(JF.sd[JF.sd$batch == "grey" & JF.sd$img.date == 141009,3:7])), col = "red", lwd = 2)
-    abline(v = qJohnson(c(0.0001, 0.9999), list(JF.sd[JF.sd$batch == "grey" & JF.sd$img.date == 141009,3:7])), col = "red", lty = 2)
-    # spatial arrangement of bad pixels at each power level
+    # are these cutpoints appropriate for SD discrimination? (better than q.001 and q.999)
+        hist(pw.sd[,,"black", "141009"], breaks = "fd", prob = T, xlim = c(0, 500))
+        lines(c(0:500), dJohnson(c(0:500), list(JF.sd[JF.sd$batch == "black" & JF.sd$img.date == 141009,3:7])), col = "red", lwd = 2)
+        abline(v = qJohnson(c(0.0001, 0.9999), list(JF.sd[JF.sd$batch == "black" & JF.sd$img.date == 141009,3:7])), col = "red", lty = 2)
+        
+        jpeg(paste0(fpath, "Residuals.jpg"), width = 900, height = 300, pointsize = 12)
+        par(mfrow = c(1,3), mar = c(2,2,3,1))
+            pixel.image(res[,,"black", "141009"], title = "Black image")
+            pixel.image(res[,,"grey", "141009"], title = "Grey image")
+            pixel.image(res[,,"white", "141009"], title = "White image")
+        dev.off()
+        
+        
+    # spatial arrangement of bad pixels detected at each power level
     {
-        plot(bp.141009[bp.141009$src == "black",1:2], pch = 20, asp = T,
-             col = c("blue", "green3", "gold", "red", NA)[bp.141009$type[bp.141009$src == "black"]], 
-             main = "Distribution of bad pixels - black")
+        pdf(paste0(fpath, "Bad-px-detected-141009.pdf"), width = 12, height = 4, pointsize = 12)
+        par(mfrow = c(1,3), mar = c(2,2,3,1))
+            plot(bp.141009[bp.141009$src == "black",1:2], pch = 20, asp = T,
+                 col = c("blue", "green3", "gold", "red", NA)[bp.141009$type[bp.141009$src == "black"]], 
+                 main = "Distribution of bad pixels - black - 14-10-09")
+            
+            plot(bp.141009[bp.141009$src == "grey",1:2], pch = 20, asp = T,
+                 col = c("blue", "green3", "gold", "red", NA)[bp.141009$type[bp.141009$src == "grey"]], 
+                 main = "Distribution of bad pixels - grey - 14-10-09")
         
-        plot(bp.141009[bp.141009$src == "grey",1:2], pch = 20, asp = T,
-             col = c("blue", "green3", "gold", "red", NA)[bp.141009$type[bp.141009$src == "grey"]], 
-             main = "Distribution of bad pixels - grey")
-        
-        plot(bp.141009[bp.141009$src == "white",1:2], pch = 20, asp = T,
-             col = c("blue", "green3", "gold", "red", NA)[bp.141009$type[bp.141009$src == "white"]], 
-             main = "Distribution of bad pixels - white")
-        
+            plot(bp.141009[bp.141009$src == "white",1:2], pch = 20, asp = T,
+                 col = c("blue", "green3", "gold", "red", NA)[bp.141009$type[bp.141009$src == "white"]], 
+                 main = "Distribution of bad pixels - white - 14-10-09")
+        dev.off()
         #----------------------------------------------------------------------------
+        pdf(paste0(fpath, "Bad-sd-detected-141009.pdf"), width = 12, height = 4, pointsize = 12)
+        par(mfrow = c(1,3), mar = c(2,2,3,1))
+            plot(bp.141009[bp.141009$src == "black",1:2], pch = 20, asp = T,
+                 col = c("magenta3", "slateblue1", "orange", NA)[bp.141009$sd.type[bp.141009$src == "black"]], 
+                 main = "Distribution of bad SDs - black")
         
-        plot(bp.141009[bp.141009$src == "black",1:2], pch = 20, asp = T,
-             col = c("red", "blue", "gold", NA)[bp.141009$sd.type[bp.141009$src == "black"]], 
-             main = "Distribution of bad SDs - black")
+            plot(bp.141009[bp.141009$src == "grey",1:2], pch = 20, asp = T,
+                 col = c("magenta3", "slateblue1", "orange", NA)[bp.141009$sd.type[bp.141009$src == "grey"]], 
+                 main = "Distribution of bad SDs - grey")
         
-        plot(bp.141009[bp.141009$src == "grey",1:2], pch = 20, asp = T,
-             col = c("red", "blue", "gold", NA)[bp.141009$sd.type[bp.141009$src == "grey"]], 
-             main = "Distribution of bad SDs - grey")
-        
-        plot(bp.141009[bp.141009$src == "white",1:2], pch = 20, asp = T,
-             col = c("red", "blue", "gold", NA)[bp.141009$sd.type[bp.141009$src == "white"]], 
-             main = "Distribution of bad SDs - white")
+            plot(bp.141009[bp.141009$src == "white",1:2], pch = 20, asp = T,
+                 col = c("magenta3", "slateblue1", "orange", NA)[bp.141009$sd.type[bp.141009$src == "white"]], 
+                 main = "Distribution of bad SDs - white")
+            dev.off()
     }
     
     # look at value & SD of pixels identified
@@ -297,7 +331,6 @@ get.bad.px <- function(dt) {
     
         
 ####################################################################################################
-
 # BAD PIXELS - 14.11.18                                                                         ####
 
     # get bad pixel map and values at each power setting
@@ -308,28 +341,57 @@ get.bad.px <- function(dt) {
             px.141118 <- bp.141118[!duplicated(bp.141118[,1:2]),c(1:2, 4:5)]
             table(px.141118$type, px.141118$sd.type)
             
-            #        static quiet noisy     -
-            # dead        5     0     0     0
-            # dim         0   219     5 16869
-            # bright      0     7  2133 15337
-            # hot       138     0     0     0
-            # -           0  4935  7878     0
+    # results
+            {
+                #        static quiet noisy     -
+                # dead        5     0     0     0
+                # dim         0   219     5 16869
+                # bright      0     7  2133 15337
+                # hot       138     0     0     0
+                # -           0  4935  7878     0
+                
+                #        static quiet noisy     -
+                # dead        5     0     0     0
+                # dim         0   108     5  8609
+                # bright      0     4  1642 12455
+                # hot       138     0     0     0
+                # -           0   268  1143     0
+            }
+
             saveRDS(px.141118, paste0(fpath, "Bad-px-141118.rds"))
         }
     px.141118 <- readRDS(paste0(fpath, "Bad-px-141118.rds"))
 
 # compare to previous map
     {
-        td.141118 <- merge(px.141009, px.141118, by = c("row", "col"), all = T, suffixes = c(".prev", ".new"))
-        td.141118[,c(3,5)] <- lapply(td.141118[,c(3,5)], ordered, levels = c(levels(td.141118[,3]), "N/A"))
-        td.141118[,c(4,6)] <- lapply(td.141118[,c(4,6)], ordered, levels = c(levels(td.141118[,4]), "N/A"))
+        td <- merge(cbind(px.141009[,1:2], "cat" = apply(px.141009[,3:4], 1, paste, collapse = ",")),
+                    cbind(px.141118[,1:2], "cat" = apply(px.141118[,3:4], 1, paste, collapse = ",")),
+                    by = c("row", "col"), all = T, suffix = c(".141009", ".141118"))
+        td[sapply(td, is.factor)] <- lapply(td[sapply(td, is.factor)], factor, 
+                                            levels = c(unique(unlist(lapply(td[sapply(td, is.factor)], levels))),"-,-"))
+        td[is.na(td)] <- "-,-"
         
-        td.141118[is.na(td.141118)] <- "N/A"
+        td$status <- factor("changed", levels = c("new", "fixed", "same", "changed"))
+        td$status[td$cat.141009 == td$cat.141118] <- "same"
+        td$status[td$cat.141009 == "-,-"] <- "new"
+        td$status[td$cat.141118 == "-,-"] <- "fixed"
         
-        # mosaic plots
-        plot(td.141118$type.new, td.141118$type.prev, col = c("blue", "green3", "gold", "red", "white", "black"))
-        plot(td.141118$sd.type.new, td.141118$sd.type.prev, col = c("blue", "green3", "gold", "white", "black"))
-    }
+        table(td$status)    #     New   Fixed    Same Changed 
+                            #    7951    8655   14844    1577 
+        
+        chng <- table(td[td$status == "changed",3:4])
+        chng <- rbind(chng, colSums(chng))
+        chng <- cbind(chng, rowSums(chng))
+        
+        table(data.frame("cat.141009" = read.table(text = as.character(td[td$status == "changed","cat.141009"]), sep = ",", colClasses = "character")[,1],
+                         "cat.141118" = read.table(text = as.character(td[td$status == "changed","cat.141118"]), sep = ",", colClasses = "character")[,1]))
+        table(data.frame("cat.141009" = read.table(text = as.character(td[td$status == "changed","cat.141009"]), sep = ",", colClasses = "character")[,2],
+                         "cat.141118" = read.table(text = as.character(td[td$status == "changed","cat.141118"]), sep = ",", colClasses = "character")[,2]))
+        
+        table(td[td$status == "fixed",3:4])
+        sum(colSums(table(td[td$status == "changed",3:4]))); sum(rowSums(table(td[td$status == "changed",3:4])))
+        
+        }
     
 # development of bad pixels - by value only
 
