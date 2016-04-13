@@ -1,0 +1,71 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+\usetikzlibrary{automata, positioning, shapes.multipart, arrows}
+
+%======================================================================
+
+\begin{document}
+
+\subsection*{State diagram}
+\begin{figure}[!h]
+\caption{State diagram for bad pixels identified in the black images from 14-10-09 and 14-11-18}
+\tikzstyle{title}=[rectangle, font=\bfseries, draw=white, text centered, anchor=north, text width=2cm, minimum height = 1.5cm]
+\tikzstyle{r.title}=[rectangle, font=\bfseries, draw=white, text centered, anchor=north, text width=2cm, minimum height = 1.5cm]
+\tikzstyle{state}=[rectangle, draw=black, rounded corners, text centered, anchor=north, text width=2cm, minimum height = 1.5cm]
+\tikzstyle{ok}=[rectangle, draw=white, rounded corners, anchor=north, text width=2cm, minimum height = 1.5cm]
+
+        
+ \begin{tikzpicture}[node distance=3cm,on grid,auto,>=stealth'] 
+
+% State nodes
+   \node (dead) [state]  {Dead}; 
+   \node (quiet_dim) [state, below right=of dead] {Quiet \\ dim}; 
+   \node (quiet_ok) [state, right=of quiet_dim] {Quiet, ok}; 
+   \node (quiet_bright) [state, right=of quiet_ok] {Quiet, bright};
+   \node (hot) [state, above right=of quiet_bright] {Hot};
+   \node (ok_dim) [state, below=of quiet_dim] {Ok, dim};
+   \node (ok_bright) [state, below=of quiet_bright] {Ok, bright};
+   \node (noisy_dim) [state, below=of ok_dim] {Noisy, dim};
+   \node (noisy_ok) [state, right=of noisy_dim] {Noisy, ok};
+   \node (noisy_bright) [state, below=of ok_bright] {Noisy, bright};
+   \node (ok) [ok, below = of quiet_ok] {};
+
+% Add column & row headers
+   	\node (t_dead) [title, above = of dead]  {Dead}; 
+
+    \path[->] 
+    (dead)					edge [loop above]	node {5}		()
+    (hot)					edge [loop above]	node {128}	()
+    ([xshift=-1ex]hot.south)	edge [bend left]		node {3}		([yshift=1ex]noisy_bright.east)
+    (quiet_ok)				edge					node {53}	(ok)
+    (ok_dim)					edge [loop left]		node {5335} ()
+    					edge 				node {1}		(noisy_bright)
+    					edge 				node {506}	(ok)
+    	(ok_bright)		edge	 				node {20}	(noisy_ok)
+    					edge 				node {576}	(noisy_bright)
+    					edge					node	 {2759}	(ok)
+    	(noisy_dim)		edge					node {4}		(ok_dim)
+    					edge					node	 {1}		(noisy_ok)
+    	(noisy_ok)		edge [loop below]	node	 {126}	()
+    					edge					node {1}		(ok_dim)
+    					edge					node {37}	(noisy_bright)
+    					edge					node {70}	(ok_bright)
+    					edge					node {1207}	(ok)
+    	(noisy_bright)	edge 				node {24}	(noisy_ok)
+    					edge					node {740} 	(ok_bright)
+    					edge [loop below]	node {873}	()
+    					edge					node {156}	(ok)
+    	([yshift=-1ex]noisy_bright.east)		edge [bend right]	node {10}	([xshift=1ex]hot.south)
+    	(ok)				edge					node	 {6}		(quiet_ok)
+    					edge					node	 {1959} (ok_dim)
+    					edge					node	 {4157} (ok_bright)
+    					edge					node {558}	(noisy_ok)
+    					edge					node	 {169}  (noisy_bright)
+    ;
+\end{tikzpicture}
+\end{figure}
+
+
+%\newpage
+%\printbibliography
+\end{document}

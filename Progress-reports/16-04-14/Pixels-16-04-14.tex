@@ -1,6 +1,5 @@
 \documentclass[10pt,fleqn]{article}
 \usepackage{/home/clair/Documents/mystyle}
-\usetikzlibrary{automata,positioning}
 %----------------------------------------------------------------------
 % reformat section headers to be smaller \& left-aligned
 \titleformat{\section}
@@ -26,14 +25,14 @@
 
 \usepackage{fancyhdr}
 
-\fancyhf{}
-\fancyhead[R]{\textbf{7-Apr-2016}}
-\pagestyle{fancy}
+%\fancyhf{}
+%\fancyhead[R]{\textbf{14-Apr-2016}}
+%\pagestyle{fancy}
 
 \addtolength{\topmargin}{-0.5cm}
 \addtolength{\textheight}{1.4cm}
 
-\renewcommand{\headrulewidth}{0pt}
+%\renewcommand{\headrulewidth}{0pt}
 
 \begin{document}
 
@@ -42,97 +41,112 @@
 \begin{itemize}
 
 \item
-Black images on 15-01-08 are somehow corrupted: First and last 10 images are identical (as in \texttt{all(b.150108[ , , 1] == b.150108[ , , 2]) == T, all(b.150108[ , , 11] == b.150108[ , , 12]) == T}. As a result, 14470pts have SD = 0; gives such a low mean SD that model fitting is meaningless.
+Black images on 15-01-08 are somehow corrupted: First and last 10 images are identical (as in \texttt{all(b.150108[ , , 1] == b.150108[ , , 2]) == T, all(b.150108[ , , 11] == b.150108[ , , 12]) == T}. As a result, 14470 pts have SD = 0; this gives such a low mean SD that model fitting is meaningless.
+
+\item Standard deviations of pixels in grey image from 14-11-18 are quite skewed, with a very short left-hand tail. Need to investigate to find out why 14-11-18 distribution is so different to those of 14-10-09 and 14-12-17.
  
-\item Tried fitting different shapes (hyper-ellipses, including ellipse and squircle). Improvement in residual MAD/SD after panel fitting is very slight in recent images. However, suspect that in old data, spot veers closer to square, so might be useful to allow $n$ to vary with the data.
+\item Tried fitting different shapes (hyper-ellipses, including ellipse and squircle). Improvement in residual MAD/SD after panel fitting is very slight in recent images. However, suspect that in old data, spot veers closer to square, so might be useful to allow $n$ to vary with the data (perhaps within strict limits, 1 <= $n$ <= 4: ranging from circle to squircle) - $n$ may itself give a measure of cumulative damage (also looks like $n$ may differ between upper and lower panels?) 
 
-\item Fitted mini-panels: no major change to MAD and SD of residuals, but spatial distribution differs. Think this is over-fitting: edge panels on grey \& white are `tipped up' by low values along panel border, so values around row 512 are too low. Better to fit a more sophisticated spot or panel model.
+\item tried fitting mini-panels: no major change to MAD and SD of residuals, but spatial distribution differs. Think this is over-fitting: edge panels on grey \& white are `tipped up' by low values along panel border, so values around row 512 are too low. Better to fit a more sophisticated spot or panel model.
 
-\item Found another line of warm pixels: black image 14-10-09, panel L7, col 43 = [809,1:992,"black", 141009]
+\item Found another line of warm pixels in first set of images: panel L7, col 43 = \texttt{pw.m[809, 1:992, , 141009]}. Haven't looked specifically at its development over time as yet.
+
+\item Still more work needed on appropriate threshold setting (\& justification thereof) for bad SD. Applying same limit as for residuals picks up large numbers of apparently normal pixels. 
+
+\item Possible alternative/complement to Johnson distribution: using modified $Z$-score $M_i = 0.6745 (x_i - \hat{x} )/ \text{MAD}$ as a measure of distance from centre of distribution (like the `sickness score' we discussed previously)
 
 \end{itemize}
 
-\subsection*{Current questions/considerations}
-\begin{itemize}
+%\subsection*{Current questions/considerations}
+%\begin{itemize}
 
-\item Still more work needed on appropriate threshold setting (\& justification thereof) for bad SD. Applying same limit as for residuals picks up large numbers of apparently normal pixels.
+%\item Need to make clear that we cannot expect to get a perfectly-fitting model. If the panels were behaving perfectly as expected then residuals should follow distribution exactly (Johnson accounts for skew/kurtosis due to movement of mean level within finite space) - but since the distribution is bounded, we will always have clusters of high/low values, as pixels `drift' to the extremes.
 
-\item Need to make clear that we cannot expect to get a perfectly-fitting model. If the panels were behaving perfectly as expected then residuals should follow distribution exactly (Johnson accounts for skew/kurtosis due to movement of mean level within finite space) - but since the distribution is bounded, we will always have clusters of high/low values, as pixels `drift' to the extremes.
-
-\item Goodness of fit tests are meaningless for same reason: our null hypothesis expects large numbers of pixels at extremes. With such a large sample size, a small number of these extreme values will cause GoF tests to fail (could test sensitivity if necessary)
-\end{itemize}
+%\item Goodness of fit tests are meaningless for same reason: our null hypothesis expects large numbers of pixels at extremes. With such a large sample size, a small number of these extreme values will cause GoF tests to fail (could test sensitivity if necessary)
+%\end{itemize}
 
 %=============================================================================================================================
-\newpage
+\hrulefill
+
 \section*{Tracking development of bad pixels over time}
 
-Parametric model used: circular spot fitted by linear regression of value against distance from centre $z$ and $z^2$, panels fitted by linear regression over $x$, $x^2$, $y$, $y^2$ with interactions (most complex model currently considered for panel fitting). A Johnson distribution was fitted to the residuals for each image, with points $< Q_{0.001}$ labelled as \texttt{dim} and points $> Q_{0.999}$ labelled as \texttt{bright}. A Johnson distribution was fitted separately to the pixelwise SD for each image, with points $< Q_{0.0001}$ labelled as \texttt{quiet} and those $> Q_{0.9999}$ as \texttt{noisy}.
+Parametric model used: circular spot fitted by linear regression of value against distance from centre $z$ and $z^2$, panels fitted by linear regression of $(x + y)$. A Johnson distribution was fitted to the residuals for each image, with points $< Q_{0.001}$ labelled as \texttt{dim} and points $> Q_{0.999}$ labelled as \texttt{bright}. A Johnson distribution was fitted separately to the pixelwise SD for each image, with points $< Q_{0.0001}$ labelled as \texttt{quiet} and those $> Q_{0.9999}$ as \texttt{noisy}.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\FloatBarrier
 \subsection*{14-10-09}
 
 \begin{figure}[!h]
+\caption{Histograms showing cutoffs for residuals and SD (1st and 99th percentiles for residuals, 0.1- and 99.9th for SD. Fitted Johnson distributions are shown in green, with the cutoffs applied shown as a red dotted line. On the SD plots, blue dotted lines show the 1st and 99th percentiles, which are too close to the body of the data to be useful in identifying extreme values.\\
+Particularly in the residuals from the black images, the cutoff applied is still very close to the foot of the peak of the data, suggesting that it might be appropriate to set the cutoff further out, as for the SD.}
+\includegraphics[scale=0.55]{../../Models/Simple-parametric/Histograms-141009.jpg}
+\end{figure}
+ 
+\begin{figure}[!h]
 \caption{Bad pixels identified in each image set: 
-\textcolor{blue}{$\bullet$} dead; \textcolor{green}{$\bullet$} dim;  \textcolor{gold}{$\bullet$} bright; \textcolor{red}{$\bullet$} hot}
-\includegraphics[scale=0.55]{../../Models/Complex-parametric/Bad-px-detected-141009.pdf}
+\textcolor{blue}{$\bullet$} dead; \textcolor{green}{$\bullet$} dim;  \textcolor{gold}{$\bullet$} bright; \textcolor{red}{$\bullet$} hot.\\
+Vertical lines of pixels identified as dim or bright in the black images are clustered at the edges of panels/midpoints of panels, suggesting that the panelwise fit of the model needs to be improved.}
+\includegraphics[scale=0.55]{../../Models/Simple-parametric/Bad-px-detected-141009.pdf}
 \end{figure}
 
 
 \begin{figure}[!h]
 \caption{Bad SDs identified in each image set: 
 \textcolor{purple}{$\bullet$} static; \textcolor{BlueViolet}{$\bullet$} quiet;  \textcolor{orange}{$\bullet$} noisy}
-\includegraphics[scale=0.55]{../../Models/Complex-parametric/Bad-sd-detected-141009.pdf}
+\includegraphics[scale=0.55]{../../Models/Simple-parametric/Bad-sd-detected-141009.pdf}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\FloatBarrier
+\subsection*{14-11-18}
+
+\begin{figure}[!h]
+\caption{Histograms showing cutoffs for residuals and SD (1st and 99th percentiles for residuals.\\
+The distribution of the standard deviations of the grey images is quite different in shape to that of the previous image batch, leading to a much smaller number of pixels being identified as ``quiet'.}
+\includegraphics[scale=0.55]{../../Models/Simple-parametric/Histograms-141118.jpg}
+\end{figure}
+
+\begin{figure}[!h]
+\caption{Bad pixels identified in each image set: 
+\textcolor{blue}{$\bullet$} dead; \textcolor{green}{$\bullet$} dim;  \textcolor{gold}{$\bullet$} bright; \textcolor{red}{$\bullet$} hot.\\
+Vertical lines of pixels identified as dim or bright in the black images are clustered at the edges of panels/midpoints of panels, suggesting that the panelwise fit of the model needs to be improved.}
+\includegraphics[scale=0.55]{../../Models/Simple-parametric/Bad-px-detected-141118.pdf}
+\end{figure}
+
+\begin{figure}[!h]
+\caption{Bad SDs identified in each image set: 
+\textcolor{purple}{$\bullet$} static; \textcolor{BlueViolet}{$\bullet$} quiet;  \textcolor{orange}{$\bullet$} noisy}
+\includegraphics[scale=0.55]{../../Models/Simple-parametric/Bad-sd-detected-141118.pdf}
 \end{figure}
 
 \begin{footnotesize}
 \begin{verbatim}
 	# Quick summary of pixels identified in all images
-       #        static   quiet   noisy       -
-       # dead        5       0       0       0
-       # dim         0     164       2    9588
-       # bright      0       4    1782   10637
-       # hot       131       0       0       0
-       # -           0     564    2199       0
+	
+       # 14-10-09                                       # 14-11-18		
+       #        static   quiet   noisy      -           #        static   quiet   noisy      -
+       # dead        5       0       0      0           # dead        5       0       0      0
+       # dim         0     166       6  18344           # dim         0     109       1  16983
+       # bright      0       4    1803  13677           # bright      0       4    1653  15820
+       # hot       131       0       0      0           # hot       138       0       0      0
+       # -           0     560    2165      0           # -           0     268    1130      0
 \end{verbatim}
 \end{footnotesize}
 
-\subsection*{14-11-18}
-\begin{footnotesize}
-\begin{verbatim}
-	# Quick summary of pixels identified in all images;		
-       #        static quiet noisy     -						
-       # dead        5     0     0     0
-       # dim         0   108     5  8609
-       # bright      0     4  1642 12455
-       # hot       138     0     0     0
-       # -           0   268  1143     0
-       
-               px.is
-px.was      - bright dead  dim  hot
-  -      3894   4363    0 2457    0
-  bright 2690   9723    0    0   10
-  dead      0      0    5    0    0
-  dim    3482     12    0 6260    0
-  hot       0      3    0    0  128
-\end{verbatim}
-\end{footnotesize}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection*{State diagram}
+\subsection*{Movement between states}
+Some quick observations, based on the states of bad pixels in the first four acquisitions:
+\begin{itemize}
+\item The majority of points classified as bad only by their SD value return to the `healthy' population immediately
 
+\item The majority of points classified on the basis of their mean value tend to remain in that class - bright points remain bright, dim points remain dim.
 
+\item SD classification seems to be less useful (in that pixels are more likely to switch classification between quiet, normal and noisy in successive acquisitions than they are between dim, normal and bright) - rather than using as an independent category, it may be more useful to use SD (quiet/normal/noisy) to give subcategories of dim and bright pixels.
 
-\begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid,auto] 
-   \node[state,initial] (q_0)   {$q_0$}; 
-   \node[state] (q_1) [above right=of q_0] {$q_1$}; 
-   \node[state] (q_2) [below right=of q_0] {$q_2$}; 
-   \node[state,accepting](q_3) [below right=of q_1] {$q_3$};
-    \path[->] 
-    (q_0) edge  node {0} (q_1)
-          edge  node [swap] {1} (q_2)
-    (q_1) edge  node  {1} (q_3)
-          edge [loop above] node {0} ()
-    (q_2) edge  node [swap] {0} (q_3) 
-          edge [loop below] node {1} ();
-\end{tikzpicture}
- 
+\item Hot and dead pixels (with static pixelwise SD) tend to be largely stationary - a small number of pixels may move between the `hot' class and the various `bright' classes, but there is no movement in the dead pixels.
+\end{itemize}
 
 \end{document}
