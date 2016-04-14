@@ -5,10 +5,10 @@ dates <- list.dirs("./Image-data/", full.names = F, recursive = F)
 dates <- dates[dates != "150702"]
 n <- length(dates)
 
-#########################################################################################
+############################################################################################
 
-# import all black images, get pixelwise means & SDs (elapsed: 1110.51 for 11 dates)
-{
+# import all black images, get pixelwise means & SDs (elapsed: 1110.51 for 11 dates)    ####
+
     pw.m <- array(dim = c(1996, 1996, n), dimnames = list(NULL, NULL, dates))
     pw.sd <- array(dim = c(1996, 1996, n), dimnames = list(NULL, NULL, dates))
     
@@ -24,12 +24,13 @@ n <- length(dates)
     
     saveRDS(pw.m, file = "./Other-data/Pixelwise-means-black.rds")
     saveRDS(pw.sd, file = "./Other-data/Pixelwise-sds-black.rds")
-}
 
-#########################################################################################
 
-# import all grey images, get pixelwise means & SDs (elapsed: 1110.51 for 11 dates)
-{
+
+############################################################################################
+
+# import all grey images, get pixelwise means & SDs (elapsed: 1110.51 for 11 dates)     ####
+
     pw.m <- array(dim = c(1996, 1996, n), dimnames = list(NULL, NULL, dates))
     pw.sd <- array(dim = c(1996, 1996, n), dimnames = list(NULL, NULL, dates))
     
@@ -45,12 +46,12 @@ n <- length(dates)
     
     saveRDS(pw.m, file = "./Other-data/Pixelwise-means-grey.rds")
     saveRDS(pw.sd, file = "./Other-data/Pixelwise-sds-grey.rds")
-}
 
-#########################################################################################
 
-# import all white images, get pixelwise means & SDs (elapsed: 1110.51 for 11 dates)
-{
+############################################################################################
+
+# import all white images, get pixelwise means & SDs (elapsed: 1110.51 for 11 dates)    ####
+
     pw.m <- array(dim = c(1996, 1996, n), dimnames = list(NULL, NULL, dates))
     pw.sd <- array(dim = c(1996, 1996, n), dimnames = list(NULL, NULL, dates))
     
@@ -66,11 +67,33 @@ n <- length(dates)
     
     saveRDS(pw.m, file = "./Other-data/Pixelwise-means-white.rds")
     saveRDS(pw.sd, file = "./Other-data/Pixelwise-sds-white.rds")
-}
 
-#########################################################################################
 
-# numerical summaries of all images
+############################################################################################
+    
+# get pixelwise MAD for all images                                                      ####
+    
+    cols <- c("black", "grey", "white")
+    pw.mad <- array(dim = c(1996, 1996, 3, n), dimnames = list(NULL, NULL, cols, dates))
+
+    pb <- txtProgressBar(min = 0, max = n, style = 3)
+    for (colour in cols) {
+        l <- substring(colour, 1, 1)
+        for (i in 1:n) {
+            load.images(dates[i], colour)
+            pw.mad[,, colour, i] <- apply(eval(parse(text = paste0(l, ".", dates[i]))), c(1,2), mad)
+            setTxtProgressBar(pb, i)
+        }
+    }
+
+    close(pb)
+    remove(i, pb, colour, cols)
+    
+    saveRDS(pw.mad, file = "./Other-data/Pixelwise-mads.rds")
+    
+
+
+# numerical summaries of all images                                                     ####
 pw.m.b <- readRDS("./Other-data/Pixelwise-means-black.rds")
 pw.m.g <- readRDS("./Other-data/Pixelwise-means-grey.rds")
 pw.m.w <- readRDS("./Other-data/Pixelwise-means-white.rds")
@@ -95,7 +118,7 @@ df <- data.frame(date = character(), batch = character(),
 for (i in 1:dim(pw.m.b)[[3]]) {
     r <- nrow(df) + 1
     df[r, 1:2] <- c(dimnames(pw.m.b)[[3]][i], "black")
-    df[r, 3:6] <- c(mean(pw.m.b[,,i]), sd(pw.m.b[,,i]), mad(pw.m.b[,,i]), mean(pw.sd.b[,,i])
+    df[r, 3:6] <- c(mean(pw.m.b[,,i]), sd(pw.m.b[,,i]), mad(pw.m.b[,,i]), mean(pw.sd.b[,,i]))
     df[r, 7:12] <- range.summary(dimnames(pw.m.b)[[3]][i], "black")
     
     r <- nrow(df) + 1
@@ -114,6 +137,6 @@ df <- df[order(rownames(df)),]
  write.csv(df, "./Other-data/Image-summaries.csv", row.names = F)
  df <- read.csv("./Other-data/Image-summaries.csv", as.is = T)
 
-#########################################################################################
+############################################################################################
 
-# need to write function to add single image batch to summary files
+# need to write function to add single image batch to summary files                     ####

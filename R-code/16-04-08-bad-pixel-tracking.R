@@ -6,6 +6,8 @@ library(data.tree)      # produce tree diagrams plotting progress
 
 load.pixel.means(); load.pixel.sds()
 
+
+
 # simple parametric model: o2 circular spot, linear panels (x + y)
     fpath <- "./Models/Simple-parametric/"
     res <- readRDS(paste0(fpath, "Residuals-simple-parametric.rds"))

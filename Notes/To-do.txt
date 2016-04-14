@@ -1,6 +1,23 @@
 
 TO DO
 
+POSSIBLE NEW BAD PIXEL DEFINITIONS:
+    - dead (maybe limit to behaviour in white channel?)
+    - no response: normal in black channel, dim in white & grey
+    - dim blob in white/grey images: spot on screen
+    - dim singleton
+    - bright singleton
+    - bright cluster (do these even exist?)
+    - bright line
+    - hot singleton px
+    - hot horizontal cluster
+    - hot cluster (may be linked to bright line)
+    
+Should also look at flat-field corrected image (maybe with parametric correction?) to find genuinely 'bad' pixels that need to be mapped for manual correction by (say) switching median filter.
+
+Crop image? edge behaviour differs (edges prone to low values, not to the high values that cause lines)
+How do edges behave in flat-field-corrected image?
+
 ===================================================================================================
 
 Need to find (parallel?) way to identify lines of hot pixels, which are more subtle than dead ones.

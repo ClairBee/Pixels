@@ -3,7 +3,7 @@
 
 library("IO.Pixels")
 
-load.pixel.means()
+load.pixel.means(); load.pixel.sds(); pw.mad <- readRDS("./Other-data/Pixelwise-mads.rds")
 
 ########################################################################################################
 # DOUBLE SPOT IN WHITE/GREY IMAGES
@@ -519,3 +519,26 @@ ks.test(pw.sd[,,"white", "150828"], "plnorm", mean = mean(p.log.w), sd = mad(p.l
     }
     range(sd.q.grad[1:11,])
 ########################################################################################################
+# MAD VS SD TO CATEGORISE POINT BEHAVIOUR                                                           ####
+# doesn't look like this will be particularly useful. Maybe focus first on cluster shapes
+    hist(pw.mad[,,"black", "150828"], breaks = "FD", xlim = c(0,50))
+    hist(pw.sd[,,"black", "150828"], breaks = "FD", add = T, col = adjustcolor("blue", alpha = 0.2))
+    
+    ratio.b <- pw.mad[,,"black", "150828"]/pw.sd[,,"black", "150828"]
+    ratio.b[is.na(ratio.b)] <- 0
+    
+    hist(ratio.b, breaks = "fd")
+    
+    summary(c(ratio.b))
+    pixel.image(ratio.b)
+
+    ratio.w <- (pw.mad[,,"white", "150828"]/1.4826)/pw.sd[,,"white", "150828"]
+    ratio.w[is.na(ratio.w)] <- 0
+    hist(ratio.w, breaks = "fd")
+    summary(c(ratio.w))
+    
+    plot(which(ratio.w > 1, arr.ind = T), asp = T, pch = 20, col = adjustcolor("red", alpha = 0.2))   
+    points(which(ratio.w < 0.2, arr.ind = T), asp = T, pch = 20, col = adjustcolor("blue", alpha = 0.5))  
+    points(which(ratio.w == 0, arr.ind = T), asp = T, pch = 20)   # static = black
+    
+    
