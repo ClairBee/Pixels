@@ -1,159 +1,42 @@
 
 TO DO
 
-POSSIBLE NEW BAD PIXEL DEFINITIONS:
+TASK LIST
+===================================================================================================
+- Compare bright/hot pixels in white & grey images. Does grey image add anything new?
+- also compare to bright/hot pixels in offset-corrected image. (Try to refine definition)
+- identify shapes & superclusters for each image set (incl. corrected) separately, compare
+- after prepping code, run files with stricter parameters
+- recreate state transitions using new definitions (incl. shape)
+===================================================================================================
+
+PROPOSED BAD PIXEL VALUE DEFINITIONS:
+    - dead: dead in white images (or in any image? So small, probably doesn't matter)
+    - unresponsive: normal in black images, dim in grey/white images
+    - dim: dim pixels in grey/white images (may be able to ignore singletons? Check transition behaviour)
+    - bright: bright in white/grey images, hot
+    - hot: hot in black images
+    
+PROPOSED BAD PIXEL TYPES:
     - dead (maybe limit to behaviour in white channel?)
     - no response: normal in black channel, dim in white & grey
-    - dim blob in white/grey images: spot on screen
+    - dim blob in white/grey images: spot on screen (exclude)
     - dim singleton
-    - bright singleton
-    - bright cluster (do these even exist?)
     - bright line
-    - hot singleton px
-    - hot horizontal cluster
-    - hot cluster (may be linked to bright line)
+    - hot/bright singleton
+    - bright cluster
+    - supercluster of hot & bright pixels (may be linked to bright line)
     
-Should also look at flat-field corrected image (maybe with parametric correction?) to find genuinely 'bad' pixels that need to be mapped for manual correction by (say) switching median filter.
+Should also look at flat-field corrected image (maybe with parametric correction?) to find genuinely 'bad' pixels that need to be mapped for manual correction. (Maybe also in parallel?)
 
-Crop image? edge behaviour differs (edges prone to low values, not to the high values that cause lines)
+Edge behaviour differs (edges prone to low values, not to the high values that cause lines)
 How do edges behave in flat-field-corrected image?
 
 ===================================================================================================
 
 Need to find (parallel?) way to identify lines of hot pixels, which are more subtle than dead ones.
-
-After fitting circular spot & linear panels (what we 'expect' to see) - what's left? Can we model it?
-
-When fitting spatial models to assess distribution & evolution of damage, relate to panel offset?
-
-Perhaps fit models excluding panel edges, then extend prediction over panel edges?
-
-Iterative model fitting process: circular spot, then per-panel gradient, usw.
-(possibly removing most egregious points at each step as well?)
-
-Check that current model is appropriate for all image sets: further processing needed?
-
-Fit per-panel model, breaking horizontally as well as vertically
-
-Compare effectiveness of each approach: how many 'bad' pixels acquired? MAD/mean/SD of residuals?
-
-Categorise bad pixels according to type/severity. Plot behaviour over time.
-    - try automatic categorisation based on all observations?
+These could be labelled separately before clustering.
+    - what if dead line cuts a cluster? Check old data, what happens on either side of line?
+      (maybe expect it to truncate the cluster?)
 
 ===================================================================================================
-
-Methods of smoothing to compare & assess:
-    - flat field comparison
-    - thresholding as given in manual
-    - parametric noise model (dome & panels)
-    - loess smoothing along columns
-Best to remove points with max & min values right from the start: these are almost too easy...
-
-Have looked briefly at progression of hot pixels over time. Some appear to worsen over successive acquisitions, others do not.
-    - Useful to normalise (subtract per-image mean value) before plotting.
-    
-Definite jump at centre line of vertical panel. Thoughts?
-
-Plot pixel value vs panel-x, panel-y, detector-z. Try to identify patterns
-
-Per-column identification of bad pixels?
-    - subtract pixel value from loess-smoothed value to get residuals
-    - treat +ve/-ve residuals the same (ie. use abs) or segregate?
-    - could simply use SD of all values (without correcting for oscillation)
-    - instead of SD, use MAD?
-Instead of thresholding, return value for all bad pixels: how 'bad' are they? May be patterns.
-    
-Use robust estimators, not just SD: SD too susceptible to outliers.
-    - SD is fine for pixelwise fluctuation: we want to be susceptible to outliers
-    - measure of dispersion of majority of points: MAD
-    - more efficient alternatives: absolute pairwise differences, biweight midvariance.
-    
-Try removing oscillation from dark current (per-channel) - what is remaining pixelwise/global SD?
-    - mean pixelwise SD is v low in black images - compare to other image batches
-    
-Compare bad pixel maps etc from Jay to figures obtained manually
-
-Test for whole-panel offset on each date: what is per-pixel change over time?
-    - from initial plots, seems to vary from panel to panel
-    - try adjusting absolute value using central point(s) as locus
-        - perhaps take mean of clusters of points from central 4 panels (s/b stable)
-        - already tried linear regression over X and Y coordinates
-        - Linear regression over pixel distance from amplifier: compare results to XY regression
-
-Spot visible in black channel - why? Thought this related to source, which is switched off here.
-    - spot in black channel is lower in value, while spot in white/grey is higher
-    - are we looking at combination of two spots in grey/white channel?
-    - is residual value related to mean/variance of absolute value at all?
-    - model initially as function of distance from centre
-    
-Modelling the dark current by breaking into components
-    - circular spot of lower values (assume bivariate Gaussian)
-    - panelwise variation (assume linear over panel, starting in one corner)
-    - characteristic 'standing wave' effect along columns
-    - deviations from this pattern will be bad (non-standard) pixels
-When source is added (grey/white channels), second spot in almost the same place
-    - dark current is essentially thermal - any variation depending on time of year?
-    
-Panelwise fixed-pattern effect:
-    - use Loess(?) with high smoothing parameter across each panel to obtain planar gradient
-    - take locus as lowest corner of each panel
-    - compare corner-to-corner gradients across panels: is pattern similar?
-    - also get per-panel absolute offset (as well as image offset)
-    - subtract this from overall dark current to get clearer view of spot offset
-    - smooth image further by aligning each corner - if possible
-    - compare gradients across all panels, all colours and all dates. How variable is this?
-Also: spot damage/desensitisation in centre of image 
-
-Recreate thresholding used in manual
-    - characterise distribution of pixelwise mean & SD to identify useful thresholds
-    - ask Jay to provide bad pixel maps as well as channel images next time
-    - rework thresholding using black as offset image
-    - more detail on calculation:
-        - Perkin Elmer website may give calibration standard? (eg ISO____)
-        - find ref. manual for Varian panel - may have similar calculation
-
-Intra-panel dependency:
-    - check relationship between mean and variance, per-panel. Should be linear?
-    - plot residuals - any patterns?
-
-Image correction: should we simply be subtracting black channel from white channel?
-
-Standing wave pattern in sensor?
-    - how to test residuals for consistency along panel: 
-        - test for same distribution in different regions
-        - resampling/bootstrap
-        - summarise using mean/median/SD in blocks (eg 8 x 124-pixel runs)
-    - how to characterise wave? Is there a package that will give frequency & amplitude?
-        - use acf/pacf to check periodicity. Need to look into differences. Also ccf and fft.
-    - do signs of differences generally go same way?
-        - check Medical Stats notes - may be something in there (like Wilcoxon?)
-    - correlation of adjacent differences? (column-wise & row-wise)
-    - re mechanism:
-        - standing wave in CMOS/CCD sensors
-        - stop looking for 'noise' terms: it's systematic!
-    - should any deviation from normal oscillation be termed a bad pixel?
-      (even if value falls within range of oscillation)
-        - what do those pixels do in the white & grey batches?
-
-Look again at diff-SD: where SD across acquisitions differs (ie. at edges of panels), what is pattern of difference? Erratic oscillation, varying amplitude, or switching of signs?
-    - consider SD of absolute differences to remove sign-switching problem
-Identifying per-channel offset in dark current:
-    - can per-channel offset be broken into image offset & channel offset?
-    - initially use points with low oscillation SD to give 'fixed-pattern noise'
-    - do differences between these points give a constant per-channel offset?
-    - then extend to regions with less constant oscillation pattern
-
-If using Lowess smoothing, need to understand more about theoretical underpinning
-    
-    
-    
-    
-    
-========================================================================================================
-READING
-
-    - Review Julia's multiple testing notes/literature
-
-    - Van Nieuwenhove et al on dynamic intensity normalisation
-    
-    - look into robust statistics: robust SD etc, for thresholding
