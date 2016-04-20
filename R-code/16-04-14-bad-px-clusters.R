@@ -164,7 +164,7 @@ for (i in 1:nrow(cl)) {
 xy2 <- xy
 # create raster containing only hot/bright clusters and singletons
 sc <- r
-sc[cellFromXY(sc, xy = xy[(xy$count > 9), c("x", "y")])] <- NA      # include dead/dim in supercluster
+sc[cellFromXY(sc, xy = xy[(xy$count > 9), c("x", "y")])] <- NA      # to include dead/dim in supercluster
 sc[cellFromXY(sc, xy = xy[(xy$count > 9) | (xy$type %in% c("dead", "dim")), c("x", "y")])] <- NA
 
 # clump these smaller pixels

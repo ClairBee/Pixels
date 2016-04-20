@@ -92,7 +92,6 @@ n <- length(dates)
     saveRDS(pw.mad, file = "./Other-data/Pixelwise-mads.rds")
     
 
-
 # numerical summaries of all images                                                     ####
 pw.m.b <- readRDS("./Other-data/Pixelwise-means-black.rds")
 pw.m.g <- readRDS("./Other-data/Pixelwise-means-grey.rds")
@@ -139,4 +138,12 @@ df <- df[order(rownames(df)),]
 
 ############################################################################################
 
-# need to write function to add single image batch to summary files                     ####
+# GET FF-CORRECTED IMAGES FROM PIXELWISE MEANS                                          ####
+ ff.corr <- array(dim = c(1996, 1996, dim(pw.m)[[4]]), dimnames = list(NULL, NULL, dimnames(pw.m)[[4]]))
+ 
+ for (d in dimnames(pw.m)[[4]]) {
+     ff.corr[,,d] <- flat.field.corrected(d)
+ }
+ saveRDS(ff.corr, file = "./Other-data/Flat-field-corrected.rds")
+ 
+ # need to write function to add single image batch to summary files                     ####

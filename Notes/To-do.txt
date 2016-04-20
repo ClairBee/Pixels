@@ -8,13 +8,22 @@ TASK LIST
 - identify shapes & superclusters for each image set (incl. corrected) separately, compare
 - after prepping code, run files with stricter parameters
 - recreate state transitions using new definitions (incl. shape)
+
+- for each bad px state, test whether it is corrected in flat field correction
+    (may help with threshold setting?)
+- also try moving thresholds to see how state transitions are affected
+    - is there a threshold at which populations stabilise?
+    
+- to look at thresholding, create 'slightly bright'/'slightly dim' categories. How does this change things?
+
+- include test for spatial randomness of residuals when fitting models (esp. in brightest/dimmest px)
 ===================================================================================================
 
 PROPOSED BAD PIXEL VALUE DEFINITIONS:
     - dead: dead in white images (or in any image? So small, probably doesn't matter)
     - unresponsive: normal in black images, dim in grey/white images
     - dim: dim pixels in grey/white images (may be able to ignore singletons? Check transition behaviour)
-    - bright: bright in white/grey images, hot
+    - bright: bright in white images, hot in grey images (?)
     - hot: hot in black images
     
 PROPOSED BAD PIXEL TYPES:
