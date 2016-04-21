@@ -1,0 +1,343 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+% add document-specific packages here
+
+\titleformat{\section}
+    {\normalfont\bfseries}
+    {\llap{\parbox{1cm}{\thesection}}}{0em}{}
+    
+\begin{document}
+\renewenvironment{knitrout}{\vspace{1em}}{\vspace{1em}}
+<<setup, include=FALSE>>=
+opts_chunk$set(size = 'footnotesize',   # smaller font size for chunks
+               out.width = '0.32\\textwidth',   # default figure size = quarter of text width
+               fig.show = 'hold',   # display all figures at end of chunk
+               fig.align='center',
+               echo = F)
+options(width = 80, digits = 4)
+set.seed(24747)
+library(xtable)
+library("IO.Pixels")
+org.par <- par()        # save default parameters in case needed later
+par(mar = c(2,2,1,1))
+@
+
+<<prep>>=
+load.pixel.means(fpath = "../../Other-data/")
+fpath <- "../../Models/Simple-parametric/"
+res <- readRDS(paste0(fpath, "Residuals-simple-parametric.rds"))
+@
+
+\section*{Possible thresholds - grey images}
+
+\begin{figure}[!h]
+\caption{Thresholds using Johnson distribution fitted to raw data (pixelwise means) - grey images}
+<<cutoffs-grey>>=
+JF <- JohnsonFit(pw.m[,,"grey", "141009"])
+dj <- 1996 * 1996 * dJohnson(c(0:65535), JF)
+m <- mean(pw.m[,,"grey", "141009"])
+
+g.hist <- hist(pw.m[,,"grey", "141009"], breaks = "fd", prob = T,  xlab = "", ylab = "", main = "", yaxt = "n")
+lines(c(0:65535), dJohnson(c(0:65535), JF), col = "cyan3", lwd = 2, lty = 1)
+axis(2, at = pretty(range(g.hist$counts)) / max(g.hist$counts) * max(g.hist$density), 
+     labels = pretty(range(g.hist$counts)))
+{
+    # upper limit for UNRESPONSIVE pixels
+    rect(qJohnson(0.001, JohnsonFit(pw.m[,,"black", "141009"])), 0,
+         qJohnson(0.999, JohnsonFit(pw.m[,,"black", "141009"])), 1,
+         col = adjustcolor("blue", alpha = 0.4), border = NA)
+    
+    # upper limit for DIM pixels
+    rect(0, 0, max(which(round(dj, 1) == 0 & c(0:65535) < m)), 1,
+         col = adjustcolor("skyblue", alpha = 0.4), border = NA)
+    
+    # lower limit for BRIGHT pixels
+    rect(min(which(round(dj, 1) == 0 & c(0:65535) > m)), 0, 65535, 1,
+             col = adjustcolor("gold", alpha = 0.4), border = NA)
+    
+    abline(v = qJohnson(c(0.001, 0.999), JF), col = "red", lty = 1)
+}
+
+hist(pw.m[,,"grey", "141009"], breaks = "fd", prob = T,  xlab = "", ylab = "", main = "", yaxt = "n",
+     ylim = c(0, 200) / max(g.hist$counts) * max(g.hist$density))
+axis(2, at = pretty(c(0:200)) / max(g.hist$counts) * max(g.hist$density), 
+     labels = pretty(c(0:200)))
+lines(c(0:65535), dJohnson(c(0:65535), JF), col = "cyan3", lwd = 2, lty = 1)
+{
+    # upper limit for UNRESPONSIVE pixels
+    rect(qJohnson(0.001, JohnsonFit(pw.m[,,"black", "141009"])), 0,
+         qJohnson(0.999, JohnsonFit(pw.m[,,"black", "141009"])), 1,
+         col = adjustcolor("blue", alpha = 0.4), border = NA)
+    
+    # upper limit for DIM pixels
+    rect(0, 0, 
+         max(which(round(dj, 1) == 0 & c(0:65535) < m)), 1,
+         col = adjustcolor("skyblue", alpha = 0.4), border = NA)
+    
+    # lower limit for BRIGHT pixels
+    rect(min(which(round(dj, 1) == 0 & c(0:65535) > m)), 0, 65535, 1,
+             col = adjustcolor("gold", alpha = 0.4), border = NA)
+    
+    abline(v = qJohnson(c(0.001, 0.999), JF), col = "red", lty = 1)
+}
+
+hist(pw.m[,,"grey", "141009"], breaks = "fd", prob = T,  xlab = "", ylab = "", main = "", yaxt = "n",
+     ylim = c(0, 10) / max(g.hist$counts) * max(g.hist$density))
+axis(2, at = pretty(c(0:10)) / max(g.hist$counts) * max(g.hist$density), 
+     labels = pretty(c((0:10))))
+lines(c(0:65535), dJohnson(c(0:65535), JF), col = "cyan3", lwd = 2, lty = 1)
+{
+    # upper limit for UNRESPONSIVE pixels
+    rect(qJohnson(0.001, JohnsonFit(pw.m[,,"black", "141009"])), 0,
+         qJohnson(0.999, JohnsonFit(pw.m[,,"black", "141009"])), 1,
+         col = adjustcolor("blue", alpha = 0.4), border = NA)
+    
+    # upper limit for DIM pixels
+    rect(0, 0, max(which(round(dj, 1) == 0 & c(0:65535) < m)), 1,
+         col = adjustcolor("skyblue", alpha = 0.4), border = NA)
+    
+    # lower limit for BRIGHT pixels
+    rect(min(which(round(dj, 1) == 0 & c(0:65535) > m)), 0, 65535, 1,
+             col = adjustcolor("gold", alpha = 0.4), border = NA)
+    
+    abline(v = qJohnson(c(0.001, 0.999), JF), col = "red", lwd = 2)
+}
+@
+\end{figure}
+
+\begin{figure}[!h]
+\caption{Dim and bright pixels identified in the grey images using cutpoints at $p(x=0)$ either side of mean, based on density of Johnson distribution fitted to residuals after simple parametric model fitted \textit{(poly(z,2) + (x + y))}}
+<<cutoffs-grey-res>>=
+g.res.support <- c(floor(min(res[,,"grey", "141009"])):ceiling(max(res[,,"grey", "141009"])))
+JF <- JohnsonFit(res[,,"grey", "141009"])
+dj <- 1996 * 1996 * dJohnson(g.res.support, JF)
+m <- mean(res[,,"grey", "141009"])
+
+g.res.hist <- hist(res[,,"grey", "141009"], breaks = "fd", prob = T,  xlab = "", ylab = "", main = "", yaxt = "n")
+lines(g.res.support, dJohnson(g.res.support, JF), col = "cyan3", lwd = 2, lty = 1)
+axis(2, at = pretty(range(g.res.hist$counts)) / max(g.res.hist$counts) * max(g.res.hist$density), 
+     labels = pretty(range(g.res.hist$counts)))
+{
+    # upper limit for DIM pixels
+    rect(min(g.res.support), 0,
+         g.res.support[max(which(round(dj, 1) == 0 & g.res.support < m))], 1,
+         col = adjustcolor("skyblue", alpha = 0.4), border = NA)
+    
+    # lower limit for BRIGHT pixels
+    rect(g.res.support[min(which(round(dj, 1) == 0 & g.res.support > m))], 0,
+         max(g.res.support), 1,
+             col = adjustcolor("gold", alpha = 0.4), border = NA)
+    
+    # quantiles
+    abline(v = qJohnson(c(0.001, 0.999), JF), col = "red", lty = 1)
+}
+
+hist(res[,,"grey", "141009"], breaks = "fd", prob = T,  xlab = "", ylab = "", main = "", yaxt = "n",
+     ylim = c(0, 200) / max(g.res.hist$counts) * max(g.res.hist$density))
+axis(2, at = pretty(c(0:200)) / max(g.res.hist$counts) * max(g.res.hist$density), 
+     labels = pretty(c(0:200)))
+lines(g.res.support, dJohnson(g.res.support, JF), col = "cyan3", lwd = 2, lty = 1)
+{
+    # upper limit for DIM pixels
+    rect(min(g.res.support), 0,
+         g.res.support[max(which(round(dj, 1) == 0 & g.res.support < m))], 25000,
+         col = adjustcolor("skyblue", alpha = 0.4), border = NA)
+    
+    # lower limit for BRIGHT pixels
+    rect(g.res.support[min(which(round(dj, 1) == 0 & g.res.support > m))], 0,
+         max(g.res.support), 25000,
+             col = adjustcolor("gold", alpha = 0.4), border = NA)
+    
+    # quantiles
+    abline(v = qJohnson(c(0.001, 0.999), JF), col = "red", lty = 1)
+}
+
+hist(res[,,"grey", "141009"], breaks = "fd", prob = T,  xlab = "", ylab = "", main = "", yaxt = "n",
+     ylim = c(0, 10) / max(g.res.hist$counts) * max(g.res.hist$density))
+axis(2, at = pretty(c(0:10)) / max(g.res.hist$counts) * max(g.res.hist$density), 
+     labels = pretty(c(0:10)))
+lines(g.res.support, dJohnson(g.res.support, JF), col = "cyan3", lwd = 2, lty = 1)
+{
+    # upper limit for DIM pixels
+    rect(min(g.res.support), 0,
+         g.res.support[max(which(round(dj, 1) == 0 & g.res.support < m))], 25000,
+         col = adjustcolor("skyblue", alpha = 0.4), border = NA)
+    
+    # lower limit for BRIGHT pixels
+    rect(g.res.support[min(which(round(dj, 1) == 0 & g.res.support > m))], 0,
+         max(g.res.support), 25000,
+             col = adjustcolor("gold", alpha = 0.4), border = NA)
+    
+    # quantiles
+    abline(v = qJohnson(c(0.001, 0.999), JF), col = "red", lty = 1)
+}
+@
+\end{figure}
+
+
+\begin{figure}[!h]
+\caption{Thresholds using Johnson distribution fitted to raw data (pixelwise means) - white images}
+<<cutoffs-white>>=
+JF <- JohnsonFit(pw.m[,,"white", "141009"])
+dj <- 1996 * 1996 * dJohnson(c(0:65535), JF)
+m <- mean(pw.m[,,"white", "141009"])
+
+g.hist <- hist(pw.m[,,"white", "141009"], breaks = "fd", prob = T,  xlab = "", ylab = "", main = "", yaxt = "n")
+lines(c(0:65535), dJohnson(c(0:65535), JF), col = "cyan3", lwd = 2, lty = 1)
+axis(2, at = pretty(range(g.hist$counts)) / max(g.hist$counts) * max(g.hist$density), 
+     labels = pretty(range(g.hist$counts)))
+{
+    # upper limit for UNRESPONSIVE pixels
+    rect(qJohnson(0.001, JohnsonFit(pw.m[,,"black", "141009"])), 0,
+         qJohnson(0.999, JohnsonFit(pw.m[,,"black", "141009"])), 1,
+         col = adjustcolor("blue", alpha = 0.4), border = NA)
+    
+    # upper limit for DIM pixels
+    rect(0, 0, max(which(round(dj, 1) == 0 & c(0:65535) < m)), 1,
+         col = adjustcolor("skyblue", alpha = 0.4), border = NA)
+    
+    # lower limit for BRIGHT pixels
+    rect(min(which(round(dj, 1) == 0 & c(0:65535) > m)), 0, 65535, 1,
+             col = adjustcolor("gold", alpha = 0.4), border = NA)
+    
+    abline(v = qJohnson(c(0.001, 0.999), JF), col = "red", lty = 1)
+}
+
+hist(pw.m[,,"white", "141009"], breaks = "fd", prob = T,  xlab = "", ylab = "", main = "", yaxt = "n",
+     ylim = c(0, 200) / max(g.hist$counts) * max(g.hist$density))
+axis(2, at = pretty(c(0:200)) / max(g.hist$counts) * max(g.hist$density), 
+     labels = pretty(c(0:200)))
+lines(c(0:65535), dJohnson(c(0:65535), JF), col = "cyan3", lwd = 2, lty = 1)
+{
+    # upper limit for UNRESPONSIVE pixels
+    rect(qJohnson(0.001, JohnsonFit(pw.m[,,"black", "141009"])), 0,
+         qJohnson(0.999, JohnsonFit(pw.m[,,"black", "141009"])), 1,
+         col = adjustcolor("blue", alpha = 0.4), border = NA)
+    
+    # upper limit for DIM pixels
+    rect(0, 0, 
+         max(which(round(dj, 1) == 0 & c(0:65535) < m)), 1,
+         col = adjustcolor("skyblue", alpha = 0.4), border = NA)
+    
+    # lower limit for BRIGHT pixels
+    rect(min(which(round(dj, 1) == 0 & c(0:65535) > m)), 0, 65535, 1,
+             col = adjustcolor("gold", alpha = 0.4), border = NA)
+    
+    abline(v = qJohnson(c(0.001, 0.999), JF), col = "red", lty = 1)
+}
+
+hist(pw.m[,,"white", "141009"], breaks = "fd", prob = T,  xlab = "", ylab = "", main = "", yaxt = "n",
+     ylim = c(0, 10) / max(g.hist$counts) * max(g.hist$density))
+axis(2, at = pretty(c(0:10)) / max(g.hist$counts) * max(g.hist$density), 
+     labels = pretty(c((0:10))))
+lines(c(0:65535), dJohnson(c(0:65535), JF), col = "cyan3", lwd = 2, lty = 1)
+{
+    # upper limit for UNRESPONSIVE pixels
+    rect(qJohnson(0.001, JohnsonFit(pw.m[,,"black", "141009"])), 0,
+         qJohnson(0.999, JohnsonFit(pw.m[,,"black", "141009"])), 1,
+         col = adjustcolor("blue", alpha = 0.4), border = NA)
+    
+    # upper limit for DIM pixels
+    rect(0, 0, max(which(round(dj, 1) == 0 & c(0:65535) < m)), 1,
+         col = adjustcolor("skyblue", alpha = 0.4), border = NA)
+    
+    # lower limit for BRIGHT pixels
+    rect(min(which(round(dj, 1) == 0 & c(0:65535) > m)), 0, 65535, 1,
+             col = adjustcolor("gold", alpha = 0.4), border = NA)
+    
+    abline(v = qJohnson(c(0.001, 0.999), JF), col = "red", lwd = 2)
+}
+@
+\end{figure}
+
+\begin{figure}[!h]
+\caption{Dim and bright pixels identified in the white images using cutpoints at $p(x=0)$ either side of mean, based on density of Johnson distribution fitted to residuals after simple parametric model fitted \textit{(poly(z,2) + (x + y))}}
+<<cutoffs-white-res>>=
+g.res.support <- c(floor(min(res[,,"white", "141009"])):ceiling(max(res[,,"white", "141009"])))
+JF <- JohnsonFit(res[,,"white", "141009"])
+dj <- 1996 * 1996 * dJohnson(g.res.support, JF)
+m <- mean(res[,,"white", "141009"])
+
+g.res.hist <- hist(res[,,"white", "141009"], breaks = "fd", prob = T,  xlab = "", ylab = "", main = "", yaxt = "n")
+lines(g.res.support, dJohnson(g.res.support, JF), col = "cyan3", lwd = 2, lty = 1)
+axis(2, at = pretty(range(g.res.hist$counts)) / max(g.res.hist$counts) * max(g.res.hist$density), 
+     labels = pretty(range(g.res.hist$counts)))
+{
+    # upper limit for DIM pixels
+    rect(min(g.res.support), 0,
+         g.res.support[max(which(round(dj, 1) == 0 & g.res.support < m))], 1,
+         col = adjustcolor("skyblue", alpha = 0.4), border = NA)
+    
+    # lower limit for BRIGHT pixels
+    rect(g.res.support[min(which(round(dj, 1) == 0 & g.res.support > m))], 0,
+         max(g.res.support), 1,
+             col = adjustcolor("gold", alpha = 0.4), border = NA)
+    
+    # quantiles
+    abline(v = qJohnson(c(0.001, 0.999), JF), col = "red", lty = 1)
+}
+
+hist(res[,,"white", "141009"], breaks = "fd", prob = T,  xlab = "", ylab = "", main = "", yaxt = "n",
+     ylim = c(0, 200) / max(g.res.hist$counts) * max(g.res.hist$density))
+axis(2, at = pretty(c(0:200)) / max(g.res.hist$counts) * max(g.res.hist$density), 
+     labels = pretty(c(0:200)))
+lines(g.res.support, dJohnson(g.res.support, JF), col = "cyan3", lwd = 2, lty = 1)
+{
+    # upper limit for DIM pixels
+    rect(min(g.res.support), 0,
+         g.res.support[max(which(round(dj, 1) == 0 & g.res.support < m))], 25000,
+         col = adjustcolor("skyblue", alpha = 0.4), border = NA)
+    
+    # lower limit for BRIGHT pixels
+    rect(g.res.support[min(which(round(dj, 1) == 0 & g.res.support > m))], 0,
+         max(g.res.support), 25000,
+             col = adjustcolor("gold", alpha = 0.4), border = NA)
+    
+    # quantiles
+    abline(v = qJohnson(c(0.001, 0.999), JF), col = "red", lty = 1)
+}
+
+hist(res[,,"white", "141009"], breaks = "fd", prob = T,  xlab = "", ylab = "", main = "", yaxt = "n",
+     ylim = c(0, 10) / max(g.res.hist$counts) * max(g.res.hist$density))
+axis(2, at = pretty(c(0:10)) / max(g.res.hist$counts) * max(g.res.hist$density), 
+     labels = pretty(c(0:10)))
+lines(g.res.support, dJohnson(g.res.support, JF), col = "cyan3", lwd = 2, lty = 1)
+{
+    # upper limit for DIM pixels
+    rect(min(g.res.support), 0,
+         g.res.support[max(which(round(dj, 1) == 0 & g.res.support < m))], 25000,
+         col = adjustcolor("skyblue", alpha = 0.4), border = NA)
+    
+    # lower limit for BRIGHT pixels
+    rect(g.res.support[min(which(round(dj, 1) == 0 & g.res.support > m))], 0,
+         max(g.res.support), 25000,
+             col = adjustcolor("gold", alpha = 0.4), border = NA)
+    
+    # quantiles
+    abline(v = qJohnson(c(0.001, 0.999), JF), col = "red", lty = 1)
+}
+@
+\end{figure}
+
+\nb{Add more quantiles to plots: may suggest useful cutpoint? Also $p(x=0)$ to different degrees of precision}
+
+\nb{Look at really simple thresholding: using binned pixel values (eg. integer values), pixk least common values as threshold. Eg. max value that appears < 10 times below mean, min value that appears < 10 times above}
+
+<<blah, echo = T, eval = F>>=
+ct <- merge(data.frame(x = c(0:65535)),
+            count(c(round(pw.m[,,"grey", "141009"],0))), all.x = T)
+ct[is.na(ct)] <- 0
+ct$cat[ct$freq < 10] <- "incl"
+
+max(ct$x[ct$freq < 10 & ct$x < mean(pw.m[,,"grey", "141009"])]) # last under 10: 17538
+min(ct$x[ct$freq > 10 & ct$x < mean(pw.m[,,"grey", "141009"])]) # first over 10: 17214
+
+min(ct$x[ct$freq < 10 & ct$x > mean(pw.m[,,"grey", "141009"])]) # first under 10: 21172
+max(ct$x[ct$freq > 10 & ct$x > mean(pw.m[,,"grey", "141009"]) & ct$x < 65535]) # last over 10: 21276
+
+hist(pw.m[,,"grey", "141009"], breaks = "fd", ylim = c(0,20))
+abline(v = min(ct$x[ct$freq > 10 & ct$x < mean(pw.m[,,"grey", "141009"])]), col = "red")
+abline(v = as.integer(min(names(t[t < 10 & names(t) > mean(pw.m[,,"grey", "141009"])]))), col = "red")
+
+@
+\end{document}

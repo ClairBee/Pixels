@@ -1,0 +1,153 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\llap{\parbox{1cm}{\thesubsection}}}{0em}{}
+	
+%----------------------------------------------------------------------
+% SPECIFY BIBLIOGRAPHY FILE & FIELDS TO EXCLUDE
+\addbibresource{refs.bib}
+%\AtEveryBibitem{\clearfield{url}}
+%\AtEveryBibitem{\clearfield{doi}}
+%\AtEveryBibitem{\clearfield{isbn}}
+%\AtEveryBibitem{\clearfield{issn}}
+
+%----------------------------------------------------------------------
+% define code format
+\lstnewenvironment{code}[1][R]{			% default language is R
+	\lstset{language = #1,
+        		columns=fixed,
+    			tabsize = 4,
+    			breakatwhitespace = true,
+			showspaces = false,
+    			xleftmargin = .75cm,
+    			lineskip = {0pt},
+			showstringspaces = false,
+			extendedchars = true
+    }}
+    {}
+    
+%======================================================================
+
+\begin{document}
+
+\section*{Identification of spots on beryllium screen}
+
+As the electron beam interacts with the tungsten target, the tungsten is heated up. Occasionally flecks of molten tungsten ping off and attach themselves to the beryllium window, where they will remain until the window is replaced.
+
+These flecks manifest in the white and grey images as patches of dim pixels, where the source is blocked. While these do not indicate a problem with the detector panel itself, their locations need to be identified so that the artificially low values can be taken into consideration, for a number of reasons:
+\begin{itemize}
+\item Identification of affected pixels allows us to quantify the damage to the beryllium window, helping the operator to decide when it should be replaced (in terms of proportion of window affected, areas of window affected, and whether flat-field correction is able to fix the issue)
+
+\item Particularly large spots may still be visible after flat-field image correction; if the locations are known, these can be double-checked
+
+\item The presence of a relatively large proportion ($\sim 0.5\%$) of dim pixels is most likely affecting the fit of distributions used to calculate thresholds for bright and dim pixels. Removing them before fitting the distribution should lead to better threshold setting. \nb{Expand on this later}
+\end{itemize}
+
+\todo{histogram of grey \& white images with fitted Johnson distribution before and after removing the dim spots, showing effect on thresholds}
+
+\todo{summarise per spot: height, width, n. cells, ?min.thickness?, is spot still visible after flat field correction? There may be a size above which the spot is too dense to be corrected (although this implies that spot volume is linearly correlated with spot area, which it may not be: maybe broader spots were travelling faster when they hit, so spread further?)}
+
+\subsection*{Procedure for identifying spots in image}
+Our current aim is to identify large clusters of pixels that are lower in value than the pixels in the surrounding area. Because the specks on the screen are likely to be thinner at their outer edge than in their centre, we expect to see a smooth gradient across these shapes, rather than a clearly defined boundary, so can't simply look for sharp changes in gradient across the image. Instead, we look for brief dips in pixel value.
+
+\begin{description}
+
+\item[Smooth] If the detector were perfect and undamaged, we would expect the values to vary smoothly from one edge of the panel to another. Since the shape of that smooth image is of no interest to us, we can use Loess smoothing to obtain an idealised curve along each column, and subtract the smoothed values from the original pixel values to obtain a residual with mean approximately 0 and much lower variance.
+
+\item[Truncate] We're currently only interested in dim values that differ from their neighbours, so we can homogenize the pixels that we know to be bright; for any pixel whose residual value is greater than the mean, set that pixel's value to the mean.
+
+\item[Closing] We perform a morphological closing over the remaining features, first dilating and then eroding them (see next section for a slightly less brief explanation). The structuring element used is a disc of diameter 5 pixels; a disc, because we might reasonably expect the blobs to have rounded edges, and 5 pixel diameter because each pixel is approximately 0.2mm wide, so this corresponds to a speck of 1mm diameter. Any dark patches unable to contain the structuring element will disappear after the dilation is performed. 
+
+\item[Threshold] Using the R function \texttt{mmand::threshold}, with thresholding method \texttt{`kmeans'}, automatically determines a cutoff point and classifies each pixel as either light or dark.
+
+\end{description}
+
+\begin{figure}[!h]
+\caption{Stages in identification of spots on beryllium screen}
+\centering
+
+\begin{subfigure}{0.32\textwidth}
+\caption{Raw data: pixelwise means from white image}
+\includegraphics[scale=0.32]{./fig/white-image}
+\end{subfigure}
+%
+\begin{subfigure}{0.32\textwidth}
+\caption{Loess smoothing along columns with span 1/5}
+\includegraphics[scale=0.32]{./fig/loess-smoothing}
+\end{subfigure}
+%
+\begin{subfigure}{0.32\textwidth}
+\caption{Residuals after Loess smoothing}
+\includegraphics[scale=0.32]{./fig/loess-residuals}
+\end{subfigure}
+%
+\begin{subfigure}{0.32\textwidth}
+\caption{Truncation: brighter-than-average residuals are set to the mean value}
+\includegraphics[scale=0.32]{./fig/loess-truncated}
+\end{subfigure}
+%
+\begin{subfigure}{0.32\textwidth}
+\caption{Closing: small dark shapes are filtered out}
+\includegraphics[scale=0.32]{./fig/dilated}
+\end{subfigure}
+%
+\begin{subfigure}{0.32\textwidth}
+\caption{Threshold: pixels are classified using a $k$-means algorithm}
+\includegraphics[scale=0.32]{./fig/thresholded}
+\end{subfigure}
+\end{figure}
+
+\subsubsection*{A brief overview of the morphological operations used}
+A morphological closing consists of two translations of the data: given a set of points $X \in \mathbb{R}^2$ and a structuring element $B$ \cite{Vincent1997},
+
+\begin{description}
+\item[Dilation] $\delta_B(X)$ of $X$ by $B$ is the set of points $x \in R^2$ such that the translation of $B$ by $x$ has a non-empty intersection with set $X$.
+\item[Erosion] $\varepsilon_B(X)$ of $X$ by $B$ is the set of points $x \in R^2$ such that the translation of $B$ by $x$ is included in $X$.
+\item[Closing] of $X$ by $B$ is given by $\phi_B(X) = \varepsilon_B(\delta_B(X))$.
+\end{description}
+
+In a greyscale image such as ours, the effect of a dilation is to dilate the brighter parts of the image, shrinking the darker parts. An erosion will erode the brighter parts of the image, expanding the darker parts. A closing, which consists of a dilation followed by an erosion, has the effect of filtering out any dark spots smaller than the structuring element used (in this case, a circle of diameter 5 pixels), while smoothing the edges of any larger features.
+
+Useful examples of the operations can be found in the documentation for R package \texttt{mmand} at \url{https://cran.r-project.org/web/packages/mmand/README.html}
+
+\begin{figure}[h!]
+\centering
+\caption{Closing of features of differing complexity, showing changes to feature boundary after closing with structuring element $B$; the light blue hatched area is the new boundary at each step.}
+\label{fig:morph-closing-example}
+%
+\begin{subfigure}[b]{0.48\textwidth}
+\caption{Simple (convex) feature}
+\label{fig:closing-simple-1}
+\centering
+\includegraphics[scale=0.18]{./fig/cl-simple-1-org.pdf}
+\includegraphics[scale=0.18]{./fig/cl-simple-2-dilated.pdf}
+\includegraphics[scale=0.18]{./fig/cl-simple-3-eroded.pdf}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.48\textwidth}
+\caption{Complex (concave) feature}
+\label{fig:closing-compl-1}
+\centering
+\includegraphics[scale=0.18]{./fig/cl-complex-1-org.pdf}
+\includegraphics[scale=0.18]{./fig/cl-complex-2-dilated.pdf}
+\includegraphics[scale=0.18]{./fig/cl-complex-3-eroded.pdf}
+\end{subfigure}
+\end{figure}
+
+
+
+\subsection*{Damage progression: spots appearing in each acquisition}
+
+\subsection*{Fitting distributions to grey/white images before and after spot identification}
+
+\hrulefill
+\printbibliography
+\end{document}

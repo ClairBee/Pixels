@@ -15,10 +15,16 @@ TASK LIST
     - is there a threshold at which populations stabilise?
     
 - to look at thresholding, create 'slightly bright'/'slightly dim' categories. How does this change things?
+- get kernel density over histograms. Where kernel density is 0, give cutoff?
 
 - include test for spatial randomness of residuals when fitting models (esp. in brightest/dimmest px)
 ===================================================================================================
-
+Find & remove/correct artefacts by other methods before simple thresholding for dim/bright.
+- nonresponsive
+- hot (not sure about superclusters?)
+- dead
+- dead lines
+===================================================================================================
 PROPOSED BAD PIXEL VALUE DEFINITIONS:
     - dead: dead in white images (or in any image? So small, probably doesn't matter)
     - unresponsive: normal in black images, dim in grey/white images

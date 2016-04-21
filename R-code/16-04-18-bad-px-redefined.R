@@ -458,7 +458,7 @@ par(mfrow = c(2,1))
     # obtain cutoff directly from density (p(x) = 0)
     m <- mean(pw.m[,,"grey", "141009"])
     JF <- JohnsonFit(pw.m[,,"grey", "141009"])
-    dj <- 65535 * dJohnson(c(0:65535), JF)
+    dj <- 1996 * 1996 * dJohnson(c(0:65535), JF)
     cols <- c("red", "red", "orange", "orange", "gold", "gold", 
               "greenyellow", "greenyellow", "green3", "green3")
     
@@ -483,9 +483,67 @@ par(mfrow = c(2,1))
 
 # add histogram with various potential thresholding methods
 
+# grey
+JF <- JohnsonFit(pw.m[,,"grey", "141009"])
+dj <- 1996 * 1996 * dJohnson(c(0:65535), JF)
+m <- mean(pw.m[,,"grey", "141009"])
 
+plot(0, type = "n", ylim = c(0, 200), bty = "n", xlim = c(0,65535), xlab = "pixel value", 
+     ylab = "Frequency", main = "Thresholds based on density function: grey images") 
+{
+    # upper limit for UNRESPONSIVE pixels
+    rect(qJohnson(0.001, JohnsonFit(pw.m[,,"black", "141009"])), 0,
+         qJohnson(0.999, JohnsonFit(pw.m[,,"black", "141009"])), 210,
+         col = adjustcolor("blue", alpha = 0.4), border = NA)
+    
+    # upper limit for DIM pixels
+    rect(0, 0, max(which(round(dj, 1) == 0 & c(0:65535) < m)), 210,
+         col = adjustcolor("skyblue", alpha = 0.4), border = NA)
+    
+    # lower limit for BRIGHT pixels
+    rect(min(which(round(dj, 1) == 0 & c(0:65535) > m)), 0, 65535, 210,
+             col = adjustcolor("gold", alpha = 0.4), border = NA)
+    
+    hist(pw.m[,,"grey", "141009"], breaks = "fd", add = T)
+    
+    abline(v = qJohnson(c(0.001, 0.999), JF), col = "red", lty = 2)
+    
+    # dead pixels
+    lines(c(0,0), c(0,length(which(pw.m[,,"grey", "141009"] == 0))), col = "blue", lwd = 2)
+    
+    # hot pixels
+    lines(c(65535, 65535), c(0,length(which(pw.m[,,"grey", "141009"] == 65535))), col = "red", lwd = 2)
+}
 
-
+plot(0, type = "n", ylim = c(0, 200), bty = "n", xlim = c(0,65535), xlab = "pixel value", 
+     ylab = "Frequency", main = "Thresholds based on density function: white images") 
+JF <- JohnsonFit(pw.m[,,"white", "141009"])
+dj <- 1996 * 1996 * dJohnson(c(0:65535), JF)
+m <- mean(pw.m[,,"white", "141009"])
+{
+    # upper limit for UNRESPONSIVE pixels
+    rect(qJohnson(0.001, JohnsonFit(pw.m[,,"black", "141009"])), 0,
+         qJohnson(0.999, JohnsonFit(pw.m[,,"black", "141009"])), 210,
+         col = adjustcolor("blue", alpha = 0.4), border = NA)
+    
+    # upper limit for DIM pixels
+    rect(0, 0, max(which(round(dj, 1) == 0 & c(0:65535) < m)), 210,
+         col = adjustcolor("skyblue", alpha = 0.4), border = NA)
+    
+    # lower limit for BRIGHT pixels
+    rect(min(which(round(dj, 1) == 0 & c(0:65535) > m)), 0, 65535, 210,
+         col = adjustcolor("gold", alpha = 0.4), border = NA)
+    
+    hist(pw.m[,,"white", "141009"], breaks = "fd", add = T)
+    
+    abline(v = qJohnson(c(0.001, 0.999), JF), col = "red", lty = 2)
+    
+    # dead pixels
+    lines(c(0,0), c(0,length(which(pw.m[,,"white", "141009"] == 0))), col = "blue", lwd = 2)
+    
+    # hot pixels
+    lines(c(65535, 65535), c(0,length(which(pw.m[,,"white", "141009"] == 65535))), col = "red", lwd = 2)
+}
 
 ####################################################################################################
 # STATE SPACE DIAGRAM                                                                           ####
