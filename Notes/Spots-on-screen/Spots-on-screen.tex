@@ -38,6 +38,9 @@
 
 \begin{document}
 
+\todo{Write up non-responsive pixels (separate document) \& include those in superclusters}
+
+
 \section*{Identification of spots on beryllium screen}
 
 As the electron beam interacts with the tungsten target, the tungsten is heated up. Occasionally flecks of molten tungsten ping off and attach themselves to the beryllium window, where they will remain until the window is replaced.
@@ -48,7 +51,7 @@ These flecks manifest in the white and grey images as patches of dim pixels, whe
 
 \item Particularly large spots may still be visible after flat-field image correction; if the locations are known, these can be double-checked
 
-\item The presence of a relatively large proportion ($\sim 0.5\%$) of dim pixels is most likely affecting the fit of distributions used to calculate thresholds for bright and dim pixels. Removing them before fitting the distribution should lead to better threshold setting. \nb{Expand on this later}
+\item The presence of a relatively large proportion ($\sim 0.2\%$) of dim pixels may affect the fit of distributions used to calculate thresholds for bright and dim pixels. Removing them before fitting the distribution should lead to better threshold setting. \nb{Actually, edge of panel has more of an effect in terms of dim pixels}
 \end{itemize}
 
 \todo{histogram of grey \& white images with fitted Johnson distribution before and after removing the dim spots, showing effect on thresholds}
@@ -60,9 +63,9 @@ Our current aim is to identify large clusters of pixels that are lower in value 
 
 \begin{description}
 
-\item[Smooth] If the detector were perfect and undamaged, we would expect the values to vary smoothly from one edge of the panel to another. Since the shape of that smooth image is of no interest to us, we can use Loess smoothing to obtain an idealised curve along each column, and subtract the smoothed values from the original pixel values to obtain a residual with mean approximately 0 and much lower variance.
+\item[Smooth] If the detector were perfect and undamaged, we would expect the values to vary smoothly from one edge of the panel to another. Since the shape of that smooth image is of no interest to us, we can use Loess smoothing to obtain an idealised curve along each column, and subtract the smoothed values from the original pixel values to obtain a residual with mean approximately 0 and much lower variance. \textit{(Generally a smoothing span of 0.2 gives good results, but need to do some more investigation into parameter setting)}
 
-\item[Truncate] We're currently only interested in dim values that differ from their neighbours, so we can homogenize the pixels that we know to be bright; for any pixel whose residual value is greater than the mean, set that pixel's value to the mean.
+\item[Flatten] We're currently only interested in dim values that are lower than their neighbours, so we can homogenize the pixels that we know to be bright; for any pixel whose residual value is greater than the mean, set that pixel's value to the mean.
 
 \item[Closing] We perform a morphological closing over the remaining features, first dilating and then eroding them (see next section for a slightly less brief explanation). The structuring element used is a disc of diameter 5 pixels; a disc, because we might reasonably expect the blobs to have rounded edges, and 5 pixel diameter because each pixel is approximately 0.2mm wide, so this corresponds to a speck of 1mm diameter. Any dark patches unable to contain the structuring element will disappear after the dilation is performed. 
 
@@ -74,32 +77,34 @@ Our current aim is to identify large clusters of pixels that are lower in value 
 \caption{Stages in identification of spots on beryllium screen}
 \centering
 
-\begin{subfigure}{0.32\textwidth}
+\captionsetup[subfigure]{position=t}
+
+\begin{subfigure}[t]{0.32\textwidth}
 \caption{Raw data: pixelwise means from white image}
 \includegraphics[scale=0.32]{./fig/white-image}
 \end{subfigure}
 %
-\begin{subfigure}{0.32\textwidth}
+\begin{subfigure}[t]{0.32\textwidth}
 \caption{Loess smoothing along columns with span 1/5}
 \includegraphics[scale=0.32]{./fig/loess-smoothing}
 \end{subfigure}
 %
-\begin{subfigure}{0.32\textwidth}
+\begin{subfigure}[t]{0.32\textwidth}
 \caption{Residuals after Loess smoothing}
 \includegraphics[scale=0.32]{./fig/loess-residuals}
 \end{subfigure}
 %
-\begin{subfigure}{0.32\textwidth}
-\caption{Truncation: brighter-than-average residuals are set to the mean value}
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Flatten image: brighter-than-average residuals are set to the mean value}
 \includegraphics[scale=0.32]{./fig/loess-truncated}
 \end{subfigure}
 %
-\begin{subfigure}{0.32\textwidth}
+\begin{subfigure}[t]{0.32\textwidth}
 \caption{Closing: small dark shapes are filtered out}
 \includegraphics[scale=0.32]{./fig/dilated}
 \end{subfigure}
 %
-\begin{subfigure}{0.32\textwidth}
+\begin{subfigure}[t]{0.32\textwidth}
 \caption{Threshold: pixels are classified using a $k$-means algorithm}
 \includegraphics[scale=0.32]{./fig/thresholded}
 \end{subfigure}
@@ -121,11 +126,9 @@ Useful examples of the operations can be found in the documentation for R packag
 \begin{figure}[h!]
 \centering
 \caption{Closing of features of differing complexity, showing changes to feature boundary after closing with structuring element $B$; the light blue hatched area is the new boundary at each step.}
-\label{fig:morph-closing-example}
 %
 \begin{subfigure}[b]{0.48\textwidth}
 \caption{Simple (convex) feature}
-\label{fig:closing-simple-1}
 \centering
 \includegraphics[scale=0.18]{./fig/cl-simple-1-org.pdf}
 \includegraphics[scale=0.18]{./fig/cl-simple-2-dilated.pdf}
@@ -134,7 +137,6 @@ Useful examples of the operations can be found in the documentation for R packag
 %
 \begin{subfigure}[b]{0.48\textwidth}
 \caption{Complex (concave) feature}
-\label{fig:closing-compl-1}
 \centering
 \includegraphics[scale=0.18]{./fig/cl-complex-1-org.pdf}
 \includegraphics[scale=0.18]{./fig/cl-complex-2-dilated.pdf}
@@ -146,7 +148,35 @@ Useful examples of the operations can be found in the documentation for R packag
 
 \subsection*{Damage progression: spots appearing in each acquisition}
 
+
+The spots identified are consistent among successive acquisitions. Presumably the screen was cleaned/replaced between January 26th and May 29th 2015, since the spots evident before January 26th disappear after this acquisition, with new spots appearing on August 28th 2015 (pending confirmation from Jay)
+
+\begin{figure}[!h]
+\centering
+\caption{Progression of spots on beryllium screen: each colour represents a single acquisition \nb{add legend}}
+%
+\begin{subfigure}[b]{0.3\textwidth}
+\caption{All spots}
+\centering
+\includegraphics[scale=0.3]{./fig/All-screen-spots}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.3\textwidth}
+\caption{Spots prior to Jan-2015}
+\centering
+\includegraphics[scale=0.3]{./fig/Screen-spots-pre-Jan}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.3\textwidth}
+\caption{Spots after Jan-2015}
+\centering
+\includegraphics[scale=0.3]{./fig/Screen-spots-post-Jan}
+\end{subfigure}
+
+\end{figure}
 \subsection*{Fitting distributions to grey/white images before and after spot identification}
+
+\subsection*{Using Loess-smoothed values to repair dim spots}
 
 \hrulefill
 \printbibliography
