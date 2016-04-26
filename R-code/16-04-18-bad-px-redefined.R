@@ -428,6 +428,9 @@ table(findInterval(pw.m[,,"grey", "141009"], th))
 resp.w <- pw.m[,,"white", "141009"] / pw.m[,,"black", "141009"]
 resp.w[pw.m[,,"black", "141009"] == 0] <- 0
 pixel.image(resp.w)
+
+####################################################################################################
+
 # FIND LINES OF WARM PIXELS                                                                     ####
 # NEW DEFINITIONS                                                                               ####
 

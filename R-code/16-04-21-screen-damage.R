@@ -1,10 +1,4 @@
 
-# UPDATE HISTOGRAMS TO SHOW 99% QUANTILE FOR BRIGHT & DIM PIXELS
-# ADD HISTOGRAMS OF GREY IMAGES
-
-# WRITE UP IDENTIFICATION OF NON-RESPONSIVE PIXELS
-# ADD NON-RESPONSIVE PIXELS TO SUPERCLUSTERS
-
 ####################################################################################################
 # IDENTTIFICATION OF SPOTS ON SCREEN BASED ON MORPHOLOGY
 
@@ -249,39 +243,103 @@ panels <- panel.lm(spot.res, "x + y")
 res <- spot.res - panels$fitted.values
 
 # plot raw residuals with Johnson fit
-pdf(paste0(fpath, "res-all.pdf"))
-hist(res, breaks = "fd", prob = T, ylim = c(0, 2e-06), xlim = c(-10000,10000), 
-            yaxt = "n", main = "", xlab = "", ylab = "")
-lines(c(-50000:22900), dJohnson(c(-50000:22900), JohnsonFit(res)), col = "red", lwd = 2)
+{
+    pdf(paste0(fpath, "res-all.pdf"))
+    hist(res, breaks = "fd", prob = T, ylim = c(0, 2e-06), xlim = c(-10000,10000), 
+         yaxt = "n", main = "", xlab = "", ylab = "")
+    lines(c(-50000:22900), dJohnson(c(-50000:22900), JohnsonFit(res)), col = "red", lwd = 2)
+    
+    rect(-50000, 0, qJohnson(0.001, JohnsonFit(res)), 0.01, col = adjustcolor("skyblue", alpha = 0.2), border = "cyan3")
+    rect(-50000, 0, qJohnson(0.0001, JohnsonFit(res)), 0.01, col = adjustcolor("green2", alpha = 0.2), border = "orange")
+    rect(qJohnson(0.999, JohnsonFit(res)), 0, 20000, 0.01, col = adjustcolor("gold", alpha = 0.2), border = "cyan3")
+    rect(qJohnson(0.9999, JohnsonFit(res)), 0, 20000, 0.01, col = adjustcolor("orange", alpha = 0.2), border = "orange")
+    dev.off()
+}
 
-rect(-50000, 0, qJohnson(0.001, JohnsonFit(res)), 0.01, col = adjustcolor("skyblue", alpha = 0.2), border = "cyan3")
-rect(-50000, 0, qJohnson(0.0001, JohnsonFit(res)), 0.01, col = adjustcolor("green2", alpha = 0.2), border = "orange")
-rect(qJohnson(0.999, JohnsonFit(res)), 0, 20000, 0.01, col = adjustcolor("gold", alpha = 0.2), border = "cyan3")
-rect(qJohnson(0.9999, JohnsonFit(res)), 0, 20000, 0.01, col = adjustcolor("orange", alpha = 0.2), border = "orange")
-dev.off()
 
 # plot residuals + Johnson fit without dim spots
-pdf(paste0(fpath, "res-without-spots.pdf"))
-res.adj <- res[xyFromCell(zz, which(is.na(getValues(zz))))]
-hist(res.adj, breaks = "fd", prob = T, ylim = c(0, 2e-06), xlim = c(-10000,10000), main = "", xlab = "", ylab = "")
-lines(c(-50000:22900), dJohnson(c(-50000:22900), JohnsonFit(res.adj)), col = "red", lwd = 2)
-rect(-50000, 0, qJohnson(0.001, JohnsonFit(res.adj)), 0.01, col = adjustcolor("skyblue", alpha = 0.2), border = "cyan3")
-rect(-50000, 0, qJohnson(0.0001, JohnsonFit(res.adj)), 0.01, col = adjustcolor("green2", alpha = 0.2), border = "orange")
-rect(qJohnson(0.999, JohnsonFit(res.adj)), 0, 20000, 0.01, col = adjustcolor("gold", alpha = 0.2), border = "cyan3")
-rect(qJohnson(0.9999, JohnsonFit(res.adj)), 0, 20000, 0.01, col = adjustcolor("orange", alpha = 0.2), border = "orange")
-dev.off()
+{
+    pdf(paste0(fpath, "res-without-spots.pdf"))
+    res.adj <- res[xyFromCell(zz, which(is.na(getValues(zz))))]
+    hist(res.adj, breaks = "fd", prob = T, ylim = c(0, 2e-06), xlim = c(-10000,10000), main = "", xlab = "", ylab = "")
+    lines(c(-50000:22900), dJohnson(c(-50000:22900), JohnsonFit(res.adj)), col = "red", lwd = 2)
+    rect(-50000, 0, qJohnson(0.001, JohnsonFit(res.adj)), 0.01, col = adjustcolor("skyblue", alpha = 0.2), border = "cyan3")
+    rect(-50000, 0, qJohnson(0.0001, JohnsonFit(res.adj)), 0.01, col = adjustcolor("green2", alpha = 0.2), border = "orange")
+    rect(qJohnson(0.999, JohnsonFit(res.adj)), 0, 20000, 0.01, col = adjustcolor("gold", alpha = 0.2), border = "cyan3")
+    rect(qJohnson(0.9999, JohnsonFit(res.adj)), 0, 20000, 0.01, col = adjustcolor("orange", alpha = 0.2), border = "orange")
+    dev.off()
+}
+
 
 # plot residuals + Johnson fit without dim spots, without edge boundary
-pdf(paste0(fpath, "res-cropped-without-spots.pdf"))
-res.adj.c <- res[xyFromCell(crop(zz, c(10.5, 1985.5, 10.5, 1985.5)), 
-                            which(is.na(getValues(crop(zz, c(10.5, 1985.5, 10.5, 1985.5))))))]
-hist(res.adj.c, breaks = "fd", prob = T, ylim = c(0, 2e-06), xlim = c(-10000,10000), main = "", xlab = "", ylab = "")
-lines(c(-50000:22900), dJohnson(c(-50000:22900), JohnsonFit(res.adj.c)), col = "red", lwd = 2)
-rect(-50000, 0, qJohnson(0.001, JohnsonFit(res.adj.c)), 0.01, col = adjustcolor("skyblue", alpha = 0.2), border = "cyan3")
-rect(-50000, 0, qJohnson(0.0001, JohnsonFit(res.adj.c)), 0.01, col = adjustcolor("green2", alpha = 0.2), border = "orange")
-rect(qJohnson(0.999, JohnsonFit(res.adj.c)), 0, 20000, 0.01, col = adjustcolor("gold", alpha = 0.2), border = "cyan3")
-rect(qJohnson(0.9999, JohnsonFit(res.adj.c)), 0, 20000, 0.01, col = adjustcolor("orange", alpha = 0.2), border = "orange")
-dev.off()
+{
+    pdf(paste0(fpath, "res-cropped-without-spots.pdf"))
+    res.adj.c <- res[xyFromCell(crop(zz, c(10.5, 1985.5, 10.5, 1985.5)), 
+                                which(is.na(getValues(crop(zz, c(10.5, 1985.5, 10.5, 1985.5))))))]
+    hist(res.adj.c, breaks = "fd", prob = T, ylim = c(0, 2e-06), xlim = c(-10000,10000), main = "", xlab = "", ylab = "")
+    lines(c(-50000:22900), dJohnson(c(-50000:22900), JohnsonFit(res.adj.c)), col = "red", lwd = 2)
+    rect(-50000, 0, qJohnson(0.001, JohnsonFit(res.adj.c)), 0.01, col = adjustcolor("skyblue", alpha = 0.2), border = "cyan3")
+    rect(-50000, 0, qJohnson(0.0001, JohnsonFit(res.adj.c)), 0.01, col = adjustcolor("green2", alpha = 0.2), border = "orange")
+    rect(qJohnson(0.999, JohnsonFit(res.adj.c)), 0, 20000, 0.01, col = adjustcolor("gold", alpha = 0.2), border = "cyan3")
+    rect(qJohnson(0.9999, JohnsonFit(res.adj.c)), 0, 20000, 0.01, col = adjustcolor("orange", alpha = 0.2), border = "orange")
+    dev.off()
+}
+
+
+# run over grey images for comparison
+{
+    spot <- spot.lm(pw.m[,,"grey", "160314"], o = 2)
+    spot.res <- matrix(spot$residuals, ncol = 1996)
+    panels <- panel.lm(spot.res, "x + y")
+    res <- spot.res - panels$fitted.values
+    
+    # plot raw residuals with Johnson fit
+    {
+        pdf(paste0(fpath, "res-all.pdf"))
+        hist(res, breaks = "fd", prob = T, ylim = c(0, 2e-06), xlim = c(-10000,10000), main = "", xlab = "", ylab = "")
+        lines(c(-20000:50000), dJohnson(c(-20000:50000), JohnsonFit(res)), col = "red", lwd = 2)
+        
+        rect(-20000, 0, qJohnson(0.001, JohnsonFit(res)), 0.01, col = adjustcolor("skyblue", alpha = 0.2), border = "cyan3")
+        rect(-20000, 0, qJohnson(0.0001, JohnsonFit(res)), 0.01, col = adjustcolor("green2", alpha = 0.2), border = "orange")
+        rect(qJohnson(0.999, JohnsonFit(res)), 0, 50000, 0.01, col = adjustcolor("gold", alpha = 0.2), border = "cyan3")
+        rect(qJohnson(0.9999, JohnsonFit(res)), 0, 50000, 0.01, col = adjustcolor("orange", alpha = 0.2), border = "orange")
+        dev.off()
+    }
+    
+    # plot residuals + Johnson fit without dim spots
+    {
+        res.adj <- res[xyFromCell(zz, which(is.na(getValues(zz))))]
+        
+        pdf(paste0(fpath, "res-all.pdf"))
+        hist(res.adj, breaks = "fd", prob = T, ylim = c(0, 2e-06), xlim = c(-10000,10000), main = "", xlab = "", ylab = "")
+        lines(c(-20000:50000), dJohnson(c(-20000:50000), JohnsonFit(res.adj)), col = "red", lwd = 2)
+        
+        rect(-20000, 0, qJohnson(0.001, JohnsonFit(res.adj)), 0.01, col = adjustcolor("skyblue", alpha = 0.2), border = "cyan3")
+        rect(-20000, 0, qJohnson(0.0001, JohnsonFit(res.adj)), 0.01, col = adjustcolor("green2", alpha = 0.2), border = "orange")
+        rect(qJohnson(0.999, JohnsonFit(res.adj)), 0, 50000, 0.01, col = adjustcolor("gold", alpha = 0.2), border = "cyan3")
+        rect(qJohnson(0.9999, JohnsonFit(res.adj)), 0, 50000, 0.01, col = adjustcolor("orange", alpha = 0.2), border = "orange")
+        dev.off()
+    }
+    
+    # plot residuals + Johnson fit without dim spots, without edge boundary
+    {
+        res.adj.c <- res[xyFromCell(crop(zz, c(10.5, 1985.5, 10.5, 1985.5)), 
+                                    which(is.na(getValues(crop(zz, c(10.5, 1985.5, 10.5, 1985.5))))))]
+        
+        pdf(paste0(fpath, "res-all.pdf"))
+        hist(res.adj.c, breaks = "fd", prob = T, ylim = c(0, 2e-06), xlim = c(-10000,10000), main = "", xlab = "", ylab = "")
+        lines(c(-20000:50000), dJohnson(c(-20000:50000), JohnsonFit(res.adj.c)), col = "red", lwd = 2)
+        
+        rect(-20000, 0, qJohnson(0.001, JohnsonFit(res.adj.c)), 0.01, col = adjustcolor("skyblue", alpha = 0.2), border = "cyan3")
+        rect(-20000, 0, qJohnson(0.0001, JohnsonFit(res.adj.c)), 0.01, col = adjustcolor("green2", alpha = 0.2), border = "orange")
+        rect(qJohnson(0.999, JohnsonFit(res.adj.c)), 0, 50000, 0.01, col = adjustcolor("gold", alpha = 0.2), border = "cyan3")
+        rect(qJohnson(0.9999, JohnsonFit(res.adj.c)), 0, 50000, 0.01, col = adjustcolor("orange", alpha = 0.2), border = "orange")
+        dev.off()
+    }
+}
+
+
+####################################################################################################
 
 hist(pw.m[,,"white", "160314"], breaks = "fd", prob = T, ylim = c(0, 2e-06))
 # q-q plots to compare
