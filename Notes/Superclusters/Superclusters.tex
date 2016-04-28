@@ -1,0 +1,146 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+\usepackage{multirow}
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\llap{\parbox{1cm}{\thesubsection}}}{0em}{}
+	
+%----------------------------------------------------------------------
+% SPECIFY BIBLIOGRAPHY FILE & FIELDS TO EXCLUDE
+%\addbibresource{bibfile.bib}
+%\AtEveryBibitem{\clearfield{url}}
+%\AtEveryBibitem{\clearfield{doi}}
+%\AtEveryBibitem{\clearfield{isbn}}
+%\AtEveryBibitem{\clearfield{issn}}
+
+%----------------------------------------------------------------------
+
+%======================================================================
+
+\begin{document}
+blah
+\section*{New classification: edge pixels}
+Since the very edges of the panel are known to be particularly prone to defective pixels (possibly due to stress induced by attaching the detector panel to its frame), a strip of 10 pixels around all edges of the panels are excluded from future analysis. The effect of removing these pixels can be seen in Figure~\ref{fig:hist-unresponsive}, where the histogram of all pixel values is shown in turquoise, with the central pixels shown in blue.
+
+\section*{New classification: non-responsive pixels}
+
+A small number of pixels appear normal in the black channel, but have no response at all to the x-ray source in either the grey or the white images, remaining within the normal range of values for a black pixel (say, within the central 99\% of a Johnson distribution fitted to all black pixels values) in both the white and the grey images.
+
+\begin{figure}[!ht]		% Histograms of grey vs black, white vs black, showing unresponsive pixels
+\caption{Histograms of pixel values in response to x-ray source (grey/white images) vs no x-ray source (black images), showing a small number of non-responsive pixels. The pale blue column indicates the expected spread of values within the black images; a small but distinct cluster of pixels falls within this region in both the white and grey images.}
+\label{fig:hist-unresponsive}
+\centering
+\begin{subfigure}[b]{0.49\textwidth}
+\caption{Grey vs black images}
+\includegraphics[scale=0.45]{./fig/grey-hist-no-response}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.49\textwidth}
+\caption{White vs black images}
+\includegraphics[scale=0.45]{./fig/white-hist-no-response}
+\end{subfigure}
+\end{figure}
+
+\section*{Revised classifications with new thresholding approach}
+In an attempt to better understand the behaviour of individual pixels within the state space, I've divided the `bright' and `dim' groups into 3, depending on the magnitude of the difference between the pixel value and the image's mean value. In each case, a Johnson distribution was fitted to the pixel values in each image, and the quantiles used to determine the approximate range of `normal' pixel values. \textit{(A possible alternative approach to finding the edge of the `normal' pixel values would be to round all pixelwise means to integer values, and find the highest integer between the minimum and mean that does not occur in the image; also the lowest value between the mean and maximum that does not occur. This should give an approximate upper and lower boundary on the central range of the values.} 
+
+\begin{description}	% New classifications
+\begin{footnotesize}
+
+\item[No response:] Pixel whose value in the black, white and grey images all fall within the range of normal behaviour for a pixel in the black images (no response to x-ray source).
+\item[Dead:] Pixel whose value is 0 in the white images (always off).
+\item[Hot:] Pixel whose value is 65535 in the black images (always on).
+
+\item[Edge:] Strip of pixels (provisionally set at 10 pixels wide) on each edge of the detector, assumed to be atypical because of stresses on the panel edges (usually displaying a lower than usual response to x-ray source).
+
+\item[Bright:] Any pixel not already categorized as one of the above, whose value in the white or grey images is greater than $Q_{99.99}$ of the Johnson distribution fitted to the pixel values. Currently subdivided into
+\textit{
+\begin{description}
+	\item[\textit{Very bright:}] Higher than the midpoint between the mean and maximum values
+	\item[\textit{Bright:}] Higher than the midpoint between the mean and the value used to define `very bright' 
+	\item[\textit{Slightly bright:}] Higher than Johnson $Q_{99.99}$
+\end{description}
+}
+
+\item[Screen spot:] Large patches of dim pixels, caused by spots on the detector screen rather than by defective pixels.
+
+\item[Dim:] Any pixel not already categorized as one of the above, whose value in the white or grey images is less than $Q_{00.01}$ of the Johnson distribution fitted to the pixel values. Currently subdivided into
+\textit{
+\begin{description}
+	\item[\textit{Very dim:}] Lower than the midpoint between the mean and minimum values
+	\item[\textit{Dim:}] Lower than the midpoint between the mean and the value used to define `very dim' 
+	\item[\textit{Slightly dim:}] Lower than Johnson $Q_{00.01}$
+\end{description}}
+\end{footnotesize}
+\end{description}
+
+Classifications are assigned in this order of priority; so, an edge pixel with mean value 0 will be classified as dead, while an edge pixel with a very low value will remain classified as an edge pixel. 
+
+Figure~\ref{fig:hist-boundaries} shows these boundaries applied to the residuals after fitting a simple parametric model (circular spot, linear panels) to the white and grey images, and to the pixelwise mean values in each image. 
+
+\begin{figure}[!ht]
+\caption{Histograms showing the proposed subdivisions of bright and dim pixels, calculated by applying the same calculation first to the residuals after parametric model fitting, and then to the pixelwise mean values. In all cases, the edge pixels have been removed.\\
+The small cluster of pixels at the left-hand end of the histogram will be classified separately as having no response.}
+\label{fig:hist-boundaries}
+\centering
+%
+\begin{subfigure}[b]{0.49\textwidth}
+\caption{Residuals from grey image}
+\includegraphics[scale=0.45]{./fig/grey-residual-thresholds}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.49\textwidth}
+\caption{Residuals from white image}
+\includegraphics[scale=0.45]{./fig/white-residual-thresholds}
+\end{subfigure}
+%
+\par\bigskip
+%
+\begin{subfigure}[b]{0.49\textwidth}
+\caption{Pixelwise mean values in grey image}
+\includegraphics[scale=0.45]{./fig/grey-pwm-thresholds}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.49\textwidth}
+\caption{Pixelwise mean values in white image}
+\includegraphics[scale=0.45]{./fig/white-pwm-thresholds}
+\end{subfigure}
+%
+\end{figure}
+
+\begin{table}[!ht]	% table of spot counts & coverage
+\caption{Comparison of points falling into each category, when classified using pixel values or residuals after parametric model fitting. Points are classified in both the grey and white images, then assigned to the most extreme category applicable. Hot, dead and unresponsive pixels, and screen spots, have not been classified separately, but the image has been cropped to remove edge pixels.\\
+The categories of the (extremely small numbers of) dim pixels are consistent, while changing the data set used for thresholding causes more movement between categories of the bright pixels; most of the movement, as we might expect, is between the least extreme categories.}
+\centering
+\begin{footnotesize}
+\csvreader[tabular=cl|ccc|ccc|c,
+    		   table head= & \multicolumn{7}{c}{Category using residual values} \\ \multirow{8}{*}{\rotatebox[origin=c]{90}{Pixel values}} & & V. bright & Bright & Slightly bright & V. dim & Dim & Slightly dim & N/A \\\hline]%
+{./fig/table-bp.csv}{1=\colnm, v.bright=\vb, bright=\b, s.bright=\sb, v.dim=\vd, dim=\d, s.dim=\sd, NA=\na}%
+{ & \colnm & \vb & \b & \sb & \vd & \d & \sd & \na}%
+\end{footnotesize}
+\end{table}
+
+
+%\todo{Adapt histograms shown in fig 1 to show cutoffs for all categories (incl. hot, dead)}
+
+%\todo{Spatial plots of bad pixels identified by this approach}
+
+%\todo{Table of bad pixels identified by this approach}
+
+%\section*{Supercluster identification \&  composition}
+
+%\section*{Supercluster progression} 
+
+%\todo{Use new definitions to create state space diagrams}
+
+%\todo{Does mean value of v bright/hot pixels vary consistently with the pixelwise mean value (/per-acquisition offset)?}
+
+%\newpage
+%\printbibliography
+\end{document}
