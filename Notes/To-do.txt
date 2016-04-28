@@ -6,7 +6,7 @@ TASK LIST
 
 # FIND COLUMNS OF BRIGHT/DIM PIXELS
 
-# how much dimmer should a tungsten spot be than the surrounding area?
+# how much dimmer should a tungsten spot be than the surrounding area? (based on density of material etc)
 
 # robustness: compare quantiles to Johnson distribution with various numbers of added hot pixels. Is Johnson dist really a more robust equivalent to fitting quantiles?
 
@@ -21,7 +21,6 @@ TASK LIST
 - also try moving thresholds to see how state transitions are affected
     - is there a threshold at which populations stabilise?
     
-- to look at thresholding, create 'slightly bright'/'slightly dim' categories. How does this change things?
 - get kernel density over histograms. Where kernel density is 0, give cutoff?
 
 - include test for spatial randomness of residuals when fitting models (esp. in brightest/dimmest px)

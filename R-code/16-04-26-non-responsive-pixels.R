@@ -1,13 +1,12 @@
 
 ####################################################################################################
-# WRITE UP IDENTIFICATION OF NON-RESPONSIVE PIXELS
 # ADD NON-RESPONSIVE PIXELS TO SUPERCLUSTERS
 
 # look at pixels identified as bright within screen spots. What should be priority?
 
 library("IO.Pixels")
 
-fpath <- "./Notes/Superclusters/fig/"
+fpath <- "./Notes/Revised-thresholds/fig/"
 load.pixel.means()
 res <- readRDS("./Models/Simple-parametric/Residuals-simple-parametric.rds")
 
@@ -262,26 +261,30 @@ dm.g <- qJohnson(0.0001, JF.g) + (vd.g - qJohnson(0.0001, JF.g))/2
     
     excl <- c("no response", "edge", "hot", "dead", "screen spot")
     
+    lim <- bad.px.limits(res[,,"white", "160314"])
+    t.cols <- c("purple", "black", "red", "gold", "orange", "red", "lightgrey", NA, "blue", "cyan3", "green3")
+    
     # histogram of residuals (white)
     {
+        lim <- bad.px.limits(res[,,"white", "160314"])
         # pdf(paste0(fpath, "white-residual-thresholds.pdf"), height = 4, width = 7)
         par(mar = c(2,2,1,1))
         
-        hist(res[,,"white", "160314"], breaks = "fd", xlab = "", ylab = "", main = "", ylim = c(0,30))
+        hist(res[11:1985,11:1985,"white", "160314"], breaks = "fd", xlab = "", ylab = "", main = "", ylim = c(0,30))
         
         # shade cutoffs
-        rect(floor(min(res[,,"white", "160314"])), 0, vd.w, 35, col = adjustcolor(t.cols[which(levels(bp$type) == "v.dim")], alpha = 0.3), border = NA)
-        rect(vd.w, 0, dm.w, 35, col = adjustcolor(t.cols[which(levels(bp$type) == "dim2")], alpha = 0.3), border = NA) 
-        rect(dm.w, 0, qJohnson(0.0001, JF.w), 35, col = adjustcolor(t.cols[which(levels(bp$type) == "dim")], alpha = 0.3), border = NA)
+        rect(floor(min(res[,,"white", "160314"])), 0, lim$dv, 35, col = adjustcolor("blue", alpha = 0.3), border = NA)
+        rect(lim$dv, 0, lim$dm, 35, col = adjustcolor("cyan3", alpha = 0.3), border = NA) 
+        rect(lim$dm, 0, lim$ds, 35, col = adjustcolor("green3", alpha = 0.3), border = NA)
         
-        rect(qJohnson(0.9999, JF.w), 0, bm.w, 35, col = adjustcolor(t.cols[which(levels(bp$type) == "bright")], alpha = 0.3), border = NA)
-        rect(bm.w, 0, vb.w, 35, col = adjustcolor(t.cols[which(levels(bp$type) == "bright2")], alpha = 0.3), border = NA)
-        rect(vb.w, 0, ceiling(max(res[,,"white", "160314"])), 35, col = adjustcolor(t.cols[which(levels(bp$type) == "v.bright")], alpha = 0.3), border = NA)
+        rect(lim$bs, 0, lim$bm, 35, col = adjustcolor("red", alpha = 0.3), border = NA)
+        rect(lim$bm, 0, lim$bv, 35, col = adjustcolor("orange", alpha = 0.3), border = NA)
+        rect(lim$bv, 0, ceiling(max(res[,,"white", "160314"])), 35, col = adjustcolor("gold", alpha = 0.3), border = NA)
         
         #qq <- res[,,"white", "160314"][c(1:1996^2)[-matrix(1:1996^2, nrow = 1996)[as.matrix(bp[bp$type %in% excl, 1:2])]]]
         
         #hist(qq, breaks = "fd", add = T, col = "blue", border = "blue")
-        abline(v = c(dm.w, bm.w, qJohnson(c(0.0001, 0.9999), JF.w), vd.w, vb.w), col = "red", lty = 2)
+        abline(v = unlist(lim), col = "red", lty = 2)
 
         legend("topleft", col = adjustcolor(t.cols[c(9:11, 6:4)], alpha = 0.4), pch = 15, cex = 0.8, inset = 0.05, bg = "white",
                legend = c("Very dim", "Dim", "Slightly dim", "Slightly bright", "Bright", "Very bright"))
@@ -290,18 +293,20 @@ dm.g <- qJohnson(0.0001, JF.g) + (vd.g - qJohnson(0.0001, JF.g))/2
     
     # histogram of residuals (grey)
     {
+        lim <- bad.px.limits(res[,,"grey", "160314"])
+        
         # pdf(paste0(fpath, "grey-residual-thresholds.pdf"), height = 4, width = 7)
         par(mar = c(2,2,1,1))
         hist(res[,,"grey", "160314"], breaks = "fd", xlab = "", ylab = "", main = "", ylim = c(0,30))
         
         # shade cutoffs
-        rect(floor(min(res[,,"grey", "160314"])), 0, vd.g, 35, col = adjustcolor(t.cols[which(levels(bp$type) == "v.dim")], alpha = 0.3), border = NA)
-        rect(vd.g, 0, dm.g, 35, col = adjustcolor(t.cols[which(levels(bp$type) == "dim2")], alpha = 0.3), border = NA) 
-        rect(dm.g, 0, qJohnson(0.0001, JF.g), 35, col = adjustcolor(t.cols[which(levels(bp$type) == "dim")], alpha = 0.3), border = NA)
+        rect(floor(min(res[,,"white", "160314"])), 0, lim$dv, 35, col = adjustcolor("blue", alpha = 0.3), border = NA)
+        rect(lim$dv, 0, lim$dm, 35, col = adjustcolor("cyan3", alpha = 0.3), border = NA) 
+        rect(lim$dm, 0, lim$ds, 35, col = adjustcolor("green3", alpha = 0.3), border = NA)
         
-        rect(qJohnson(0.9999, JF.g), 0, bm.g, 35, col = adjustcolor(t.cols[which(levels(bp$type) == "bright")], alpha = 0.3), border = NA)
-        rect(bm.g, 0, vb.g, 35, col = adjustcolor(t.cols[which(levels(bp$type) == "bright2")], alpha = 0.3), border = NA)
-        rect(vb.g, 0, ceiling(max(res[,,"grey", "160314"])), 35, col = adjustcolor(t.cols[which(levels(bp$type) == "v.bright")], alpha = 0.3), border = NA)
+        rect(lim$bs, 0, lim$bm, 35, col = adjustcolor("red", alpha = 0.3), border = NA)
+        rect(lim$bm, 0, lim$bv, 35, col = adjustcolor("orange", alpha = 0.3), border = NA)
+        rect(lim$bv, 0, ceiling(max(res[,,"white", "160314"])), 35, col = adjustcolor("gold", alpha = 0.3), border = NA)
         
         #hist(res[,,"grey", "160314"][c(1:1996^2)[-matrix(1:1996^2, nrow = 1996)[as.matrix(bp[bp$type %in% excl, 1:2])]]], 
         #     breaks = "fd", add = T, col = "darkred", border = "darkred")      
@@ -416,13 +421,11 @@ bad.px.limits <- function(im, cropped = T) {
 
 plot.limits <- function(im, cropped = T, hist.height = 30, legend = T, ...) {
     
-    lim <- bad.px.limits(im, cropped)
-    
-    if (cropped) {im <- im[11:1985, 11:1985]}
+    lim <- bad.px.limits(im)
     
     t.cols <- adjustcolor(c("blue", "cyan3", "green3", "red", "orange", "gold"), alpha = 0.4)
     
-    hist(im, breaks = "fd", xlab = "", ylab = "", main = "", ylim = c(0, hist.height))
+    hist(im[11:1985, 11:1985], breaks = "fd", xlab = "", ylab = "", main = "", ylim = c(0, hist.height))
     
     rect(floor(min(im)), 0, lim$dv, hist.height * 2, col = t.cols[1], border = NA)
     rect(lim$dv, 0, lim$dm, hist.height * 2, col = t.cols[2], border = NA)
@@ -439,6 +442,39 @@ plot.limits <- function(im, cropped = T, hist.height = 30, legend = T, ...) {
                legend = c("Very dim", "Dim", "Slightly dim", "Slightly bright", "Bright", "Very bright"))
     }
 }
+
+get.dim.bright.px <- function(im, cropped = T) {
+    lim <- bad.px.limits(im, cropped)
+    
+    if (cropped) {im <- im[11:1985, 11:1985]}
+    
+    bp <- rbind(data.frame(which(im > lim$bv, arr.ind = T), type = "v.bright"),
+                data.frame(which(im > lim$bm, arr.ind = T), type = "bright"),
+                data.frame(which(im > lim$bs, arr.ind = T), type = "s.bright"),
+                data.frame(which(im < lim$dv, arr.ind = T), type = "v.dim"),
+                data.frame(which(im < lim$dm, arr.ind = T), type = "dim"),
+                data.frame(which(im < lim$ds, arr.ind = T), type = "s.dim"))
+    bp <- bp[!duplicated(bp[,1:2]),]
+    return(bp)
+}
+
+bad.px <- function(dt, threshold.b = res) {
+    dt <- toString(dt)
+    bp <- rbind(setNames(data.frame(matrix(c(sort(rep(1:10, 1996)), sort(rep(1987:1996, 1996)), rep(1:1996, 20),
+                                             rep(1:1996, 20), sort(rep(1:10, 1996)), sort(rep(1987:1996, 1996))), ncol = 2), 
+                                    ordered("edge", levels = c("no response", "dead", "hot", "v.bright", "bright", "s.bright", "screen spot", "edge", "v.dim", "dim", "s.dim"))),
+                         c("row", "col", "type")),
+                data.frame(no.response(dt), type = "no response"),
+                data.frame(which(pw.m[, , "black", dt] == 65535, arr.ind = T), type = "hot"),
+                data.frame(which(pw.m[, , "white", dt] == 0, arr.ind = T), type = "dead"),
+                get.dim.bright.px(res[, , "grey", dt]),
+                get.dim.bright.px(res[, , "white", dt]),
+                screen.spots.xt(dt))
+    
+    bp <- bp[order(bp$type),]
+    bp[!duplicated(bp[,1:2]),]
+}
+####################################################################################################
 
 # BAD PX BY RESIDUALS VS BY RAW VALUES                                                          ####
 # quick plots
@@ -464,7 +500,125 @@ plot.limits <- function(im, cropped = T, hist.height = 30, legend = T, ...) {
     dev.off()
 }
 
+bp.g.pwm <- get.dim.bright.px(pw.m[,,"grey", "160314"])
+bp.w.pwm <- get.dim.bright.px(pw.m[,,"white", "160314"])
+
+bp.g.res <- get.dim.bright.px(res[,,"grey", "160314"])
+bp.w.res <- get.dim.bright.px(res[,,"white", "160314"])
+
+# combine & compare (grey & white combined)
+{
+    bp.pwm <- rbind(bp.g.pwm, bp.w.pwm)
+    bp.pwm <- bp.pwm[order(bp.pwm$type),]
+    bp.pwm <- bp.pwm[!duplicated(bp.pwm[,1:2]),]
+    
+    bp.res <- rbind(bp.g.res, bp.w.res)
+    bp.res <- bp.res[order(bp.res$type),]
+    bp.res <- bp.res[!duplicated(bp.res[,1:2]),]
+    
+    bp.compare <- merge(bp.pwm, bp.res,  by = c("row", "col"), all = T, suffix = c(".val", ".res"))
+    write.csv(as.matrix(table(bp.compare$type.val, bp.compare$type.res, useNA = "ifany")),
+              paste0(fpath, "table-bp.csv"), quote = F)
+}
+
+# combine & compare (grey & white separate)
+{
+    bp.pwm <- merge(bp.g.pwm, bp.w.pwm, by = c("row", "col"), all = T, suffix = c(".grey", ".white"))
+    table("grey" = bp.pwm$type.grey, "white" = bp.pwm$type.white, useNA = "ifany")
+    
+    bp.white <- merge(bp.w.pwm, bp.w.res,  by = c("row", "col"), all = T, suffix = c(".val", ".res"))
+    table("value" = bp.white$type.val, "residual" = bp.white$type.res, useNA = "ifany")
+    
+    write.csv(table(bp.white$type.val, bp.white$type.res, useNA = "ifany"), 
+              paste0(fpath, "table-bp-white.csv"), quote = F)
+    
+    table("val" = bp.white$type.val,"res" =  bp.white$type.res, useNA = "ifany")
+    
+    bp.grey <- merge(bp.g.pwm, bp.g.res,  by = c("row", "col"), all = T, suffix = c(".val", ".res"))
+    table("value" = bp.grey$type.val, "residual" = bp.grey$type.res, useNA = "ifany")
+}
+
 
 ####################################################################################################
 
-# FIND SUPERCLUSTERS OF BRIGHT, HOT, NONRESPONSIVE                                              ####
+# BAD PX CLASSIFICAION                                                                          ####
+
+bp.summ <- rbind.fill(lapply(lapply(lapply(lapply(lapply(bp, "[", 3), table), as.matrix),t), as.data.frame))
+rownames(bp.summ) <- dimnames(pw.m)[[4]]
+
+write.csv(bp.summ, paste0(fpath, "bp-table-all.csv"), quote = F)
+
+bp.cols <- c("purple", "black", "red", "orange", "gold", NA, "grey", NA, "green3", "green", "lightskyblue")
+
+pdf(paste0(fpath, "plot-bp-1.pdf"))
+par(mar = c(2,2,1,1))
+plot(bp[[1]][,1:2], pch = 15, col = bp.cols[bp[[1]]$type], asp = T, cex = 0.6, xlab = "", ylab = "")
+dev.off()
+
+pdf(paste0(fpath, "plot-bp-2.pdf"))
+par(mar = c(2,2,1,1))
+plot(bp[[2]][,1:2], pch = 15, col = bp.cols[bp[[2]]$type], asp = T, cex = 0.6, xlab = "", ylab = "")
+dev.off()
+
+pdf(paste0(fpath, "plot-bp-10.pdf"))
+par(mar = c(2,2,1,1))
+plot(bp[[10]][,1:2], pch = 15, col = bp.cols[bp[[10]]$type], asp = T, cex = 0.6, xlab = "", ylab = "")
+dev.off()
+
+pdf(paste0(fpath, "plot-bp-11.pdf"))
+par(mar = c(2,2,1,1))
+plot(bp[[11]][,1:2], pch = 15, col = bp.cols[bp[[11]]$type], asp = T, cex = 0.6, xlab = "", ylab = "")
+dev.off()
+
+pdf(paste0(fpath, "legend.pdf"))
+plot.new(); legend("center", pch = 15, col = bp.cols, legend = levels(bp[[2]]$type))
+dev.off()
+
+
+####################################################################################################
+
+# DIM PIXEL BEHAVIOUR: ARE THEY DIM OR NON-RESPONSIVE?                                          ####
+dim <- as.matrix(bp[[11]][bp[[11]]$type == "v.dim",1:2])
+nr <- as.matrix(bp[[11]][bp[[11]]$type == "no response",1:2])
+
+dim.vals <- apply(pw.m, 3:4, "[", dim)
+nr.vals <- apply(pw.m, 3:4, "[", nr)
+
+dim.res <- apply(res, 3:4, "[", dim)
+nr.res <- apply(res, 3:4, "[", nr)
+
+{
+    pdf(paste0(fpath, "v-dim-values.pdf"))
+    matplot(t(dim.vals[,1,]), type = "l", ylim = range(pretty(range(dim.vals))), col = "green3",
+            xlab = "", ylab = "")
+    matplot(t(dim.vals[,2,]), type = "l", add = T, col = "blue")
+    matplot(t(dim.vals[,3,]), type = "l", add = T, col = "red")
+    dev.off()
+}
+
+{
+    pdf(paste0(fpath, "nonresponsive-values.pdf"))
+    matplot(t(nr.vals[,1,]), type = "l", ylim = range(pretty(range(nr.vals))), col = "green3",
+            xlab = "", ylab = "")
+    matplot(t(nr.vals[,2,]), type = "l", add = T, col = "blue")
+    matplot(t(nr.vals[,3,]), type = "l", add = T, col = "red")
+    dev.off()
+}
+
+{
+    pdf(paste0(fpath, "v-dim-res.pdf"))
+    matplot(t(dim.res[,1,]), type = "l", ylim = range(pretty(range(dim.res))), col = "green3",
+            xlab = "", ylab = "")
+    matplot(t(dim.res[,2,]), type = "l", add = T, col = "blue")
+    matplot(t(dim.res[,3,]), type = "l", add = T, col = "red")
+    dev.off()
+}
+
+{
+    pdf(paste0(fpath, "v-nr-res.pdf"))
+    matplot(t(nr.res[,1,]), type = "l", ylim = range(pretty(range(nr.res))), col = "green3",
+            xlab = "", ylab = "")
+    matplot(t(nr.res[,2,]), type = "l", add = T, col = "blue")
+    matplot(t(nr.res[,3,]), type = "l", add = T, col = "red")
+    dev.off()
+}

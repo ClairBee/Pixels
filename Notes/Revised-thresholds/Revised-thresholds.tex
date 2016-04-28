@@ -24,7 +24,7 @@
 %======================================================================
 
 \begin{document}
-blah
+
 \section*{New classification: edge pixels}
 Since the very edges of the panel are known to be particularly prone to defective pixels (possibly due to stress induced by attaching the detector panel to its frame), a strip of 10 pixels around all edges of the panels are excluded from future analysis. The effect of removing these pixels can be seen in Figure~\ref{fig:hist-unresponsive}, where the histogram of all pixel values is shown in turquoise, with the central pixels shown in blue.
 
@@ -84,7 +84,7 @@ Classifications are assigned in this order of priority; so, an edge pixel with m
 
 Figure~\ref{fig:hist-boundaries} shows these boundaries applied to the residuals after fitting a simple parametric model (circular spot, linear panels) to the white and grey images, and to the pixelwise mean values in each image. 
 
-\begin{figure}[!ht]
+\begin{figure}[!ht]	% histograms with thresholds
 \caption{Histograms showing the proposed subdivisions of bright and dim pixels, calculated by applying the same calculation first to the residuals after parametric model fitting, and then to the pixelwise mean values. In all cases, the edge pixels have been removed.\\
 The small cluster of pixels at the left-hand end of the histogram will be classified separately as having no response.}
 \label{fig:hist-boundaries}
@@ -114,7 +114,7 @@ The small cluster of pixels at the left-hand end of the histogram will be classi
 %
 \end{figure}
 
-\begin{table}[!ht]	% table of spot counts & coverage
+\begin{table}[!ht]	% table of bad pixels identified by thresholding over residuals vs mean values
 \caption{Comparison of points falling into each category, when classified using pixel values or residuals after parametric model fitting. Points are classified in both the grey and white images, then assigned to the most extreme category applicable. Hot, dead and unresponsive pixels, and screen spots, have not been classified separately, but the image has been cropped to remove edge pixels.\\
 The categories of the (extremely small numbers of) dim pixels are consistent, while changing the data set used for thresholding causes more movement between categories of the bright pixels; most of the movement, as we might expect, is between the least extreme categories.}
 \centering
@@ -126,12 +126,62 @@ The categories of the (extremely small numbers of) dim pixels are consistent, wh
 \end{footnotesize}
 \end{table}
 
+\section*{Bad pixel mapping using new approach}
+The approach outlined above was applied to several image sets: screen spots were identified based on dim patches in the white images, with 
+hot, dead and unresponsive pixels categorised according to the pixelwise mean values, and grades of dimness and brightness assigned according to the values of the residuals after a simple parametric model was fitted (circular spot, linear panels).
+ 
+\begin{table}[!h]	% table of bad pixels identified (16-03-14)
+\caption{Bad pixel classifications obtained by applying the thresholding approach above to the pixelwise residual values after fitting a simple parametric model.}
+\centering
+\begin{scriptsize}
+%
+\csvreader[tabular = c|ccc|ccc|cc|ccc,
+		   table head = Acq date & No response & Dead & Hot & V. bright & Bright & Slightly bright & Screen spot & Edge & V. dim & Dim & Slightly dim \\\hline]%
+{./fig/bp-table-all.csv}{1=\dt, no response=\nr, dead=\dead, hot=\hot, v.bright=\vb, bright=\b, s.bright=\sb, screen spot=\spot, edge=\edge, v.dim=\vd, dim=\d, s.dim=\sd}%
+{\dt & \nr & \dead & \hot & \vb & \b & \sb & \spot & \edge & \vd & \d & \sd}%    
+%
+\end{scriptsize}
+\end{table}
+
+ 
+\begin{figure}[!ht]
+\caption{Plot of bad pixels identified in the first two acquisitions. Slightly bright pixels have been removed to more clearly show the other categories (suspect that the pattern of bright pixels has more to do with inadequate model fitting than with actual pixel defects under the current simple parametric approach)}
+\centering
+%
+\begin{subfigure}[t]{0.55\textwidth}
+\caption{Images from 14-10-09}
+\includegraphics[scale=0.4]{./fig/plot-bp-1}
+\includegraphics[scale=0.35]{./fig/legend}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.39\textwidth}
+\caption{Images from 14-11-18}
+\includegraphics[scale=0.4]{./fig/plot-bp-2}
+\end{subfigure}
+%
+\end{figure}
+
+\begin{figure}[!ht]
+\caption{Plot of bad pixels identified in the last two acquisitions. Slightly bright pixels have been removed to more clearly show the other categories (suspect that the pattern of bright pixels has more to do with inadequate model fitting than with actual pixel defects under the current simple parametric approach)}
+\centering
+%
+\begin{subfigure}[t]{0.55\textwidth}
+\caption{Images from 15-10-15}
+\includegraphics[scale=0.4]{./fig/plot-bp-10}
+\includegraphics[scale=0.35]{./fig/legend}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.39\textwidth}
+\caption{Images from 16-03-14}
+\includegraphics[scale=0.4]{./fig/plot-bp-11}
+\end{subfigure}
+%
+\end{figure}
 
 %\todo{Adapt histograms shown in fig 1 to show cutoffs for all categories (incl. hot, dead)}
 
 %\todo{Spatial plots of bad pixels identified by this approach}
 
-%\todo{Table of bad pixels identified by this approach}
 
 %\section*{Supercluster identification \&  composition}
 
