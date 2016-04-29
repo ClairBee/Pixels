@@ -24,6 +24,11 @@ TASK LIST
 - get kernel density over histograms. Where kernel density is 0, give cutoff?
 
 - include test for spatial randomness of residuals when fitting models (esp. in brightest/dimmest px)
+
+===================================================================================================
+Revise thresholding classification in line with sd.levels()
+    (or revise plot colours in line with thresholding classification)
+    
 ===================================================================================================
 Find & remove/correct artefacts by other methods before simple thresholding for dim/bright.
 - nonresponsive
