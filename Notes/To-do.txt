@@ -10,6 +10,8 @@ TASK LIST
 
 # robustness: compare quantiles to Johnson distribution with various numbers of added hot pixels. Is Johnson dist really a more robust equivalent to fitting quantiles?
 
+# identification of dim spots: use Gaussian blurring first to soften/smooth edges?
+
 - Compare bright/hot pixels in white & grey images. Does grey image add anything new?
 - also compare to bright/hot pixels in offset-corrected image. (Try to refine definition)
 - identify shapes & superclusters for each image set (incl. corrected) separately, compare

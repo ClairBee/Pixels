@@ -6,6 +6,41 @@ dates <- dates[dates != "150702"]
 n <- length(dates)
 
 ############################################################################################
+# IMPORT & ADD A SINGLE IMAGE BATCH TO ALL SUMMARIES                                    ####
+library(abind)
+
+new.date <- "160430"
+im <- load.daily(new.date)
+
+# pixelwise mean values
+{
+    # black
+    {
+        b <- readRDS("./Other-data/Pixelwise-means-black.rds")
+        b <- abind(b, pixelwise.mean(im[,,,1]), along = 3,
+                   new.names = list(NULL, NULL, c(dimnames(b)[[3]], new.date)))
+        saveRDS(b, "./Other-data/Pixelwise-means-black.rds")
+    }
+    
+    # grey
+    {
+        g <- readRDS("./Other-data/Pixelwise-means-grey.rds")
+        g <- abind(g, pixelwise.mean(im[,,,2]), along = 3,
+                   new.names = list(NULL, NULL, c(dimnames(g)[[3]], new.date)))
+        saveRDS(g, "./Other-data/Pixelwise-means-grey.rds")
+    }
+    
+    # white
+    {
+        w <- readRDS("./Other-data/Pixelwise-means-white.rds")
+        w <- abind(w, pixelwise.mean(im[,,,3]), along = 3,
+                   new.names = list(NULL, NULL, c(dimnames(w)[[3]], new.date)))
+        saveRDS(w, "./Other-data/Pixelwise-means-white.rds")
+    }
+}
+
+
+############################################################################################
 
 # import all black images, get pixelwise means & SDs (elapsed: 1110.51 for 11 dates)    ####
 

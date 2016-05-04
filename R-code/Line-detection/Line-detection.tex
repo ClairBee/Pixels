@@ -1,0 +1,243 @@
+\documentclass[10pt,fleqn]{article}\usepackage[]{graphicx}\usepackage[]{color}
+%% maxwidth is the original width if it is less than linewidth
+%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
+\usepackage{/home/clair/Documents/mystyle}
+% add document-specific packages here
+
+\titleformat{\section}
+    {\normalfont\bfseries}
+    {\llap{\parbox{1cm}{\thesection}}}{0em}{}
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\begin{document}
+\renewenvironment{knitrout}{\vspace{1em}}{\vspace{1em}}
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\large{\textbf{Detection of bright/dim lines}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ----------------------------------------------------------------------
+
+Two sections of the latest batch of images have been identified as containing lines of slightly bright pixels.
+
+\begin{figure}[!ht]
+\caption{Subsets of images used to compare and develop edge detection methods. The columns of interest are plotted in black, with neighbouring columns plotted in light blue and gold. The median value of the bright line segment is shown in red, that of the normal line segment in green.\\ In both cases, the distance between the healthy and unhealthy pixels is aproximately 300 grey values.}
+\centering
+\begin{subfigure}[b]{0.24\textwidth}
+\caption{Column 427, upper panel (rows 1100:1300)}
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\maxwidth]{figure/sf1a1-1} 
+
+}
+
+
+
+\end{knitrout}
+\end{subfigure}
+\begin{subfigure}[b]{0.24\textwidth}
+\caption{Transect along column 427}
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\maxwidth]{figure/sf1a-1} 
+
+}
+
+
+
+\end{knitrout}
+\end{subfigure}
+\begin{subfigure}[b]{0.24\textwidth}
+\caption{Column 809, lower panel (rows 512:640)}
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\maxwidth]{figure/sf2a-1} 
+
+}
+
+
+
+\end{knitrout}
+\end{subfigure}
+\begin{subfigure}[b]{0.24\textwidth}
+\caption{Transect along column 809}
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\maxwidth]{figure/sf2a2-1} 
+
+}
+
+
+
+\end{knitrout}
+\end{subfigure}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Focal filter (linear kernel)}
+
+
+\begin{figure}[!ht]
+\caption{The image is convolved with a linear kernel $(-1, 2, -1)$}
+%
+\begin{subfigure}[b]{0.24\textwidth}
+\caption{Upper panel, k vertical}
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\maxwidth]{figure/focal-linear-im-a-1} 
+
+}
+
+
+
+\end{knitrout}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.24\textwidth}
+\caption{Upper panel, k horizontal}
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\maxwidth]{figure/focal-linear-im-b-1} 
+
+}
+
+
+
+\end{knitrout}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.24\textwidth}
+\caption{Lower panel, k vertical}
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\maxwidth]{figure/focal-linear-im-c-1} 
+
+}
+
+
+
+\end{knitrout}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.24\textwidth}
+\caption{Lower panel, k horizontal}
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\maxwidth]{figure/focal-linear-im-d-1} 
+
+}
+
+
+
+\end{knitrout}
+\end{subfigure}
+%
+%mad(conv.lin.t[!is.na(conv.lin.t)])
+%
+\begin{subfigure}[b]{0.49\textwidth}
+\caption{Upper panel subset. Median $\pm$ MAD is marked as blue dotted lines.}
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=0.49\textwidth]{figure/focal-linear-plot-a-1} 
+\includegraphics[width=0.49\textwidth]{figure/focal-linear-plot-a-2} 
+
+}
+
+
+
+\end{knitrout}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.49\textwidth}
+\caption{Lower panel subset. Median $\pm$ MAD is marked as blue dotted lines.}
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=0.49\textwidth]{figure/focal-linear-plot-b-1} 
+\includegraphics[width=0.49\textwidth]{figure/focal-linear-plot-b-2} 
+
+}
+
+
+
+\end{knitrout}
+\end{subfigure}
+\end{figure}
+
+The convolution with a vertical kernel has SD 1013 and MAD 295, while the convolution using a horizontal kernel has SD 952 and MAD 124
+
+
+\section*{Focal filter (square kernel)}
+
+\section*{Simple differences across columns/rows}
+
+\todo{Get differences along rows}
+\todo{Threshold}
+\todo{Clump}
+
+\section*{Gradient change}
+
+\section*{Contra-Loess smoothing}
+
+\todo{Smooth across rows, then filter residuals for columnwise differences}
+\todo{Smooth across columns, then filter residuals for row-wise differences}
+
+\nb{Try applying these approaches with \& without eg. parametric modelling}
+\end{document}
