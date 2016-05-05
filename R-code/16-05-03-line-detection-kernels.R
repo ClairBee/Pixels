@@ -8,10 +8,12 @@ load.pixel.means()
 fpath <- "./Notes/Line-detection/fig/"
 
 im <- pw.m[,,"black", "160314"]
+th.cols <- c("white", "paleturquoise1",  "cyan3", "skyblue", "green3",
+             "gold", "orange", "red", "magenta3", "blue", "black")
 
 # identify regions to look at in detail
 im1 <- list(xrng = c(359:550), yrng = c(1100:1300), col = 427, row = 1199)
-im2 <- list(xrng = c(766:896), yrng = c(512:640), col = 809)
+im2 <- list(xrng = c(766:896), yrng = c(50:200), col = 809)
 
 ####################################################################################################
 # NUMERICAL SUMMARIES                                                                           ####
@@ -350,14 +352,173 @@ conv.sq.big <- r2m(focal(m2r(im), k5))              # k5 vertical
 
 ####################################################################################################
 
-# CLASSIFICATION BY SQUARE KERNEL                                                               ####
+# SOBEL KERNEL                                                                                  ####
+
+ks <- matrix(c(-1, -2, -1, 0, 0, 0, 1, 2, 1), nrow = 3)
+conv.sobel <- r2m(focal(m2r(im), ks))
+
+# upper panel image
+{
+    pdf(paste0(fpath, "conv-sobel-upper-im.pdf"))
+    par(mar = c(2,2,0,0))
+    pixel.image(conv.sobel, xlim = range(im1$xrng), ylim = range(im1$yrng))
+    dev.off()
+}
+
+# upper panel transect
+{
+    pdf(paste0(fpath, "conv-sobel-upper-trans.pdf"))
+    par(mar = c(2,2,0,0))
+    
+    o.plot(conv.sobel[im1$col, im1$yrng], ylim = c(-20000, 20000), xlab = "Transect sample: outer edge ->", ylab = "Pixel value")
+    o.plot(conv.sobel[im1$col - 1, im1$yrng], add = T, col = adjustcolor("skyblue", alpha = 0.4))
+    o.plot(conv.sobel[im1$col + 1, im1$yrng], add = T, col = adjustcolor("gold", alpha = 0.4))
+    o.plot(conv.sobel[im1$col + 2, im1$yrng], add = T, col = adjustcolor("orange", alpha = 0.4))
+    o.plot(conv.sobel[im1$col - 2, im1$yrng], add = T, col = adjustcolor("green3", alpha = 0.4))
+    
+    abline(h = median(conv.sobel, na.rm = T) + mad(conv.sobel, na.rm = T) * c(1,2), col = "blue", lty = 2)
+    dev.off()
+}     
+
+# lower panel image
+{
+    pdf(paste0(fpath, "conv-sobel-lower-im.pdf"))
+    par(mar = c(2,2,0,0))
+    pixel.image(conv.sobel, xlim = range(im2$xrng), ylim = range(im2$yrng))
+    dev.off()
+}
+
+# lower panel transect
+{
+    pdf(paste0(fpath, "conv-sobel-lower-trans.pdf"))
+    par(mar = c(2,2,0,0))
+    
+    o.plot(conv.sobel[im2$col, im2$yrng], ylim = c(-20000,20000), xlab = "Transect sample: outer edge ->", ylab = "Pixel value")
+    o.plot(conv.sobel[im2$col - 1, im2$yrng], add = T, col = adjustcolor("skyblue", alpha = 0.4))
+    o.plot(conv.sobel[im2$col + 1, im2$yrng], add = T, col = adjustcolor("gold", alpha = 0.4))
+    o.plot(conv.sobel[im2$col + 2, im2$yrng], add = T, col = adjustcolor("orange", alpha = 0.4))
+    o.plot(conv.sobel[im2$col - 2, im2$yrng], add = T, col = adjustcolor("green3", alpha = 0.4))
+    
+    abline(h = median(conv.sobel, na.rm = T) + mad(conv.sobel, na.rm = T) * c(1,2), col = "blue", lty = 2)
+    dev.off()
+}    
+
+
+# LAPLACIAN KERNEL                                                                              ####
+
+kl <- matrix(c(0,-1,0,-1,4,-1,0,-1,0), nrow = 3)
+conv.laplace <- r2m(focal(m2r(im), kl))
+
+# upper panel image
+{
+    pdf(paste0(fpath, "conv-laplace-upper-im.pdf"))
+    par(mar = c(2,2,0,0))
+        pixel.image(conv.laplace, xlim = range(im1$xrng), ylim = range(im1$yrng))
+    dev.off()
+}
+
+# upper panel transect
+{
+    pdf(paste0(fpath, "conv-laplace-upper-trans.pdf"))
+    par(mar = c(2,2,0,0))
+    
+    o.plot(conv.laplace[im1$col, im1$yrng], ylim = c(-20000,20000), xlab = "Transect sample: outer edge ->", ylab = "Pixel value")
+    o.plot(conv.laplace[im1$col - 1, im1$yrng], add = T, col = adjustcolor("skyblue", alpha = 0.4))
+    o.plot(conv.laplace[im1$col + 1, im1$yrng], add = T, col = adjustcolor("gold", alpha = 0.4))
+    o.plot(conv.laplace[im1$col + 2, im1$yrng], add = T, col = adjustcolor("orange", alpha = 0.4))
+    o.plot(conv.laplace[im1$col - 2, im1$yrng], add = T, col = adjustcolor("green3", alpha = 0.4))
+    
+    abline(h = median(conv.laplace, na.rm = T) + mad(conv.laplace, na.rm = T) * c(-5:5), col = "blue", lty = 2)
+    dev.off()
+}     
+
+# lower panel image
+{
+    pdf(paste0(fpath, "conv-laplace-lower-im.pdf"))
+    par(mar = c(2,2,0,0))
+        pixel.image(conv.laplace, xlim = range(im2$xrng), ylim = range(im2$yrng))
+    dev.off()
+}
+
+# lower panel transect
+{
+    pdf(paste0(fpath, "conv-laplace-lower-trans.pdf"))
+    par(mar = c(2,2,0,0))
+    
+    o.plot(conv.laplace[im2$col, im2$yrng], ylim = c(-20000,20000), xlab = "Transect sample: outer edge <-", ylab = "Pixel value")
+    o.plot(conv.laplace[im2$col - 1, im2$yrng], add = T, col = adjustcolor("skyblue", alpha = 0.4))
+    o.plot(conv.laplace[im2$col + 1, im2$yrng], add = T, col = adjustcolor("gold", alpha = 0.4))
+    o.plot(conv.laplace[im2$col + 2, im2$yrng], add = T, col = adjustcolor("orange", alpha = 0.4))
+    o.plot(conv.laplace[im2$col - 2, im2$yrng], add = T, col = adjustcolor("green3", alpha = 0.4))
+    
+    abline(h = median(conv.laplace, na.rm = T) + mad(conv.laplace, na.rm = T) * c(1,2), col = "blue", lty = 2)
+    dev.off()
+}    
+
+##################   EVERYTHING BELOW THIS POINT HAS MOVED TO SEPARATE FILE  ################## ####
+
+# COMPARE KERNEL RESULTS BY THRESHOLDING                                                        ####
+
+xt.lin <- matrix(findInterval(conv.lin, median(conv.lin, na.rm = T) + c(0:9) * mad(conv.lin, na.rm = T)), ncol = 1996)
+xt.sq <- matrix(findInterval(conv.sq, median(conv.sq, na.rm = T) + c(0:9) * mad(conv.sq, na.rm = T)), ncol = 1996)
+xt.sq.big <- matrix(findInterval(conv.sq.big, median(conv.sq.big, na.rm = T) + c(0:9) * mad(conv.sq.big, na.rm = T)), ncol = 1996)
+
+# plot 
+plot(table(xt.lin), col = th.cols, main = "Linear (-1, 2, -1) kernel, all pixels")
+plot(table(xt.sq), col = th.cols, main = "3x3 square kernel, all pixels")
+plot(table(xt.sq.big), col = th.cols, main = "5x5 square kernel, all pixels")
+
+# how bright are the panel edges?
+# expect RHS of panel join to be higher in value on lower, LHS on upper
+edge.px <- matrix(c(rep(panel.edges()$x[1:16], 992), rep(panel.edges()$x[2:17]-1, 1004), 
+                    sort(rep(1:992, 16)), sort(rep(993:1996, 16))), ncol = 2)
+{
+    # linear -1,2,-1 kernel
+    {
+        round(table(xt.lin[edge.px]) / length(edge.px), 3)
+        plot(table(xt.lin[edge.px]) / length(edge.px), col = th.cols, main = "Linear kernel",
+             ylab = "", xlab = "")
+        
+        # check spread of bright pixel values along panel edges
+        mean(conv.lin[edge.px], na.rm = T) / mad(conv.lin, na.rm = T)
+        median(conv.lin[edge.px], na.rm = T) / mad(conv.lin, na.rm = T)
+        mad(conv.lin[edge.px], na.rm = T)
+    }
+    
+    # 3x3 square kernel
+    {
+        round(table(xt.sq[edge.px]) / length(edge.px), 3)
+        plot(table(xt.sq[edge.px]) / length(edge.px), col = th.cols, main = "3x3 square kernel",
+             ylab = "", xlab = "")
+        
+        # check spread of bright pixel values along panel edges
+        mean(conv.sq[edge.px], na.rm = T) / mad(conv.sq, na.rm = T)
+        median(conv.sq[edge.px], na.rm = T) / mad(conv.sq, na.rm = T)
+        mad(conv.sq[edge.px], na.rm = T)
+    }
+
+    # 5x5 square kernel
+    {
+        round(table(xt.sq.big[edge.px]) / length(edge.px), 3)
+        plot(table(xt.sq.big[edge.px]) / length(edge.px), col = th.cols, main = "5x5 square kernel",
+             ylab = "", xlab = "")
+        
+        # check spread of bright pixel values along panel edges
+        mean(conv.sq.big[edge.px], na.rm = T) / mad(conv.sq.big, na.rm = T)
+        median(conv.sq.big[edge.px], na.rm = T) / mad(conv.sq.big, na.rm = T)
+        mad(conv.sq.big[edge.px], na.rm = T)
+    }
+}
+
+####################################################################################################
+
+# IDENTIFICATION BY THRESHOLDING (3x3 SQUARE)                                                   ####
 
 # threshold to find only high points
 xt <- matrix(findInterval(conv.sq, 
                           sort(median(conv.sq, na.rm = T) + c(0:9) * mad(conv.sq, na.rm = T))), 
              ncol = 1996)
-th.cols <- c("white", "paleturquoise1",  "cyan3", "skyblue", "green3",
-             "gold", "orange", "red", "magenta3", "blue", "black")
+
 
 # plot
 {
@@ -503,6 +664,56 @@ xt.w <- matrix(findInterval(conv.sq.w,
 ####################################################################################################
 
 # RECONSTRUCT BROKEN LINES (EG. PASSING UNDER DIM SPOT)                                         ####
+
+####################################################################################################
+
+# DISTRIBUTION OF EDGE PIXELS IN ALL IMAGES                                                     ####
+# run various convolutions over all images
+{
+    # restate kernels
+    k <- matrix(c(-1, 2, -1), nrow = 1)
+    k3 <- matrix(c(rep(-1, 3), rep(2, 3), rep(-1, 3)), ncol = 3)
+    k5 <- matrix(c(rep(-1, 10), rep(4, 5), rep(-1, 10)), ncol = 5)
+    
+    conv.lin.black <- lapply(lapply(apply(pw.m[,,"black", ], 3, m2r), focal, k), r2m)
+    conv.lin.grey <- lapply(lapply(apply(pw.m[,,"grey", ], 3, m2r), focal, k), r2m)
+    
+    conv.sq3.black <- lapply(lapply(apply(pw.m[,,"black", ], 3, m2r), focal, k3), r2m)
+    conv.sq3.grey <- lapply(lapply(apply(pw.m[,,"grey", ], 3, m2r), focal, k3), r2m)
+    
+    conv.sq5.black <- lapply(lapply(apply(pw.m[,,"black", ], 3, m2r), focal, k5), r2m)
+    conv.sq5.grey <- lapply(lapply(apply(pw.m[,,"grey", ], 3, m2r), focal, k5), r2m)
+}
+
+{
+    {
+        pdf(paste0(fpath, "linear-convolution-black-upper.pdf"))
+        par(mfrow = c(4,3), mar = c(2,2,3,1))
+        for (n in names(conv.lin.black)) {
+            im <- conv.lin.black[[n]]
+            xt <- matrix(findInterval(im, 
+                                      median(im, na.rm = T) + c(0:9) * mad(im, na.rm = T)), ncol = 1996)
+            image(c(1:1996), c(1:1996), xt, main = paste0("Linear k, upper, ", n), asp = T, 
+                  xlim = range(im1$xrng), ylim = range(im1$yrng),
+                  col = th.cols, breaks = c(0:11) - 0.5)
+        }
+        dev.off()
+    }
+
+    {
+        pdf(paste0(fpath, "linear-convolution-black-lower.pdf"))
+        par(mfrow = c(4,3), mar = c(2,2,3,1))
+        for (n in names(conv.lin.black)) {
+            im <- conv.lin.black[[n]]
+            xt <- matrix(findInterval(im, 
+                                      median(im, na.rm = T) + c(0:9) * mad(im, na.rm = T)), ncol = 1996)
+            image(c(1:1996), c(1:1996), xt, main = paste0("Linear k, upper, ", n), asp = T, 
+                  xlim = range(im2$xrng), ylim = range(im2$yrng),
+                  col = th.cols, breaks = c(0:11) - 0.5)
+        }
+        dev.off()
+    }
+}
 
 ####################################################################################################
 
