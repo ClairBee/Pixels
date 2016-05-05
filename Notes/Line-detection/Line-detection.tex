@@ -1,0 +1,336 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+%\titleformat{\section}
+%	{\normalfont\bfseries}
+%	{\thesection}{1em}{}
+	
+%\titleformat{\subsection}
+%	{\normalfont\bfseries}
+%	{\llap{\parbox{1cm}{\thesubsection}}}{0em}{}
+	
+%================================================================================================================
+
+\begin{document}
+
+\nb{NEED TO RE-RUN ALL GRAPHS TO ACCOUNT FOR DISCOVERY OF END OF HOT LINE}
+
+\nb{Add diagrams of kernels used}
+
+\section*{Detection of bright/dim lines}
+
+Two sections of the latest batch of images have already been identified as containing lines of slightly bright pixels. Candidate methods will first be tested on these regions to assess their affectiveness.
+
+\begin{figure}[!ht]
+\caption{Subsets of images used to compare and develop edge detection methods. The columns of interest are plotted in black, with neighbouring columns plotted in light blue and gold. The median value of the bright line segment is shown in red, that of the normal line segment in green.\\ In both cases, the distance between the healthy and unhealthy pixels is aproximately 300 grey values.}
+\centering
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Column 427, upper panel (rows 1100:1300)}
+	\includegraphics[scale=0.2]{./fig/im-raw-upper}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Transect along column 427}
+	\includegraphics[scale=0.2]{./fig/trans-raw-upper}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Column 809, lower panel (rows 512:640)}
+	\includegraphics[scale=0.2]{./fig/im-raw-lower}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Transect along column 809}
+	\includegraphics[scale=0.2]{./fig/trans-raw-lower}
+\end{subfigure}
+\end{figure}
+
+\section{Identifying candidate pixels}
+
+\FloatBarrier
+\subsection{Focal filter (linear -1, 2, -1 kernel)}
+\label{sec:linear121}
+A linear kernel filter $(-1, 2, -1)$ centred at point $i$ will return the difference between $i$ and the mean of its two neighbours (the filter can be transposed to capture the horizontal or vertical neighbours)
+
+\begin{figure}[!ht]
+\caption{The image is convolved with a horizontal linear kernel $(-1, 2, -1)$ to enhance separation between high points and their horizontal neighours. The resulting array has median value -4.85, with SD 952 and MAD 124. \\ The median plus 1 and 2 times the MAD are marked with dashed lines.}
+\centering
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Upper panel}
+\includegraphics[scale=0.2]{./fig/conv-lin-horiz-upper-im}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Upper panel transect}
+\includegraphics[scale=0.2]{./fig/conv-lin-horiz-upper-trans}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Lower panel}
+\includegraphics[scale=0.2]{./fig/conv-lin-horiz-lower-im}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Lower panel transect}
+\includegraphics[scale=0.2]{./fig/conv-lin-horiz-lower-trans}
+\end{subfigure}
+%
+\end{figure}
+
+\FloatBarrier
+%-----------------------------------------------------------------------------------
+\subsection{Focal filter (linear 1, 1, 1 kernel)}
+
+\begin{figure}[!ht]
+\caption{The image is convolved with a vertical linear kernel $(1, 1, 1)$ to highlight vertical sequences of high values. The resulting array has median value 15111, with SD 1266 and MAD 834. \\ The median, and the median $\pm$ 1 and 2 times the MAD are marked with dashed lines.}
+\centering
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Upper panel}
+\includegraphics[scale=0.2]{./fig/conv-lin-solid-horiz-upper-im}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Upper panel transect}
+\includegraphics[scale=0.2]{./fig/conv-lin-solid-horiz-upper-trans}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Lower panel}
+\includegraphics[scale=0.2]{./fig/conv-lin-solid-horiz-lower-im}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Lower panel transect}
+\includegraphics[scale=0.2]{./fig/conv-lin-solid-horiz-lower-trans}
+\end{subfigure}
+%
+\end{figure}
+
+\FloatBarrier
+%-----------------------------------------------------------------------------------
+\subsection{Focal filter (3-square kernel)}
+
+\begin{figure}[!ht]
+\caption{The image is convolved with a $3\times 3$ vertical square kernel where each row is identical to the horizontal linear kernel used in Section~\ref{sec:linear121}; this will highlight vertical sequences of pixels that are higher than their hoizontal neighbours. The resulting array has median value -11, with SD 1689 and MAD 272. \\ The median, and the median $\pm$ multiples of the MAD are marked with dashed lines.}
+\centering
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Upper panel}
+\includegraphics[scale=0.2]{./fig/conv-sq-horiz-upper-im}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Upper panel transect}
+\includegraphics[scale=0.2]{./fig/conv-sq-horiz-upper-trans}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Lower panel}
+\includegraphics[scale=0.2]{./fig/conv-sq-horiz-lower-im}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Lower panel transect}
+\includegraphics[scale=0.2]{./fig/conv-sq-horiz-lower-trans}
+\end{subfigure}
+%
+\end{figure}
+
+\FloatBarrier
+%-----------------------------------------------------------------------------------
+\subsection{Focal filter (5-square kernel)}
+
+\begin{figure}[!ht]
+\caption{The image is convolved with a $5\times 5$ vertical square kernel, with identical rows (-1, -1, 4, -1, -1); this will highlight larger vertical sequences of pixels that are higher than their hoizontal neighbours. The resulting array has median value -11, with SD 1689 and MAD 272. \\ The median, and the median $\pm$ multiples of the MAD are marked with dashed lines.}
+\centering
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Upper panel}
+\includegraphics[scale=0.2]{./fig/conv-sq-big-horiz-upper-im}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Upper panel transect}
+\includegraphics[scale=0.2]{./fig/conv-sq-big-horiz-upper-trans}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Lower panel}
+\includegraphics[scale=0.2]{./fig/conv-sq-big-horiz-lower-im}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Lower panel transect}
+\includegraphics[scale=0.2]{./fig/conv-sq-big-horiz-lower-trans}
+\end{subfigure}
+%
+\end{figure}
+
+\FloatBarrier
+%-----------------------------------------------------------------------------------
+\subsection{Sobel filter}
+
+\begin{figure}[!ht]
+\caption{The image is convolved with a $3\times 3$ Sobel kernel, commonly used in edge detection. The resulting array has median value -11, with SD 1689 and MAD 272. \\ The median, and the median $\pm$ multiples of the MAD are marked with dashed lines.}
+\centering
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Upper panel}
+\includegraphics[scale=0.2]{./fig/conv-sobel-upper-im}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Upper panel transect}
+\includegraphics[scale=0.2]{./fig/conv-sobel-upper-trans}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Lower panel}
+\includegraphics[scale=0.2]{./fig/conv-sobel-lower-im}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Lower panel transect}
+\includegraphics[scale=0.2]{./fig/conv-sobel-lower-trans}
+\end{subfigure}
+%
+\end{figure}
+
+
+\FloatBarrier
+%-----------------------------------------------------------------------------------
+\subsection{Laplace filter}
+
+\begin{figure}[!ht]
+\caption{The image is convolved with a $3\times 3$ Laplacian kernel, commonly used in edge detection. The resulting array has median value -11, with SD 1689 and MAD 272. \\ The median, and the median $\pm$ multiples of the MAD are marked with dashed lines.}
+\centering
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Upper panel}
+\includegraphics[scale=0.2]{./fig/conv-laplace-upper-im}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Upper panel transect}
+\includegraphics[scale=0.2]{./fig/conv-laplace-upper-trans}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Lower panel}
+\includegraphics[scale=0.2]{./fig/conv-laplace-lower-im}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Lower panel transect}
+\includegraphics[scale=0.2]{./fig/conv-laplace-lower-trans}
+\end{subfigure}
+%
+\end{figure}
+
+\FloatBarrier
+
+%================================================================================================================
+
+\section{Identifying lines}
+
+\nb{Update this depending on most effective method for identifying streaks of bright/dim pixels above}
+
+
+Pixels are first assigned a classification according to how much brighter they are than their horizontal neighbours. The MAD of the convolved image is used as a natural unit, with points assigned a score according to how many integer multiples of the MAD they are above the median.\\
+While the panel edges are still visible, they have a much lower value after convolution (typically between 3 and 4 MAD above the median) than the bright lines in which we are interested
+
+
+\begin{figure}[!ht]
+\caption{Pixel values after convolution with square kernel, showing distance above median, measured in multiples of MAD.\\ The line in the lower panel has a fainter patch approximately between rows 200 and 300, suggesting that some image reconstruction may be necessary.}
+\centering
+%
+%
+\begin{subfigure}[c]{0.4\textwidth}
+\caption{Upper panel}
+\includegraphics[scale=0.35]{./fig/conv-sq-thresholds-upper}
+\end{subfigure}
+%
+\begin{subfigure}[c]{0.1\textwidth}
+\caption{Upper panel}
+\includegraphics[scale=0.35]{./fig/conv-sq-thresholds-legend}
+\end{subfigure}
+%
+\begin{subfigure}[c]{0.4\textwidth}
+\caption{Lower panel}
+\includegraphics[scale=0.35]{./fig/conv-sq-thresholds-lower}
+\end{subfigure}
+%
+%
+\end{figure}
+
+
+\todo{Threshold data}
+\todo{Clump resulting bright pixels}
+
+\nb{Also need to repair broken lines, eg. those that pass beneath a dim spot on the screen}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Thresholding}
+
+
+\subsection{Clump adjacent pixels \& using shape to identify}
+\subsection{Use focal (1,1,1) filter to score pixels that are part of line}
+\subsection{Use focal (1,1,1,1,1) filter to score pixels that are part of line}
+
+\section{Check distribution of edge values in all other images (by colour \& by date)}
+
+\begin{figure}[!ht]
+\caption{Comparison of values (after convolution) of pixels at panel edges vs those manually identified as lying on a bright line, classified according to their distance from the median value in multiples of the MAD. \\ Points outlined in black are edge pixels, those without outline are part of a bright line.\\
+The distinction between the distributions of edge and line pixels seems to be clearer in the grey images than in the black.}
+\centering
+%
+\begin{subfigure}[b]{0.3\textwidth}
+\caption{Black image, linear kernel}
+\includegraphics[scale=0.3]{./fig/props-lin-black}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.3\textwidth}
+\caption{Grey image, linear kernel}
+\includegraphics[scale=0.3]{./fig/props-lin-grey}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.3\textwidth}
+\caption{Black image, 3x3 kernel}
+\includegraphics[scale=0.3]{./fig/props-3x3-grey}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.3\textwidth}
+\caption{Grey image, 3x3 kernel}
+\includegraphics[scale=0.3]{./fig/props-3x3-grey}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.3\textwidth}
+\caption{Black image, 5x5 kernel}
+\includegraphics[scale=0.3]{./fig/props-5x5-grey}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.3\textwidth}
+\caption{Black image, 5x5 kernel}
+\includegraphics[scale=0.3]{./fig/props-5x5-grey}
+\end{subfigure}
+%
+\end{figure}
+
+\section{Apply this method to grey \& white images. Same results?}
+
+\nb{Lines are more difficult to detect in white image, because all pixels become noisier at higher powers. Should be able to use Jay's sequence of images at different powers to support the argument that we can just use the black \& grey images to identify bright lines (essentially, with \& without spot).}
+
+\section{Apply same method to look for dim lines}
+\nb{Better to separate these two processes, rather than to combine: a bright line generally has dimmer lines either side of it in the convolved image (a sort of 1d `Mexican Hat Function'), which may be incorrectly identified as dim lines if we start looking at both together. Far better to run the same process with inverted matrix and see what the result is.}
+
+\section{Behaviour of lines over time}
+\todo{Difference between line \& neighbours in each image, observed over time}
+\todo{If possible, link to development of root supercluster over time as well} 
+\todo{Use transect plots to show difference clearly}
+
+\end{document}
