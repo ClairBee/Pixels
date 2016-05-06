@@ -1,47 +1,173 @@
 \documentclass[10pt,fleqn]{article}
 \usepackage{/home/clair/Documents/mystyle}
 
-%----------------------------------------------------------------------
-% reformat section headers to be smaller \& left-aligned
-\titleformat{\section}
-	{\normalfont\bfseries}
-	{\thesection}{1em}{}
-	
-\titleformat{\subsection}
-	{\normalfont\bfseries}
-	{\llap{\parbox{1cm}{\thesubsection}}}{0em}{}
-	
-%----------------------------------------------------------------------
-% SPECIFY BIBLIOGRAPHY FILE & FIELDS TO EXCLUDE
-%\addbibresource{bibfile.bib}
-%\AtEveryBibitem{\clearfield{url}}
-%\AtEveryBibitem{\clearfield{doi}}
-%\AtEveryBibitem{\clearfield{isbn}}
-%\AtEveryBibitem{\clearfield{issn}}
-
-%----------------------------------------------------------------------
-% define code format
-\lstnewenvironment{code}[1][R]{			% default language is R
-	\lstset{language = #1,
-        		columns=fixed,
-    			tabsize = 4,
-    			breakatwhitespace = true,
-			showspaces = false,
-    			xleftmargin = .75cm,
-    			lineskip = {0pt},
-			showstringspaces = false,
-			extendedchars = true
-    }}
-    {}
-    
 %======================================================================
+
+\newcommand{\UpperCol}{427}
+\newcommand{\UpperYrng}{1100:1300}
+
+
+\newcommand{\LowerCol}{809}
+\newcommand{\LowerYrng}{50:200}
+
+%===========================================================================================================================
 
 \begin{document}
 
-\code{blah}
+\todo{Robustness: what if there is a bright pixel next to line? Or a cluster?}
 
-Type some text...
+\todo{After thresholding, what is the minimum value \& line length likely to be picked up by this method?}
 
-%\newpage
-%\printbibliography
+\section*{Detection of bright/dim lines}
+
+Two sections of the images acquired on March 14th 2016 have already been identified as containing lines of slightly bright pixels. Candidate methods will first be tested on these regions of the black image, to assess their affectiveness.
+
+Ideally, the selected method will isolate single columns of pixels that are brighter than their neighbours (the chosen kernel can be transposed or inverted to identify rows and dimmer lines respectively), and will be able to distinguish genuinely bright lines from the edges of subpanels.
+
+\begin{figure}[!ht]		% raw data images & transects
+\caption{Subsets of images used to compare and develop edge detection methods, showing the ends of the two bright lines already identified.
+\\In the transects, the columns of interest are plotted in black, with its immediate neighbours blue and the next adjacent columns in green. The median values of the bright line segment and the healthy line segment are shown in red.
+\\In this image, the distance between the healthy and unhealthy pixels is aproximately 300 grey values in both bright lines.}
+\centering
+
+\begin{footnotesize}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Column \UpperCol, upper panel (rows \UpperYrng)}
+	\includegraphics[scale=0.2]{./fig/im-raw-upper}
+\end{subfigure}
+%
+\hspace*{\fill}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Transect along column \UpperCol}
+	\includegraphics[scale=0.2]{./fig/trans-raw-upper}
+\end{subfigure}
+%
+\hspace*{\fill}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Column \LowerCol, lower panel (rows \LowerYrng)}
+	\includegraphics[scale=0.2]{./fig/im-raw-lower}
+\end{subfigure}
+%
+\hspace*{\fill}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Transect along column \LowerCol}
+	\includegraphics[scale=0.2]{./fig/trans-raw-lower}
+\end{subfigure}
+\end{footnotesize}
+\end{figure}
+
+\section{Enhancement of bright columns by convolution}
+
+The images are first convolved with a square filter designed to enhance vertical runs of pixels that are higher in value than both of their neighbours. Both a 3-square and a 5-square filter are applied to the black image, and the results after thresholding at various levels compared, to determine the best combination of filter and threshold to use.
+
+\begin{center}			% kernel examples
+3-square kernel: $\begin{matrix} -1 & 2 & -1 \\ -1 & 2 & -1 \\ -1 & 2 & -1 \end{matrix}$
+\hspace{3cm}
+5-square kernel: $ \begin{matrix} -1 & -1 & 4 & -1 & -1 \\ -1 & -1 & 4 & -1 & -1 \\ -1 & -1 & 4 & -1 & -1 \\ -1 & -1 & 4 & -1 & -1 \\ -1 & -1 & 4 & -1 & -1 \end{matrix} $
+\end{center}
+
+\begin{figure}[!ht]		% images & transects after convolution with 3x3 kernel
+\begin{footnotesize}
+%
+\caption{Image and transects after convolution with $3\times 3$ square kernel.\\
+In the transect, the bright column is plotted in black, with its immediate neighbours blue and the next adjacent columns in green. The red dashed lines indicate the first 6 multiples of the MAD above the median value.}
+\centering
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Upper panel}
+\includegraphics[scale=0.2]{./fig/conv-sq-horiz-upper-im}
+\end{subfigure}
+%
+\hspace*{\fill}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Upper panel transect}
+\includegraphics[scale=0.2]{./fig/conv-sq-horiz-upper-trans}
+\end{subfigure}
+%
+\hspace*{\fill}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Lower panel}
+\includegraphics[scale=0.2]{./fig/conv-sq-horiz-lower-im}
+\end{subfigure}
+%
+\hspace*{\fill}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Lower panel transect}
+\includegraphics[scale=0.2]{./fig/conv-sq-horiz-lower-trans}
+\end{subfigure}
+%
+\end{footnotesize}
+\end{figure}
+
+\begin{figure}[!ht]		% images & transects after convolution with 5x5 kernel
+\begin{footnotesize}
+%
+\caption{Image and transects after convolution with $5\times 5$ square kernel\\
+In the transect, the bright column is plotted in black, with its immediate neighbours blue, the next adjacent columns in green, and the columns after those in turquoise. The red dashed lines indicate the first 6 multiples of the MAD above the median value.}
+\centering
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Upper panel}
+\includegraphics[scale=0.2]{./fig/conv-sq-big-horiz-upper-im}
+\end{subfigure}
+%
+\hspace*{\fill}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Upper panel transect}
+\includegraphics[scale=0.2]{./fig/conv-sq-big-horiz-upper-trans}
+\end{subfigure}
+%
+\hspace*{\fill}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Lower panel}
+\includegraphics[scale=0.2]{./fig/conv-sq-big-horiz-lower-im}
+\end{subfigure}
+%
+\hspace*{\fill}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Lower panel transect}
+\includegraphics[scale=0.2]{./fig/conv-sq-big-horiz-lower-trans}
+\end{subfigure}
+%
+\end{footnotesize}
+\end{figure}
+
+While both kernels give good separation between the bright lines and their neighbouring columns, it seems from these initial plots that the larger kernel may be a better choice. In row 84 of the column right-hand-adjacent to the lower line (right-hand pair of images), there is a bright pixel (around 1200 grey values higher than the bright line). Under the 3-square convolution, this causes a dip in the values of the bright line, while the 5-square convolution is more robust to the presence of an anomalous pixel. \nb{Behaviour when there are two or more such adjacent pixels?}
+
+
+\section{Behaviour of subpanel edges}
+
+We know that the pixel values increase across each of the 32 subpanels, from left to right for the upper and from right to left for the lower panels. We would therefore expect the leftmost column of the lower panels, and the rightmost of the upper, to be flagged as bright lines. We aim to discriminate between this typical subpanel edge behaviour and a genuinely bright column.
+
+\begin{figure}[!ht]
+\caption{Histograms of values after convolution of subpanel edges that are likely to be brighter than the adjacent columns. Each colour represents a different acquisition date.}
+\centering
+%
+\begin{subfigure}[b]{0.4\textwidth}
+\caption{3-square kernel}
+\includegraphics[scale=0.35]{./fig/hist-3x3-edges}
+\end{subfigure}
+%
+\hspace*{\fill}
+%
+\begin{subfigure}[b]{0.4\textwidth}
+\caption{5-square kernel}
+\includegraphics[scale=0.35]{./fig/hist-5x5-edges}
+\end{subfigure}
+%
+
+\end{figure}
+
+\todo{Add histogram of value / image MAD. Is that still quite stable?}
+
 \end{document}

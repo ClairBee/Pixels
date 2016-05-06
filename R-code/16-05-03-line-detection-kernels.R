@@ -58,18 +58,20 @@ median(im[im2$col, im2$yrng] - im[im2$col - 1, im2$yrng])         # 347.15
     dev.off()
 }
 
+pixel.image(im, xlim = c(800,820), ylim = c(80,100))
+
 # transect along black image - upper panel
 {
     pdf(paste0(fpath, "trans-raw-upper.pdf"))
     par(mar = c(2,2,0,0))
     
     o.plot(im[im1$col, ], xlim = range(im1$yrng), ylim = c(4500,5500), xlab = "Transect sample: outer edge ->", ylab = "Pixel value")
-    o.plot(im[im1$col - 1, ], add = T, col = adjustcolor("skyblue", alpha = 0.4))
-    o.plot(im[im1$col + 1, ], add = T, col = adjustcolor("gold", alpha = 0.4))
+    o.plot(im[im1$col - 1, ], add = T, col = adjustcolor("blue", alpha = 0.4))
+    o.plot(im[im1$col + 1, ], add = T, col = adjustcolor("blue", alpha = 0.4))
     o.plot(im[im1$col - 2, ], add = T, col = adjustcolor("green3", alpha = 0.4))
-    o.plot(im[im1$col + 2, ], add = T, col = adjustcolor("orange", alpha = 0.4))
+    o.plot(im[im1$col + 2, ], add = T, col = adjustcolor("green3", alpha = 0.4))
     
-    abline(h = median(im[im1$col, min(im1$yrng):(im1$row - 1)]), col = "green3")
+    abline(h = median(im[im1$col, min(im1$yrng):(im1$row - 1)]), col = "red")
     abline(h = median(im[im1$col, (im1$row + 1):max(im1$yrng)]), col = "red")
     dev.off()
 }
@@ -80,12 +82,12 @@ median(im[im2$col, im2$yrng] - im[im2$col - 1, im2$yrng])         # 347.15
     par(mar = c(2,2,0,0))
     
     o.plot(im[im2$col, ], xlim = range(im2$yrng), ylim = c(5000,6000), xlab = "Transect sample: outer edge <-", ylab = "Pixel value")
-    o.plot(im[im2$col - 1, ], add = T, col = adjustcolor("skyblue", alpha = 0.4))
-    o.plot(im[im2$col + 1, ], add = T, col = adjustcolor("gold", alpha = 0.4))
+    o.plot(im[im2$col - 1, ], add = T, col = adjustcolor("blue", alpha = 0.4))
+    o.plot(im[im2$col + 1, ], add = T, col = adjustcolor("blue", alpha = 0.4))
     o.plot(im[im2$col - 2, ], add = T, col = adjustcolor("green3", alpha = 0.4))
-    o.plot(im[im2$col + 2, ], add = T, col = adjustcolor("orange", alpha = 0.4))
+    o.plot(im[im2$col + 2, ], add = T, col = adjustcolor("green3", alpha = 0.4))
     
-    abline(h = median(im[im2$col - 1, im2$yrng]), col = "green3")
+    abline(h = median(im[im2$col - 1, im2$yrng]), col = "red")
     abline(h = median(im[im2$col, im2$yrng]), col = "red")
     dev.off()
 }
@@ -257,12 +259,12 @@ conv.sq <- r2m(focal(m2r(im), k3))              # k3 vertical
     par(mar = c(2,2,0,0))
     
     o.plot(conv.sq[im1$col, ], xlim = range(im1$yrng), ylim = c(-2000,3000), xlab = "Transect sample: outer edge ->", ylab = "Pixel value")
-    o.plot(conv.sq[im1$col - 1, ], add = T, col = adjustcolor("skyblue", alpha = 0.4))
-    o.plot(conv.sq[im1$col + 1, ], add = T, col = adjustcolor("gold", alpha = 0.4))
-    o.plot(conv.sq[im1$col + 2, ], add = T, col = adjustcolor("orange", alpha = 0.4))
+    o.plot(conv.sq[im1$col - 1, ], add = T, col = adjustcolor("blue", alpha = 0.4))
+    o.plot(conv.sq[im1$col + 1, ], add = T, col = adjustcolor("blue", alpha = 0.4))
+    o.plot(conv.sq[im1$col + 2, ], add = T, col = adjustcolor("green3", alpha = 0.4))
     o.plot(conv.sq[im1$col - 2, ], add = T, col = adjustcolor("green3", alpha = 0.4))
     
-    abline(h = median(conv.sq, na.rm = T) + mad(conv.sq, na.rm = T) * c(-3:3), col = "blue", lty = 2)
+    abline(h = median(conv.sq, na.rm = T) + mad(conv.sq, na.rm = T) * c(1:6), col = "red", lty = 2)
     dev.off()
 }
 
@@ -272,12 +274,12 @@ conv.sq <- r2m(focal(m2r(im), k3))              # k3 vertical
     par(mar = c(2,2,0,0))
     
     o.plot(conv.sq[im2$col, ], xlim = range(im2$yrng), ylim = c(-2000,3000), xlab = "Transect sample: outer edge ->", ylab = "Pixel value")
-    o.plot(conv.sq[im2$col - 1, ], add = T, col = adjustcolor("skyblue", alpha = 0.4))
-    o.plot(conv.sq[im2$col + 1, ], add = T, col = adjustcolor("gold", alpha = 0.4))
-    o.plot(conv.sq[im2$col + 2, ], add = T, col = adjustcolor("orange", alpha = 0.4))
+    o.plot(conv.sq[im2$col - 1, ], add = T, col = adjustcolor("blue", alpha = 0.4))
+    o.plot(conv.sq[im2$col + 1, ], add = T, col = adjustcolor("blue", alpha = 0.4))
+    o.plot(conv.sq[im2$col + 2, ], add = T, col = adjustcolor("green3", alpha = 0.4))
     o.plot(conv.sq[im2$col - 2, ], add = T, col = adjustcolor("green3", alpha = 0.4))
     
-    abline(h = median(conv.sq, na.rm = T) + mad(conv.sq, na.rm = T) * c(-3:3), col = "blue", lty = 2)
+    abline(h = median(conv.sq, na.rm = T) + mad(conv.sq, na.rm = T) * c(0:6), col = "red", lty = 2)
     dev.off()
 }
 
@@ -320,29 +322,20 @@ conv.sq.big <- r2m(focal(m2r(im), k5))              # k5 vertical
     par(mar = c(2,2,0,0))
     
     o.plot(conv.sq.big[im1$col, ], xlim = range(im1$yrng), ylim = c(-3000, 8000), xlab = "Transect sample: outer edge ->", ylab = "Pixel value")
-    o.plot(conv.sq.big[im1$col - 1, ], add = T, col = adjustcolor("skyblue", alpha = 0.4))
-    o.plot(conv.sq.big[im1$col + 1, ], add = T, col = adjustcolor("gold", alpha = 0.4))
-    o.plot(conv.sq.big[im1$col + 2, ], add = T, col = adjustcolor("orange", alpha = 0.4))
+    o.plot(conv.sq.big[im1$col - 1, ], add = T, col = adjustcolor("blue", alpha = 0.4))
+    o.plot(conv.sq.big[im1$col + 1, ], add = T, col = adjustcolor("blue", alpha = 0.4))
+    o.plot(conv.sq.big[im1$col + 2, ], add = T, col = adjustcolor("green3", alpha = 0.4))
     o.plot(conv.sq.big[im1$col - 2, ], add = T, col = adjustcolor("green3", alpha = 0.4))
+    o.plot(conv.sq.big[im1$col + 3, ], add = T, col = adjustcolor("cyan3", alpha = 0.4))
+    o.plot(conv.sq.big[im1$col - 3, ], add = T, col = adjustcolor("cyan3", alpha = 0.4))
     
-    abline(h = median(conv.sq.big, na.rm = T) + mad(conv.sq.big, na.rm = T) * c(-3:3), col = "blue", lty = 2)
+    abline(h = median(conv.sq.big, na.rm = T) + mad(conv.sq.big, na.rm = T) * c(1:6), col = "red", lty = 2)
     dev.off()
 }
 
 # transect across lower panel after convolution with horizontal kernel
 {
-    pdf(paste0(fpath, "conv-sq-big-horiz-lower-trans.pdf"))
-    par(mar = c(2,2,0,0))
-    
-    o.plot(conv.sq.big[im2$col, ], xlim = range(im2$yrng), ylim = c(-3000, 8000), xlab = "Transect sample: outer edge ->", ylab = "Pixel value")
-    o.plot(conv.sq.big[im2$col - 1, ], add = T, col = adjustcolor("skyblue", alpha = 0.4))
-    o.plot(conv.sq.big[im2$col + 1, ], add = T, col = adjustcolor("gold", alpha = 0.4))
-    o.plot(conv.sq.big[im2$col + 2, ], add = T, col = adjustcolor("orange", alpha = 0.4))
-    o.plot(conv.sq.big[im2$col - 2, ], add = T, col = adjustcolor("green3", alpha = 0.4))
-    o.plot(conv.sq.big[im2$col + 3, ], add = T, col = adjustcolor("cyan3", alpha = 0.4))
-    o.plot(conv.sq.big[im2$col - 3, ], add = T, col = adjustcolor("orchid", alpha = 0.4))
-    abline(h = median(conv.sq.big, na.rm = T) + mad(conv.sq.big, na.rm = T) * c(-3:3), col = "blue", lty = 2)
-    dev.off()
+s
 }
 
 # now apply to white images

@@ -1,16 +1,6 @@
 \documentclass[10pt,fleqn]{article}
 \usepackage{/home/clair/Documents/mystyle}
 
-%----------------------------------------------------------------------
-% reformat section headers to be smaller \& left-aligned
-%\titleformat{\section}
-%	{\normalfont\bfseries}
-%	{\thesection}{1em}{}
-	
-%\titleformat{\subsection}
-%	{\normalfont\bfseries}
-%	{\llap{\parbox{1cm}{\thesubsection}}}{0em}{}
-	
 %================================================================================================================
 
 \newcommand{\UpperCol}{427}
@@ -34,32 +24,35 @@ Ideally, the selected method will isolate single columns of pixels that are brig
 \begin{figure}[!ht]
 \caption{Subsets of images used to compare and develop edge detection methods. The columns of interest are plotted in black, with neighbouring columns plotted in light blue and gold, and the next neighouring columns in orange and green. The median value of the bright line segment is shown in red, that of the normal line segment in green.\\ In both cases, the distance between the healthy and unhealthy pixels is aproximately 300 grey values.}
 \centering
+
+\begin{footnotesize}
 %
 \begin{subfigure}[b]{0.22\textwidth}
 \caption{Column \UpperCol, upper panel (rows \UpperYrng)}
 	\includegraphics[scale=0.2]{./fig/im-raw-upper}
 \end{subfigure}
 %
-\vspace*{0.04\textwidth}
+\hspace*{\fill}
 %
 \begin{subfigure}[b]{0.22\textwidth}
 \caption{Transect along column \UpperCol}
 	\includegraphics[scale=0.2]{./fig/trans-raw-upper}
 \end{subfigure}
 %
-\vspace*{0.04\textwidth}
+\hspace*{\fill}
 %
 \begin{subfigure}[b]{0.22\textwidth}
 \caption{Column \LowerCol, lower panel (rows \LowerYrng)}
 	\includegraphics[scale=0.2]{./fig/im-raw-lower}
 \end{subfigure}
 %
-\vspace*{0.04\textwidth}
+\hspace*{\fill}
 %
 \begin{subfigure}[b]{0.22\textwidth}
 \caption{Transect along column \LowerCol}
 	\includegraphics[scale=0.2]{./fig/trans-raw-lower}
 \end{subfigure}
+\end{footnotesize}
 \end{figure}
 
 \section{Identifying candidate pixels}
