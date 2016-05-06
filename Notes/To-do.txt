@@ -3,6 +3,8 @@ TO DO
 
 TASK LIST
 ===================================================================================================
+            UPDATE CB.MISC REQUIREMENTS LIST TO AUTOLOAD ALL USEFUL PACKAGES!
+===================================================================================================
 
 # FIND COLUMNS OF BRIGHT/DIM PIXELS
 

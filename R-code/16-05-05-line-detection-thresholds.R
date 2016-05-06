@@ -22,6 +22,8 @@ line.px <- rbind(cbind(x = 427, y = c(1201:1996)),
 k <- matrix(c(-1, 2, -1), nrow = 1)
 k3 <- matrix(c(rep(-1, 3), rep(2, 3), rep(-1, 3)), ncol = 3)
 k5 <- matrix(c(rep(-1, 10), rep(4, 5), rep(-1, 10)), ncol = 5)
+ks <- matrix(c(-1, -2, -1, 0, 0, 0, 1, 2, 1), nrow = 3)
+kl <- matrix(c(0,-1,0,-1,4,-1,0,-1,0), nrow = 3)
 
 # convolve all black & grey images
 conv.lin.b <- lapply(lapply(apply(pw.m[,,"black", ], 3, m2r), focal, k), r2m)

@@ -13,72 +13,98 @@
 	
 %================================================================================================================
 
+\newcommand{\UpperCol}{427}
+\newcommand{\UpperYrng}{1100:1300}
+
+
+\newcommand{\LowerCol}{809}
+\newcommand{\LowerYrng}{50:200}
+
+%================================================================================================================
 \begin{document}
 
-\nb{NEED TO RE-RUN ALL GRAPHS TO ACCOUNT FOR DISCOVERY OF END OF HOT LINE}
-
-\nb{Add diagrams of kernels used}
+\nb{After thresholding, what is the minimum value \& line length likely to be picked up by this method?}
 
 \section*{Detection of bright/dim lines}
 
-Two sections of the latest batch of images have already been identified as containing lines of slightly bright pixels. Candidate methods will first be tested on these regions to assess their affectiveness.
+Two sections of the images acquired on March 14th 2016 have already been identified as containing lines of slightly bright pixels. Candidate methods will first be tested on these regions of the black image, to assess their affectiveness.
+
+Ideally, the selected method will isolate single columns of pixels that are brighter than their neighbours (the chosen kernel can be transposed or inverted to identify rows and dimmer lines respectively), and will be able to distinguish genuinely bright lines from the edges of subpanels.
 
 \begin{figure}[!ht]
-\caption{Subsets of images used to compare and develop edge detection methods. The columns of interest are plotted in black, with neighbouring columns plotted in light blue and gold. The median value of the bright line segment is shown in red, that of the normal line segment in green.\\ In both cases, the distance between the healthy and unhealthy pixels is aproximately 300 grey values.}
+\caption{Subsets of images used to compare and develop edge detection methods. The columns of interest are plotted in black, with neighbouring columns plotted in light blue and gold, and the next neighouring columns in orange and green. The median value of the bright line segment is shown in red, that of the normal line segment in green.\\ In both cases, the distance between the healthy and unhealthy pixels is aproximately 300 grey values.}
 \centering
 %
 \begin{subfigure}[b]{0.22\textwidth}
-\caption{Column 427, upper panel (rows 1100:1300)}
+\caption{Column \UpperCol, upper panel (rows \UpperYrng)}
 	\includegraphics[scale=0.2]{./fig/im-raw-upper}
 \end{subfigure}
 %
+\vspace*{0.04\textwidth}
+%
 \begin{subfigure}[b]{0.22\textwidth}
-\caption{Transect along column 427}
+\caption{Transect along column \UpperCol}
 	\includegraphics[scale=0.2]{./fig/trans-raw-upper}
 \end{subfigure}
 %
+\vspace*{0.04\textwidth}
+%
 \begin{subfigure}[b]{0.22\textwidth}
-\caption{Column 809, lower panel (rows 512:640)}
+\caption{Column \LowerCol, lower panel (rows \LowerYrng)}
 	\includegraphics[scale=0.2]{./fig/im-raw-lower}
 \end{subfigure}
 %
+\vspace*{0.04\textwidth}
+%
 \begin{subfigure}[b]{0.22\textwidth}
-\caption{Transect along column 809}
+\caption{Transect along column \LowerCol}
 	\includegraphics[scale=0.2]{./fig/trans-raw-lower}
 \end{subfigure}
 \end{figure}
 
 \section{Identifying candidate pixels}
 
-\FloatBarrier
-\subsection{Focal filter (linear -1, 2, -1 kernel)}
-\label{sec:linear121}
-A linear kernel filter $(-1, 2, -1)$ centred at point $i$ will return the difference between $i$ and the mean of its two neighbours (the filter can be transposed to capture the horizontal or vertical neighbours)
+The image is convolved with a series of filters designed to enhance vertical edge features within the data (the same filters can also be rotated to identify horizontal edge features):
 
-\begin{figure}[!ht]
-\caption{The image is convolved with a horizontal linear kernel $(-1, 2, -1)$ to enhance separation between high points and their horizontal neighours. The resulting array has median value -4.85, with SD 952 and MAD 124. \\ The median plus 1 and 2 times the MAD are marked with dashed lines.}
+\begin{figure}[!ht]	% filter examples
+\caption{Edge filters applied to the raw image}
 \centering
+\label{fig:filters}
+\begin{footnotesize}
+
 %
-\begin{subfigure}[b]{0.22\textwidth}
-\caption{Upper panel}
-\includegraphics[scale=0.2]{./fig/conv-lin-horiz-upper-im}
+\begin{subfigure}[t]{0.15\textwidth}
+\caption{Linear,\\ vertical}
+$ \begin{matrix} 1 \\ 1 \\ 1 \end{matrix} $
 \end{subfigure}
 %
-\begin{subfigure}[b]{0.22\textwidth}
-\caption{Upper panel transect}
-\includegraphics[scale=0.2]{./fig/conv-lin-horiz-upper-trans}
+\begin{subfigure}[t]{0.15\textwidth}
+\caption{Linear,\\ horizontal}
+$ \begin{matrix} -1 & 2 & -1 \end{matrix} $
 \end{subfigure}
 %
-\begin{subfigure}[b]{0.22\textwidth}
-\caption{Lower panel}
-\includegraphics[scale=0.2]{./fig/conv-lin-horiz-lower-im}
+\begin{subfigure}[t]{0.15\textwidth}
+\caption{3x3 \\ square}
+$ \begin{matrix} -1 & 2 & -1 \\ -1 & 2 & -1 \\ -1 & 2 & -1 \end{matrix} $
 \end{subfigure}
 %
-\begin{subfigure}[b]{0.22\textwidth}
-\caption{Lower panel transect}
-\includegraphics[scale=0.2]{./fig/conv-lin-horiz-lower-trans}
+\begin{subfigure}[t]{0.2\textwidth}
+\caption{5x5 \\ square}
+$ \begin{matrix} -1 & -1 & 4 & -1 & -1 \\ -1 & -1 & 4 & -1 & -1 \\ -1 & -1 & 4 & -1 & -1 \\ -1 & -1 & 4 & -1 & -1 \\ -1 & -1 & 4 & -1 & -1 \end{matrix} $
 \end{subfigure}
 %
+\begin{subfigure}[t]{0.15\textwidth}
+\caption{Sobel filter\\}
+$ \begin{matrix} -1 & 0 & 1 \\ -2 & 0 & 2 \\ -1 & 0 & 1 \end{matrix} $
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.15\textwidth}
+\caption{Laplacian filter\\}
+$ \begin{matrix} 0 & -1 & 0 \\ -1 & 4 & -1 \\ 0 & -1 & 0 \end{matrix}$
+\end{subfigure}
+%\end{raggedleft}
+%
+\end{footnotesize}
 \end{figure}
 
 \FloatBarrier
@@ -86,7 +112,7 @@ A linear kernel filter $(-1, 2, -1)$ centred at point $i$ will return the differ
 \subsection{Focal filter (linear 1, 1, 1 kernel)}
 
 \begin{figure}[!ht]
-\caption{The image is convolved with a vertical linear kernel $(1, 1, 1)$ to highlight vertical sequences of high values. The resulting array has median value 15111, with SD 1266 and MAD 834. \\ The median, and the median $\pm$ 1 and 2 times the MAD are marked with dashed lines.}
+\caption{The image is convolved with a vertical linear kernel $(1, 1, 1)$ to highlight vertical sequences of high values.}
 \centering
 %
 \begin{subfigure}[b]{0.22\textwidth}
@@ -113,10 +139,41 @@ A linear kernel filter $(-1, 2, -1)$ centred at point $i$ will return the differ
 
 \FloatBarrier
 %-----------------------------------------------------------------------------------
+\subsection{Focal filter (linear -1, 2, -1 kernel)}
+\label{sec:linear121}
+
+\begin{figure}[!ht]
+\caption{The image is convolved with a horizontal linear kernel $(-1, 2, -1)$ to enhance separation between high points and their horizontal neighours. \\Dashed lines show the median and the median $\pm$ multiples of the MAD of the convolved image.}
+\centering
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Upper panel}
+\includegraphics[scale=0.2]{./fig/conv-lin-horiz-upper-im}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Upper panel transect}
+\includegraphics[scale=0.2]{./fig/conv-lin-horiz-upper-trans}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Lower panel}
+\includegraphics[scale=0.2]{./fig/conv-lin-horiz-lower-im}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.22\textwidth}
+\caption{Lower panel transect}
+\includegraphics[scale=0.2]{./fig/conv-lin-horiz-lower-trans}
+\end{subfigure}
+%
+\end{figure}
+
+\FloatBarrier
+%-----------------------------------------------------------------------------------
 \subsection{Focal filter (3-square kernel)}
 
 \begin{figure}[!ht]
-\caption{The image is convolved with a $3\times 3$ vertical square kernel where each row is identical to the horizontal linear kernel used in Section~\ref{sec:linear121}; this will highlight vertical sequences of pixels that are higher than their hoizontal neighbours. The resulting array has median value -11, with SD 1689 and MAD 272. \\ The median, and the median $\pm$ multiples of the MAD are marked with dashed lines.}
+\caption{The image is convolved with a $3\times 3$ vertical square kernel where each row is identical to the horizontal linear kernel used in Section~\ref{sec:linear121}; this will highlight vertical sequences of pixels that are higher than their hoizontal neighbours.\\ The median, and the median $\pm$ multiples of the MAD are marked with dashed lines.}
 \centering
 %
 \begin{subfigure}[b]{0.22\textwidth}
@@ -146,7 +203,7 @@ A linear kernel filter $(-1, 2, -1)$ centred at point $i$ will return the differ
 \subsection{Focal filter (5-square kernel)}
 
 \begin{figure}[!ht]
-\caption{The image is convolved with a $5\times 5$ vertical square kernel, with identical rows (-1, -1, 4, -1, -1); this will highlight larger vertical sequences of pixels that are higher than their hoizontal neighbours. The resulting array has median value -11, with SD 1689 and MAD 272. \\ The median, and the median $\pm$ multiples of the MAD are marked with dashed lines.}
+\caption{The image is convolved with a $5\times 5$ vertical square kernel, with identical rows (-1, -1, 4, -1, -1); this will highlight larger vertical sequences of pixels that are higher than their hoizontal neighbours. \\ The median, and the median $\pm$ multiples of the MAD are marked with dashed lines.}
 \centering
 %
 \begin{subfigure}[b]{0.22\textwidth}
@@ -176,7 +233,7 @@ A linear kernel filter $(-1, 2, -1)$ centred at point $i$ will return the differ
 \subsection{Sobel filter}
 
 \begin{figure}[!ht]
-\caption{The image is convolved with a $3\times 3$ Sobel kernel, commonly used in edge detection. The resulting array has median value -11, with SD 1689 and MAD 272. \\ The median, and the median $\pm$ multiples of the MAD are marked with dashed lines.}
+\caption{The image is convolved with a $3\times 3$ Sobel kernel, commonly used in edge detection.\\ The median, and the median $\pm$ multiples of the MAD are marked with dashed lines.}
 \centering
 %
 \begin{subfigure}[b]{0.22\textwidth}
@@ -201,13 +258,14 @@ A linear kernel filter $(-1, 2, -1)$ centred at point $i$ will return the differ
 %
 \end{figure}
 
+Unlike the other filters, the Sobel filter does not highlight the edge pixels, instead highlighting the adjacent columns. Since this would require extra processing to extract the rows of real interest, we can discard this filter as a potential candidate. 
 
 \FloatBarrier
 %-----------------------------------------------------------------------------------
 \subsection{Laplace filter}
 
 \begin{figure}[!ht]
-\caption{The image is convolved with a $3\times 3$ Laplacian kernel, commonly used in edge detection. The resulting array has median value -11, with SD 1689 and MAD 272. \\ The median, and the median $\pm$ multiples of the MAD are marked with dashed lines.}
+\caption{The image is convolved with a $3\times 3$ Laplacian kernel, commonly used in edge detection.  \\ The median, and the median $\pm$ multiples of the MAD are marked with dashed lines.}
 \centering
 %
 \begin{subfigure}[b]{0.22\textwidth}
@@ -236,6 +294,55 @@ A linear kernel filter $(-1, 2, -1)$ centred at point $i$ will return the differ
 
 %================================================================================================================
 
+\section{Comparison of results for each kernel}
+
+\begin{table}[!ht]	% median, separation for each kernel
+\caption{Results of convolution of black image acquired on 16-03-14 with various kernels. \\
+The median value is calculated for the whole image, and also for the subset of pixels identified as bad, and those that lie on the brighter edge of the 32 subpanels. \\ 
+`Bad px separation' is the difference between the median of the bad pixel values and the median of all values, divided by the MAD of all values.\\
+`Bad px/edge separation' is the difference between the median of the bad pixel values and the median of the pixels lying on a panel edge, divided by the MAD of all values.\\}
+\begin{footnotesize}
+\csvreader[tabular = r|ccc|c|cc,
+    		   table head = Kernel & Median & Median (bad lines) & Median (panel edges) & MAD & Bad px separation & Bad px/edge separation \\\hline]%
+{./fig/df-conv-black-160314.csv}{1=\img, mean=\mean, mean.bad=\meanB, mean.edge=\meanP, median=\median, median.bad=\medB, median.edge=\medP, mad=\mad, mad.bad=\madB, mad.edge=\madP, sd=\sd, sd.bad=\sdB, sd.edge=\sdP, med.ratio=\medRatio, med.diff.mad=\medSep, med.edge.diff.mad=\edgeSep}%
+{\img & \median & \medB & \medP & \mad & \medSep & \edgeSep}%
+\end{footnotesize}
+\end{table}
+
+The highest degree of separation between the median of the known bright lines and of the healthy pixel population, and between the medians of the known bright lines and the panel edges, is given by the horizontal linear kernel and the two square kernels. The rest can be discarded.
+
+\begin{figure}[!ht]	% histograms showing separation
+\caption{Separation of known bright columns (red histogram) from subpanel edges (black histogram) using the three most successful kernels}
+\centering
+
+%
+\begin{subfigure}[b]{0.32\textwidth}
+\caption{Horizontal kernel}
+\includegraphics[scale=0.3]{./fig/conv-hist-lin}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.32\textwidth}
+\caption{3x3 square kernel}
+\includegraphics[scale=0.3]{./fig/conv-hist-3x3}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.32\textwidth}
+\caption{5x5 square kernel}
+\includegraphics[scale=0.3]{./fig/conv-hist-5x5}
+\end{subfigure}
+%
+
+\end{figure}
+
+The linear kernel gives a bimodal distribution for the bad pixels after convolution, possibly because of the oscillations already observed along columns in the  black images (the effect does not appear in the panel edges, presumably because the jump between panels disrupts the pattern); using a square kernel smooths the effect. The 3x3 and 5x5 square kernels offer a very similar performance; the larger kernel gives slightly better separation, but parsimony suggests that we should prefer the smaller.
+
+\nb{Does 3x3 kernel always give MAD comparable to that of raw image?}
+
+\section*{ }
+\end{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Identifying lines}
 
 \nb{Update this depending on most effective method for identifying streaks of bright/dim pixels above}
@@ -277,14 +384,15 @@ While the panel edges are still visible, they have a much lower value after conv
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Thresholding}
 
+	\subsection{Clump adjacent pixels \& using shape to identify}
 
-\subsection{Clump adjacent pixels \& using shape to identify}
-\subsection{Use focal (1,1,1) filter to score pixels that are part of line}
-\subsection{Use focal (1,1,1,1,1) filter to score pixels that are part of line}
+	\subsection{Use focal (1,1,1) filter to score pixels that are part of line}
+
+	\subsection{Use focal (1,1,1,1,1) filter to score pixels that are part of line}
 
 \section{Check distribution of edge values in all other images (by colour \& by date)}
 
-\begin{figure}[!ht]
+		\begin{figure}[!ht]
 \caption{Comparison of values (after convolution) of pixels at panel edges vs those manually identified as lying on a bright line, classified according to their distance from the median value in multiples of the MAD. \\ Points outlined in black are edge pixels, those without outline are part of a bright line.\\
 The distinction between the distributions of edge and line pixels seems to be clearer in the grey images than in the black.}
 \centering
@@ -327,6 +435,8 @@ The distinction between the distributions of edge and line pixels seems to be cl
 
 \section{Apply same method to look for dim lines}
 \nb{Better to separate these two processes, rather than to combine: a bright line generally has dimmer lines either side of it in the convolved image (a sort of 1d `Mexican Hat Function'), which may be incorrectly identified as dim lines if we start looking at both together. Far better to run the same process with inverted matrix and see what the result is.}
+
+\section{Apply same method to look for horizontal bright/dim lines}
 
 \section{Behaviour of lines over time}
 \todo{Difference between line \& neighbours in each image, observed over time}
