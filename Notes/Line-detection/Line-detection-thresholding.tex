@@ -18,6 +18,8 @@
 
 \todo{After thresholding, what is the minimum value \& line length likely to be picked up by this method?}
 
+\todo{\nb{We know that panel edges are likely to be significantly brighter than one of their adjacent columns, but not the other. Could we use this fact to set a threshold to identify pixels that are brighter than both adjacent columns?}}
+
 \section*{Detection of bright/dim lines}
 
 Two sections of the images acquired on March 14th 2016 have already been identified as containing lines of slightly bright pixels. Candidate methods will first be tested on these regions of the black image, to assess their affectiveness.
@@ -145,12 +147,14 @@ In the transect, the bright column is plotted in black, with its immediate neigh
 While both kernels give good separation between the bright lines and their neighbouring columns, it seems from these initial plots that the larger kernel may be a better choice. In row 84 of the column right-hand-adjacent to the lower line (right-hand pair of images), there is a bright pixel (around 1200 grey values higher than the bright line). Under the 3-square convolution, this causes a dip in the values of the bright line, while the 5-square convolution is more robust to the presence of an anomalous pixel. \nb{Behaviour when there are two or more such adjacent pixels?}
 
 
+
 \section{Behaviour of subpanel edges}
 
-We know that the pixel values increase across each of the 32 subpanels, from left to right for the upper and from right to left for the lower panels. We would therefore expect the leftmost column of the lower panels, and the rightmost of the upper, to be flagged as bright lines. We aim to discriminate between this typical subpanel edge behaviour and a genuinely bright column.
+We know that the pixel values increase across each of the 32 subpanels, from left to right for the upper and from right to left for the lower panels. We would therefore expect the leftmost column of the lower panels, and the rightmost of the upper, to appear as bright lines after convolution. We aim to discriminate between this typical subpanel edge behaviour and a genuinely bright column.
 
 \begin{figure}[!ht]
-\caption{Histograms of values after convolution of subpanel edges that are likely to be brighter than the adjacent columns. Each colour represents a different acquisition date.}
+\caption{Histograms of values (after convolution) of subpanel edges that are likely to be brighter than the adjacent columns. Each colour represents a different acquisition date.\\
+The spread of values at the panel edges is very consistent across all acquisition dates, suggesting that the behaviour of subpanel edges is quite stable in these images, and may be useful in setting an appropriate threshold to identify unusually bright columns of pixels.}
 \centering
 %
 \begin{subfigure}[b]{0.4\textwidth}
@@ -168,6 +172,215 @@ We know that the pixel values increase across each of the 32 subpanels, from lef
 
 \end{figure}
 
-\todo{Add histogram of value / image MAD. Is that still quite stable?}
+
+
+\section{Thresholding}
+\nb{This needs editing!}
+
+The possibility of normalising the convolved values before thresholding, by dividing each value by the MAD of the image, was considered. This proposal was rejected on the grounds that, as more and more pixels become damaged, the MAD will increase, and the relationship between the MAD and the pixels that we want to identify will probably change. Thresholding the convolved values directly gives the user fine control of the sensitivity of the method. For example, a line of pixels that are exactly 300 grey values brighter than the surrounding area will show as a line of pixels of value 1800 after convolution with the 3x3 kernel, or a line of value 6000 after convolution with the 5x5 kernel. A panel edge, having values 100 grey-values greater than its neighbours on one side and 300 greater on the other, will produce a line of value 1200 after convolution with the 3x3 kernel, and 4000 after convolution with the 5x5 kernel.
+
+Since we have already seen that the behavour of panel edges under both convolutions is fairly stable (at least in the new data set, taken from a relatively healthy detector panel), we can use this fact to set a threshold at which to classify pixels as either bright or dim. In the 3x3 convolution, to identify bright lines that are 300 grey values brighter than their neighbours while excluding lines that are 300 grey values brighter than only one adjacent column (as at a panel edge), we should set the threshold somewhere between 1200 and 1800. To achieve the same result with the 5x5 kernel, we should threshold somewhere between 4000 and 6000.
+
+\begin{figure}[!ht]
+\caption{High and low thresholds applied after convolution with 3x3 kernel}
+\centering
+%
+\begin{subfigure}[t]{0.24\textwidth}
+\caption{Threshold at 1500: \\upper line}
+\includegraphics[scale=0.23]{./fig/th-sq3-1500-upper}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.24\textwidth}
+\caption{Threshold at 1500: \\lower line}
+\includegraphics[scale=0.23]{./fig/th-sq3-1500-lower}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.24\textwidth}
+\caption{Threshold at 2000: \\upper line}
+\includegraphics[scale=0.23]{./fig/th-sq3-2000-upper}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.24\textwidth}
+\caption{Threshold at 2000: \\lower line}
+\includegraphics[scale=0.23]{./fig/th-sq3-2000-lower}
+\end{subfigure}
+%
+\end{figure}
+
+
+\begin{figure}[!ht]
+\caption{High and low thresholds applied after convolution with 5x5 kernel}
+\centering
+%
+\begin{subfigure}[t]{0.24\textwidth}
+\caption{Threshold at 3500: \\upper line}
+\includegraphics[scale=0.23]{./fig/th-sq5-3500-upper}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.24\textwidth}
+\caption{Threshold at 3500: \\lower line}
+\includegraphics[scale=0.23]{./fig/th-sq5-3500-lower}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.24\textwidth}
+\caption{Threshold at 6000: \\upper line}
+\includegraphics[scale=0.23]{./fig/th-sq5-6000-upper}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.24\textwidth}
+\caption{Threshold at 6000: \\lower line}
+\includegraphics[scale=0.23]{./fig/th-sq5-6000-lower}
+\end{subfigure}
+%
+\end{figure}
+
+Even with the lower threshold, the upper line has some breaks after convolution with the 3x3 kernel, again suggesting that the 5x5 kernel is a more robust choice. The lower threshold applied after convolution with a 5x5 kernel has picked up a broken line at column 511 in the upper panel, and another at column 895 in the lower panel, both of which are panel edges. Ideally, we wish to repair the gaps along the lines of bright pixels to obtain a single bright line, and to remove the short line segments resulting from the kernel 'smearing' single bright points into short line segments.
+
+\section{Smoothing the line}
+
+A second filter is run over the thresholded convolution, this one a column vector of 1s with length $2k+1$, where $k$ is the dimension of the square kernel already convolved with the image. 
+
+\begin{figure}[!ht]
+\caption{High and low thresholds applied after convolution with 3x3 kernel, with 7-pixel smoothing filter.\\ Line segments that will be filtered out by this approach are coloured gold, with those that will remain flagged as a bright line marked in blue.}
+\centering
+%
+\begin{subfigure}[t]{0.24\textwidth}
+\caption{Threshold at 1500: \\upper line}
+\includegraphics[scale=0.23]{./fig/7-smoothed-1500-upper}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.24\textwidth}
+\caption{Threshold at 1500: \\lower line}
+\includegraphics[scale=0.23]{./fig/7-smoothed-1500-lower}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.24\textwidth}
+\caption{Threshold at 2000: \\upper line}
+\includegraphics[scale=0.23]{./fig/7-smoothed-2000-upper}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.24\textwidth}
+\caption{Threshold at 2000: \\lower line}
+\includegraphics[scale=0.23]{./fig/7-smoothed-2000-lower}
+\end{subfigure}
+%
+\end{figure}
+
+\begin{figure}[!ht]
+\caption{High and low thresholds applied after convolution with 5x5 kernel, with 11-pixel smoothing filter.\\ Line segments that will be filtered out by this approach are coloured gold, with those that will remain flagged as a bright line marked in blue.}
+\centering
+%
+\begin{subfigure}[t]{0.24\textwidth}
+\caption{Threshold at 3500: \\upper line}
+\includegraphics[scale=0.23]{./fig/11-smoothed-3500-upper}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.24\textwidth}
+\caption{Threshold at 3500: \\lower line}
+\includegraphics[scale=0.23]{./fig/11-smoothed-3500-lower}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.24\textwidth}
+\caption{Threshold at 6000: \\upper line}
+\includegraphics[scale=0.23]{./fig/11-smoothed-6000-upper}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.24\textwidth}
+\caption{Threshold at 6000: \\lower line}
+\includegraphics[scale=0.23]{./fig/11-smoothed-6000-lower}
+\end{subfigure}
+%
+\end{figure}
+
+The smoothing filter is able to repair the break at row 84 of the upper line after convolution with a 3x3 kernel when thresholded at the lower level, but the lines of interest remain broken when thresholded at a slightly higher level. The results obtained using the 5x5 kernel are far more robust, so it is this kernel that we will continue to focus on.
+
+\todo{End cap}
+
+\section{Classifier performance in black images}
+
+\todo{Run 5x5 kernel \& threshold at different levels, then smooth with 11-vector}
+
+\todo{Produce table of classification rates over each image \& assess optimum (or range of optimal) thresholds}
+
+\todo{Check performance in other colours. Are any other lines identified if the grey/white images are used?}
+
+\end{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+												-- NOT DISPLAYED AFTER THIS POINT --
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{figure}[!ht]
+\caption{Results after convolution}
+
+\begin{subfigure}[c]{\textwidth}
+\caption{Bright line with 3x3 kernel}
+\begin{tiny}
+\csvreader[tabular=ccccccc]%
+  {./fig/M1.csv}{}%
+{\csvlinetotablerow}%
+\end{tiny}
+%
+$\Rightarrow$
+%
+\begin{tiny}
+\csvreader[tabular=ccccccc]%
+  {./fig/M1-3x3.csv}{}%
+{\csvlinetotablerow}%
+\end{tiny}
+\end{subfigure}
+%
+\begin{subfigure}[c]{\textwidth}
+\caption{Panel edge with 3x3 kernel}
+\begin{tiny}
+\csvreader[tabular=ccccccc]%
+  {./fig/M2.csv}{}%
+{\csvlinetotablerow}%
+\end{tiny}
+%
+$\Rightarrow$
+%
+\begin{tiny}
+\csvreader[tabular=ccccccc]%
+  {./fig/M2-3x3.csv}{}%
+{\csvlinetotablerow}%
+\end{tiny}
+\end{subfigure}
+%
+\begin{subfigure}[c]{\textwidth}
+\caption{Bright line with 5x5 kernel}
+\begin{tiny}
+\csvreader[tabular=ccccccc]%
+  {./fig/M1.csv}{}%
+{\csvlinetotablerow}%
+\end{tiny}
+%
+$\Rightarrow$
+%
+\begin{tiny}
+\csvreader[tabular=ccccccc]%
+  {./fig/M1-5x5.csv}{}%
+{\csvlinetotablerow}%
+\end{tiny}
+\end{subfigure}
+%
+\begin{subfigure}[c]{\textwidth}
+\caption{Panel edge with 5x5 kernel}
+\begin{tiny}
+\csvreader[tabular=ccccccc]%
+  {./fig/M2.csv}{}%
+{\csvlinetotablerow}%
+\end{tiny}
+%
+$\Rightarrow$
+%
+\begin{tiny}
+\csvreader[tabular=ccccccc]%
+  {./fig/M2-5x5.csv}{}%
+{\csvlinetotablerow}%
+\end{tiny}
+\end{subfigure}
+\end{figure}
+
 
 \end{document}
