@@ -14,12 +14,6 @@
 
 \begin{document}
 
-\todo{Robustness: what if there is a bright pixel next to line? Or a cluster?}
-
-\todo{After thresholding, what is the minimum value \& line length likely to be picked up by this method?}
-
-\todo{\nb{We know that panel edges are likely to be significantly brighter than one of their adjacent columns, but not the other. Could we use this fact to set a threshold to identify pixels that are brighter than both adjacent columns?}}
-
 \section*{Detection of bright/dim lines}
 
 Two sections of the images acquired on March 14th 2016 have already been identified as containing lines of slightly bright pixels. Candidate methods will first be tested on these regions of the black image, to assess their affectiveness.
@@ -144,7 +138,7 @@ In the transect, the bright column is plotted in black, with its immediate neigh
 \end{footnotesize}
 \end{figure}
 
-While both kernels give good separation between the bright lines and their neighbouring columns, it seems from these initial plots that the larger kernel may be a better choice. In row 84 of the column right-hand-adjacent to the lower line (right-hand pair of images), there is a bright pixel (around 1200 grey values higher than the bright line). Under the 3-square convolution, this causes a dip in the values of the bright line, while the 5-square convolution is more robust to the presence of an anomalous pixel. \nb{Behaviour when there are two or more such adjacent pixels?}
+While both kernels give good separation between the bright lines and their neighbouring columns, it seems from these initial plots that the larger kernel may be a better choice. In row 84 of the column right-hand-adjacent to the lower line (right-hand pair of images), there is a bright pixel (around 1200 grey values higher than the bright line). Under the 3-square convolution, this causes a dip in the values of the bright line, while the 5-square convolution is more robust to the presence of an anomalous pixel. %\nb{Behaviour when there are two or more such adjacent pixels?}
 
 
 
@@ -175,14 +169,16 @@ The spread of values at the panel edges is very consistent across all acquisitio
 
 
 \section{Thresholding}
-\nb{This needs editing!}
 
-The possibility of normalising the convolved values before thresholding, by dividing each value by the MAD of the image, was considered. This proposal was rejected on the grounds that, as more and more pixels become damaged, the MAD will increase, and the relationship between the MAD and the pixels that we want to identify will probably change. Thresholding the convolved values directly gives the user fine control of the sensitivity of the method. For example, a line of pixels that are exactly 300 grey values brighter than the surrounding area will show as a line of pixels of value 1800 after convolution with the 3x3 kernel, or a line of value 6000 after convolution with the 5x5 kernel. A panel edge, having values 100 grey-values greater than its neighbours on one side and 300 greater on the other, will produce a line of value 1200 after convolution with the 3x3 kernel, and 4000 after convolution with the 5x5 kernel.
+The possibility of normalising the convolved values before thresholding, by dividing each value by the MAD of the image, was considered. This proposal was rejected on the grounds that, as more and more pixels become damaged (so larger number of pixels will have extreme values), the MAD will increase, and the relationship between the MAD and the pixels that we want to identify will probably change.
 
-Since we have already seen that the behavour of panel edges under both convolutions is fairly stable (at least in the new data set, taken from a relatively healthy detector panel), we can use this fact to set a threshold at which to classify pixels as either bright or dim. In the 3x3 convolution, to identify bright lines that are 300 grey values brighter than their neighbours while excluding lines that are 300 grey values brighter than only one adjacent column (as at a panel edge), we should set the threshold somewhere between 1200 and 1800. To achieve the same result with the 5x5 kernel, we should threshold somewhere between 4000 and 6000.
+ Thresholding the convolved values directly gives the user fine control of the sensitivity of the method. For example, a line of pixels that are exactly 300 grey values brighter than the surrounding area will show as a line of pixels of value 1800 after convolution with the 3x3 kernel, or a line of value 6000 after convolution with the 5x5 kernel. A panel edge, having values 100 grey-values greater than its neighbours on one side and 300 greater on the other, will produce a line of value 1200 after convolution with the 3x3 kernel, and 4000 after convolution with the 5x5 kernel.
+
+Since we have already seen that the behavour of panel edges under both convolutions is fairly stable (at least in the new data set, taken from a relatively healthy detector panel), we can use this fact to set a threshold at which to classify pixels as either bright or dim. In the 3x3 convolution, to identify bright lines that are 300 grey values brighter than their neighbours while excluding lines that are 300 grey values brighter than only one adjacent column (as at a panel edge), we should set the threshold somewhere between 1200 and 1800. To achieve the same result with the 5x5 kernel, we should threshold somewhere between 4000 and 6000. Examples of high and low thresholds over both convolutions are shown in Figures~\ref{fig:hi-lo-thresholds-sq3} and ~\ref{fig:hi-lo-thresholds-sq5}.
 
 \begin{figure}[!ht]
 \caption{High and low thresholds applied after convolution with 3x3 kernel}
+\label{fig:hi-lo-thresholds-sq3}
 \centering
 %
 \begin{subfigure}[t]{0.24\textwidth}
@@ -210,6 +206,7 @@ Since we have already seen that the behavour of panel edges under both convoluti
 
 \begin{figure}[!ht]
 \caption{High and low thresholds applied after convolution with 5x5 kernel}
+\label{fig:hi-lo-thresholds-sq5}
 \centering
 %
 \begin{subfigure}[t]{0.24\textwidth}
@@ -238,7 +235,7 @@ Even with the lower threshold, the upper line has some breaks after convolution 
 
 \section{Smoothing the line}
 
-A second filter is run over the thresholded convolution, this one a column vector of 1s with length $2k+1$, where $k$ is the dimension of the square kernel already convolved with the image. 
+A second filter is run over the thresholded convolution, this one a column vector of 1s with length $2k+1$, where $k$ is the dimension of the square kernel already convolved with the image. Since the thresholded image consists only of 0s and 1s, the column filter will fill each pixel with the number of vertically-adjacent neighbours within a 5-pixel neighbourhood. Thresholding the resulting image at $k$ will remove any short line segments resulting from the smearing of a single pixel.
 
 \begin{figure}[!ht]
 \caption{High and low thresholds applied after convolution with 3x3 kernel, with 7-pixel smoothing filter.\\ Line segments that will be filtered out by this approach are coloured gold, with those that will remain flagged as a bright line marked in blue.}
@@ -294,21 +291,63 @@ A second filter is run over the thresholded convolution, this one a column vecto
 
 The smoothing filter is able to repair the break at row 84 of the upper line after convolution with a 3x3 kernel when thresholded at the lower level, but the lines of interest remain broken when thresholded at a slightly higher level. The results obtained using the 5x5 kernel are far more robust, so it is this kernel that we will continue to focus on.
 
-\todo{End cap}
 
 \section{Classifier performance in black images}
 
-\todo{Run 5x5 kernel \& threshold at different levels, then smooth with 11-vector}
+\begin{figure}[!ht]
+\caption{Regions of interest after convolution with 5x5 kernel, then smoothing with vector of length 11, retaining only line segments longer than 5px.\\
+Lower thresholds retain a large number of short line segments, while the very highest risk fragmenting the lines of interest.}
+\centering
 
-\todo{Produce table of classification rates over each image \& assess optimum (or range of optimal) thresholds}
+\begin{subfigure}[c]{0.39\textwidth} 
+\caption{Upper panel}
+\includegraphics[scale=0.35]{./fig/bright-lines-upper}
+\end{subfigure}
+%
+\begin{subfigure}[c]{0.19\textwidth}
+\centering
+\includegraphics[scale=0.45]{./fig/bright-lines-legend}
+\end{subfigure}
+%
+\begin{subfigure}[c]{0.39\textwidth} 
+\caption{Lower panel}
+\includegraphics[scale=0.35]{./fig/bright-lines-lower}
+\end{subfigure}
+\end{figure}
 
-\todo{Check performance in other colours. Are any other lines identified if the grey/white images are used?}
+\begin{table}[!ht]
+\begin{footnotesize}
+\caption{Classification performance at each threshold in the black images from 16-03-14, convolved with a 5x5 kernel and smoothed with a vector of length 11 (retaining only those points that form part of a line of length 6 or greater). A true positive (TP) is a point correctly identified as belonging to a bright line.\\
+The F1 score is the harmonic mean of the classifier's precision and sensitivity, given by $F1 = 2 TP / (2 TP + FP + FN)$. The highest F1 scores are obtained by thresholding somewhere around 5500-6000; since the true positive rate at 5500 is the higher, this seems like the reasonable choice of threshold.}
+
+\centering
+\csvreader[tabular=l|cccc|cc|c, table head = Threshold & TN & FP & FN & TP & True positive rate & False discovery rate & F1 score \\\hline]%
+  {./fig/sq5-classification-rates.csv}{}%
+{\csvlinetotablerow}%
+
+\end{footnotesize}
+\end{table}
+
+\section{Further image cleaning}
+
+A large number of the false positive identifications could be removed by considering the number of the cells in each column that are assigned as part of a bright column. For example, in column 427 of the upper panel, 781 pixels (78\% of the column) are identified as lying on a bright column, while in column 581, only 8 are. Since less than 1\% of the pixels in 581 have been identified as bright using this method, we might reasonably say that this is not a true bright column.
+
+An alternative approach would be to cross-reference the midpoints of the shorter line segments with known bright pixels already identified by thresholding. Known singletons or small clusters could be smoothed using a median filter (or simply removed) before the convolution is applied.
+
+
+%\todo{Check that this is the best threshold to use in all acquisitions}
+%
+%\todo{Check performance in other colours. Are any other lines identified if the grey/white images are used?}
+%
+%\todo{Check for dim lines using same method. Also for rows as well as columns}
 
 \end{document}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 												-- NOT DISPLAYED AFTER THIS POINT --
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section*{Scratch}
 
 \begin{figure}[!ht]
 \caption{Results after convolution}
@@ -381,6 +420,9 @@ $\Rightarrow$
 \end{tiny}
 \end{subfigure}
 \end{figure}
+
+
+
 
 
 \end{document}

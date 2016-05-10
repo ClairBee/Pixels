@@ -4,6 +4,10 @@
 
 library("IO.Pixels"); library("CB.Misc")
 
+####################################################################################################
+
+# SETUP                                                                                         ####
+
 load.pixel.means()
 fpath <- "./Notes/Line-detection/fig/"
 
@@ -26,6 +30,7 @@ im2 <- list(xrng = c(766:896), yrng = c(50:200), col = 809)
 
 
 ####################################################################################################
+
 # NUMERICAL SUMMARIES                                                                           ####
 
 median(im[im1$col, (im1$row + 1):max(im1$yrng)]) - 
@@ -561,6 +566,11 @@ hist(r2m(focal(m2r(pw.m[,,"black", "160430"]), k5))[line.px], add = T, col = "re
 ####################################################################################################
 
 ##################   EVERYTHING BELOW THIS POINT HAS MOVED TO SEPARATE FILE  ################## ####
+
+qq <- convolve.lines(pw.m[,,"black", "160314"], k = 7)
+    
+pixel.image(qq)
+
 
 # COMPARE KERNEL RESULTS BY THRESHOLDING                                                        ####
 

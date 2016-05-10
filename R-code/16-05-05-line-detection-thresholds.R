@@ -282,6 +282,14 @@ rate5 <- rbind.fill(lapply(lapply(lapply(lapply(th5, table, l.mask), c), t), dat
 
 rate3; rate5
 
+####################################################################################################
+
+# CONVOLVE WITH SINGLE-POINT KERNEL                                                             ####
+
+# can this filter out small clusters before convolution with linear kernel?
+
+# CONVOLVE WITH RECTANGULAR KERNEL                                                              ####
+
 
 ####################################################################################################
 
@@ -323,7 +331,6 @@ l.cols <- c(NA, rep("gold", 5), rep("cyan3", 6))
               ylim = range(im2$yrng), col = l.cols)
         dev.off()
     }
-    
 }
 
 # smoothing over 3x3 convolution with 7-vector
@@ -524,7 +531,7 @@ l.cols <- c(NA, rep("gold", 3), rep("cyan3", 8))
 
 # can't simply merge all points and assume that they form a line.
 # single points will be smeared by into line by a 3x3 or 5x5 kernel.
-m3 <- matrix(c(rep(0, 60), 700, rep(0, 60)), ncol = 11)
+m3 <- matrix(c(rep(0, 60), 1375, rep(0, 60)), ncol = 11)
 r2m(focal(m2r(m3), k3))
 r2m(focal(m2r(m3), k5))
 r2m(focal(m2r(m3), matrix(c(rep(-1, 21), rep(6, 7), rep(-1, 21)), ncol = 7)))
