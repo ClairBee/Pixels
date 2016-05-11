@@ -233,6 +233,20 @@ pdf(paste0(fpath, "short-lines-after-thresholding.pdf")); {
     dev.off()
 }
 
+####################################################################################################
+
+conv <- convolve.lines(pw.m[,,"black", "160314"], k.size = 5)
+th <- threshold(conv, level = 5500)
+sm <- r2m(focal(m2r(th), matrix(rep(1, 11), ncol = 1)))
+
+c.col <- 6
+o.plot(pw.m[c.col,1:100, "black", "160314"], ylim = c(-10000, 20000))
+o.plot(conv[c.col,1:100], add = T, col = "red")
+abline(h = 5500, col = "cyan3")
+points((sm[c.col,1:100] > 5.5) * conv[c.col,1:100], pch = 20, col = "blue")
+
+
+####################################################################################################
 
 # POSSIBLE CAUSES
 # may be bridging between 2 points

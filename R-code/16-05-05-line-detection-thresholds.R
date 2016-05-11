@@ -368,6 +368,63 @@ l.cols <- c(NA, rep("gold", 3), rep("cyan3", 8))
 
 ####################################################################################################
 
+# 7-SQUARE KERNEL                                                                               ####
+
+# range of behaviours under convolution
+{
+    # single point: 1800
+    r2m(focal(m2r(matrix(c(rep(0, 112), 300, rep(0, 112)), ncol = 15)),
+              matrix(c(rep(-1,21), rep(6, 7), rep(-1, 21)), ncol = 7)))
+    
+    # column: 12600
+    r2m(focal(m2r(t(matrix(c(rep(0, 105), rep(300, 15), rep(0, 105)), ncol = 15))),
+              matrix(c(rep(-1,21), rep(6, 7), rep(-1, 21)), ncol = 7)))
+    
+    # row: 0
+    r2m(focal(m2r(matrix(c(rep(0, 105), rep(300, 15), rep(0, 105)), ncol = 15)),
+              matrix(c(rep(-1,21), rep(6, 7), rep(-1, 21)), ncol = 7)))
+    
+    # panel edge (100 difference on one side, 300 on the other): 8400
+    r2m(focal(m2r(t(matrix(c(rep(200, 105), rep(300, 15), rep(0, 105)), ncol = 15))),
+              matrix(c(rep(-1,21), rep(6, 7), rep(-1, 21)), ncol = 7)))
+}
+
+conv.sq7 <- alply(pw.m[,,"black", ], 3, convolve.lines, k = 7, .dims = T)
+th.sq7 <- lapply(conv.sq7, threshold, level = 10000)
+sm.sq7 <- lapply(th.sq7, smooth.lines, sm.size = 15, min.length = 8)
+
+o.plot(conv.sq7$"160314"[427, 1100:1300], ylim = c(-5000, 20000))
+image(1:1996, 1:1996, th.sq7$"160314", col = c(NA, "magenta3"))
+
+image(1:1996, 1:1996, sm.sq7$"160314", col = c(NA, "magenta3"))
+
+df7 <- summarise.lines(sm.sq7$"160314")
+df7[df7$cover > 0.5 & df7$filled > 20,]
+
+summarise.lines(find.lines(pw.m[,,"black", "160314"], k = 7, threshold.at = 10000, sm.size = 15, min.length = 8), filter = T)
+summarise.lines(find.lines(pw.m[,,"black", "160314"], k = 7, threshold.at = 9000, sm.size = 15, min.length = 8), filter = T)
+summarise.lines(find.lines(pw.m[,,"black", "160430"], k = 7, threshold.at = 11000, sm.size = 15, min.length = 8), filter = T)
+
+conv <- convolve.lines(pw.m[,,"black", "160314"], k = 5)
+l.sq5 <- find.lines(pw.m[,,"black", "160314"], k = 5, threshold.at = 5500, sm.size = 11, min.length = 6)
+
+summarise.lines(find.lines(pw.m[,,"black", "160430"], k = 5, threshold.at = 5500, sm.size = 11, min.length = 6), filter = T)
+
+o.plot(pw.m[427, ,"black", "160314"], ylim = c(4000,10000), xlim = c(993, 1996))
+o.plot(pw.m[426, ,"black", "160314"], add = T, col = adjustcolor("cyan3", alpha = 0.4))
+o.plot(pw.m[428, ,"black", "160314"], add = T, col = adjustcolor("gold", alpha = 0.4))
+o.plot(conv[427,], add = T, col = adjustcolor("green3", alpha = 0.4))
+abline(h = 5500, col = "red")
+
+points(l.sq5[427,] * conv[427,], pch = 20, col = "red")
+
+summarise.lines(l.sq5, filter = T)
+
+pixel.image(pw.m[, ,"black", "160314"], xlim = c(410, 430), ylim = c(970,1010))
+draw.panels()
+
+
+####################################################################################################
 
 
 ######### SCRATCH ######### ####                   
