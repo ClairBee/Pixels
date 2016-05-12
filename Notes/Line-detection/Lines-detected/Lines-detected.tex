@@ -1,0 +1,201 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+\def\rot{\rotatebox}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\llap{\parbox{1cm}{\thesubsection}}}{0em}{}
+	
+    
+%======================================================================
+
+\begin{document}
+
+\section*{Bright and dim lines in detector panel}
+
+\nb{Do some research on charge leakage/charge blocking in CCDs}
+
+\todo{Should also explain criteria for a bad line. Short line segments will be picked up as clusters of bright pixels; we're interested in long line segments, extending from a point to the edge/midline of panel. WHY?}
+
+
+\section{Bright lines in each image set}
+
+\begin{figure}[!ht] % bright lines plotted with & without panel edges
+\caption{Bright lines identified in any acquisition after convolution with a 5x5 square kernel, thresholding at 5500, and smoothing with a linear kernel of length 11. \\
+Yellow lines were identified only in the white images, turquoise in the white and grey, and red in the white, grey and black images.}
+\centering
+%
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{All lines identified}
+\includegraphics[scale=0.45]{./fig/bright-lines-identified}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{All lines, with subpanel edges marked}
+\includegraphics[scale=0.45]{./fig/bright-lines-identified-with-panels}
+\end{subfigure}
+%
+\end{figure}
+
+The majority of lines identified in the white image are panel edges, with some shorter line segments also picked up at various locations in the detector on some acquisitions. A smaller number of lines are identified in the grey images, with panel edges again being identified as potentially too bright. The two lines identified as being unusually bright in the black image are also identified as too bright in the white and grey images - suggesting that the underlying mechanism affects all power settngs. Those lines that do not appear in the black image, and are not a panel edge, tend to be short line segments, only identified in a few of the white images. Since we expect damaged columns of pixels to extend to either the panel edge or the horizontal midline, the only damaged lines of real interest seem to be those identified in all three images. 
+
+\begin{table}[!ht] % persistence of bright lines
+\caption{Persistence of bright lines identified in each image type.}
+\begin{footnotesize}
+\csvreader[tabular=r|c|c|c|c|c|c|c|c|c|c|c|c|c, head to column names=true, %
+		   table head = Column &  \rot{60}{14-10-09} & \rot{60}{14-11-18} & \rot{60}{14-12-17} & \rot{60}{15-01-08} 
+		   						& \rot{60}{15-01-13} & \rot{60}{15-01-26} & \rot{60}{15-05-29} & \rot{60}{15-07-30}
+		   						 & \rot{60}{15-08-28} & \rot{60}{15-10-15} & \rot{60}{16-03-14} & \rot{60}{16-04-30} & Edge?\\\hline]%
+  {./fig/bright-columns.csv}{}%
+{\col \, \panel & \imba \imga \imwa & \imbb \imgb \imwb & \imbc \imgc \imwc & \imbd \imgd \imwd
+				& \imbe \imge \imwe & \imbf \imgf \imwf & \imbg \imgg \imwg & \imbh \imgh \imwh
+				& \imbi \imgi \imwi & \imbj \imgj \imwj & \imbk \imgk \imwk & \imbl \imgl \imwl & \spedge}%
+\end{footnotesize}
+\end{table}
+
+\section{Dim liness in each image set}
+
+\begin{figure}[!ht] % dim lines plotted with & without panel edges
+\caption{Dim lines identified in any acquisition after convolution with a 5x5 square kernel, thresholding at 5500, and smoothing with a linear kernel of length 11. \\
+Yellow lines were identified only in the white images, turquoise in the white and grey, and red in the white, grey and black images.}
+\centering
+%
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{All lines identified}
+\includegraphics[scale=0.45]{./fig/dim-lines-identified}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{All lines, with subpanel edges marked}
+\includegraphics[scale=0.45]{./fig/dim-lines-identified-with-panels}
+\end{subfigure}
+%
+\end{figure}
+
+As with the bright lines identified, the majority of dim columns picked up by the algorithm are panel edges, highlighted as unusually bright because of the gradient that occurs across each subpanel as a result of charge accumulation during sensor readout. A single short fragment was also identified in the most recent black image, but this appears in the bottom-left corner, an area already flagged by the pixel thresholding procedure as unusually dim. It seems that there are currently no genuinely dim columns of pixels in this detector.
+
+\begin{table}[!ht] % persistence of dim lines
+\caption{Persistence of dim lines identified in each image type.}
+\begin{footnotesize}
+\csvreader[tabular=r|c|c|c|c|c|c|c|c|c|c|c|c|c, head to column names=true, %
+		   table head = Column &  \rot{60}{14-10-09} & \rot{60}{14-11-18} & \rot{60}{14-12-17} & \rot{60}{15-01-08} 
+		   						& \rot{60}{15-01-13} & \rot{60}{15-01-26} & \rot{60}{15-05-29} & \rot{60}{15-07-30}
+		   						 & \rot{60}{15-08-28} & \rot{60}{15-10-15} & \rot{60}{16-03-14} & \rot{60}{16-04-30} & Edge?\\\hline]%
+  {./fig/dim-columns.csv}{}%
+{\col \, \panel & \imba \imga \imwa & \imbb \imgb \imwb & \imbc \imgc \imwc & \imbd \imgd \imwd
+				& \imbe \imge \imwe & \imbf \imgf \imwf & \imbg \imgg \imwg & \imbh \imgh \imwh
+				& \imbi \imgi \imwi & \imbj \imgj \imwj & \imbk \imgk \imwk & \imbl \imgl \imwl & \spedge}%
+\end{footnotesize}
+\end{table}
+
+\section{Identification of bright lines at each power setting}
+
+Running the same procedure over the test images produced by Jay at a variety of power settings reinforces the results above; with increasing power, we are more likely to pick up panel edges and short line segments as bright columns. The only two columns to be reliably identified as bright are the two already identified in the black images.
+
+\begin{figure}[!ht] % bright lines, varying power settings
+\caption{Transects along the two bright columns with varying power settings. All values are taken from acquisitions on 16-04-30.}
+\label{fig:bright-lines-different-powers}
+\centering
+%
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{Column 427, upper panel}
+\includegraphics[scale=0.45]{./fig/bright-line-upper}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{Column 809, lower panel}
+\includegraphics[scale=0.45]{./fig/bright-line-lower}
+\end{subfigure}
+%
+\end{figure}
+
+In both images and in all lines, the grey value is slightly higher towards the edges of the panel ($x$-values 0 and 1996), with a jump between levels marked by a sharp spike to 65535 (a hot pixel). The effect can be seen more clearly after convolution with a kernel designed to identify lines that are higher than their neighbours. 
+
+\begin{figure}[!ht] % transects over convolution
+\caption{Transects along the two bright columns after convolution at each power setting with a 5x5 kernel. The colours denote the varying power settings, as in Figure~\ref{fig:bright-lines-different-powers}.\\ While the higher powers are more variable, all of the transects follow the same centre line, indicating that the offset between the bright columns and their neighbours remains essentially constant.}
+\centering
+%
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{Column 427, upper panel}
+\includegraphics[scale=0.45]{./fig/convolutions-by-power-upper}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{Column 809, lower panel}
+\includegraphics[scale=0.45]{./fig/convolutions-by-power-lower}
+\end{subfigure}
+%
+\end{figure}
+
+An interesting feature of both columns as we follow them in from the panel edges towards the midline is their behaviour in the few hundred pixels after the spike that ends the initial bright segment.
+ 
+\begin{figure}[!ht] % transects over differences
+\caption{Differences between each bright column and the neighouring columns in the three most recent acquisitions. \\(\textcolor{SkyBlue}{October 2015}; \textcolor{orange}{March 2016}; April 2016. Panel midline is marked in red, with the differences between the neighbouring columns and their next neighbours shown in light yellow as a reference for normal behaviour.)}
+\centering
+%
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{Column 427, upper panel}
+\includegraphics[scale=0.45]{./fig/column-diffs-over-time-upper}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{Column 809, lower panel}
+\includegraphics[scale=0.45]{./fig/column-diffs-over-time-lower}
+\end{subfigure}
+%
+\end{figure}
+ 
+Column 809 of the lower panel is fairly stable; its value does not change significantly relative to its neighbours in any of the 12 available acquisitions. The pixel value between the panel edge at 0 and the hot pixel that ends the bright line at row 177 remains fairly constant; after the hot pixel, the pixel value drops down to equal that of the neighbouring rows, then immediately begins to increase steadily over the following 400 pixels until it stabilises at roughly the same height above its neighbours as the edgemost segment.
+
+Column 427 in the upper panel did not stand out from its neighbours until after October 2015. In both of the acquisitions since then, the column has increased in brightness; between the panel edge at 1996 and the hot pixel that ends the bright line at row 1196, the column is offset from both of its neighbours by a constant value (although that constant value appears to be increasing over time - whether it will stabilise, as the other line appears to have done, remains to be seen). In the most recent image, the segment from the hot pixel to the midline also begins to increase, around 150 pixels away from the end of the bright line. It seems plausible that this column is moving towards a similar state to that seen in column 809, but this will remain speculation unless we can observe it occurring.
+
+\section{Supercluster interaction with bright lines}
+
+Dammit. These were not the superclusters I was looking for.
+
+\begin{figure}[!ht] % transects over differences
+\caption{Ends of bright lines with identified bad pixels marked.}
+\centering
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Column 427, upper panel\\ Black image}
+\includegraphics[scale = 0.3, page = 1]{./fig/supercluster-427}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Column 427, upper panel\\ Grey image}
+\includegraphics[scale = 0.3, page = 2]{./fig/supercluster-427}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Column 427, upper panel\\ White image}
+\includegraphics[scale = 0.3, page = 3]{./fig/supercluster-427}
+\end{subfigure}
+%
+%
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Column 809, lower panel\\ Black image}
+\includegraphics[scale = 0.3, page = 1]{./fig/supercluster-809}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Column 809, lower panel\\ Grey image}
+\includegraphics[scale = 0.3, page = 2]{./fig/supercluster-809}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Column 809, lower panel\\ White image}
+\includegraphics[scale = 0.3, page = 3]{./fig/supercluster-809}
+\end{subfigure}
+%
+\end{figure}
+
+\end{document}

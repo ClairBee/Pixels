@@ -278,7 +278,7 @@ sc <- merge(sc,
 table("b larger than g?" = sc$b.sc.count >= sc$g.sc.count,
       "g larger than w?" = sc$g.sc.count >= sc$w.sc.count,
       "b larger than w?" = sc$b.sc.count >= sc$w.sc.count, useNA = "ifany")
-# all superclusters are same size or larger in black/grey images thatn in white
+# all superclusters are same size or larger in black/grey images than in white
 # some are larger in grey than black
 
 sc[sc$b.sc.count < sc$g.sc.count,]
