@@ -42,6 +42,17 @@ im <- load.daily(new.date)
 
 ############################################################################################
 
+# ADD AN IMAGE TO MEDIAN-DIFFERENCE LIST                                                ####
+
+md.black <- readRDS("./Other-data/Med-diffs-black.rds")
+
+md.black$"160430" <- pw.m[,,"black", "160430"] - r2m(focal(m2r(pw.m[,,"black", "160430"]), matrix(rep(1, 9), ncol = 3), fun = median))
+
+saveRDS(md.black, "./Other-data/Med-diffs-black.rds")
+
+
+############################################################################################
+
 # import all black images, get pixelwise means & SDs (elapsed: 1110.51 for 11 dates)    ####
 
     pw.m <- array(dim = c(1996, 1996, n), dimnames = list(NULL, NULL, dates))
