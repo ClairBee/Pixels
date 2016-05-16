@@ -3,16 +3,17 @@ TO DO
 
 TASK LIST
 ===================================================================================================
-            UPDATE CB.MISC REQUIREMENTS LIST TO AUTOLOAD ALL USEFUL PACKAGES!
+
+# get superclusters with locally extreme pixels
+
+# SD behaviour for each bad pixel type
+--> DO WE NEED TO ADD IN A SEPARATE 'NOISY' CATEGORY?
+
+# run algorithm over old images. Particularly interested in development of column defects.
+
+# remove known bad pixels from image and re-plot: what's left?
+
 ===================================================================================================
-
-# FIND COLUMNS OF BRIGHT/DIM PIXELS
-
-# how much dimmer should a tungsten spot be than the surrounding area? (based on density of material etc)
-
-# robustness: compare quantiles to Johnson distribution with various numbers of added hot pixels. Is Johnson dist really a more robust equivalent to fitting quantiles?
-
-# identification of dim spots: use Gaussian blurring first to soften/smooth edges?
 
 - Compare bright/hot pixels in white & grey images. Does grey image add anything new?
 - also compare to bright/hot pixels in offset-corrected image. (Try to refine definition)
@@ -33,12 +34,12 @@ TASK LIST
 Revise thresholding classification in line with sd.levels()
     (or revise plot colours in line with thresholding classification)
     
-===================================================================================================
-Find & remove/correct artefacts by other methods before simple thresholding for dim/bright.
-- nonresponsive
-- hot (not sure about superclusters?)
-- dead
-- dead lines
+# how much dimmer should a tungsten spot be than the surrounding area? (based on density of material etc)
+
+# robustness: compare quantiles to Johnson distribution with various numbers of added hot pixels. Is Johnson dist really a more robust equivalent to fitting quantiles? (may not use this now...)
+
+# identification of dim spots: use Gaussian blurring first to soften/smooth edges?
+
 ===================================================================================================
 PROPOSED BAD PIXEL VALUE DEFINITIONS:
     - dead: dead in white images (or in any image? So small, probably doesn't matter)
@@ -61,12 +62,5 @@ Should also look at flat-field corrected image (maybe with parametric correction
 
 Edge behaviour differs (edges prone to low values, not to the high values that cause lines)
 How do edges behave in flat-field-corrected image?
-
-===================================================================================================
-
-Need to find (parallel?) way to identify lines of hot pixels, which are more subtle than dead ones.
-These could be labelled separately before clustering.
-    - what if dead line cuts a cluster? Check old data, what happens on either side of line?
-      (maybe expect it to truncate the cluster?)
 
 ===================================================================================================
