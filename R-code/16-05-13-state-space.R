@@ -401,6 +401,7 @@ unlist(lapply(md.b.th, sum, na.rm = T))
 # FIND SINGLETON BRIGHT/DIM PIXELS USING SINGLE-POINT KERNEL                                    ####
 
 # check stability of categories
+# better or worse than median differencing?
 
 ####################################################################################################
 
@@ -481,3 +482,18 @@ zz <- which(old.dc$"130613" > 0, arr.ind = T)
 }
 
 o.plot(old.b$"130613"[1372, ],add = T, col = "red")
+
+####################################################################################################
+
+# DOES MEDIAN-FILTERED DIFF PICK UP ALL OTHER BAD PIXELS?                                       ####
+
+bp.local <- rbind(setNames(data.frame(which(threshold(md.b[["160430"]], level = mad(pw.m[,,"black", "160430"]) * 2) > 0, arr.ind = T),
+                                       type = "l.bright"), c("x", "y", "type")),
+                   setNames(data.frame(which(threshold(md.b[["160430"]], level = mad(pw.m[,,"black", "160430"]) * -2) == 0, arr.ind = T),
+                                       type = "l.dim"), c("x", "y", "type")))
+bpx[[dt]] <- bpx[[dt]][order(bpx[[dt]]$type),]
+bpx[[dt]] <- bpx[[dt]][!duplicated(bpx[[dt]][,1:2]),]
+
+
+
+####################################################################################################

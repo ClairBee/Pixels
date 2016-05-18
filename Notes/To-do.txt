@@ -1,66 +1,64 @@
 
 TO DO
 
-TASK LIST
+17-May-16
 ===================================================================================================
 
-# get superclusters with locally extreme pixels
-
-# SD behaviour for each bad pixel type
---> DO WE NEED TO ADD IN A SEPARATE 'NOISY' CATEGORY?
-
-# run algorithm over old images. Particularly interested in development of column defects.
-
-# remove known bad pixels from image and re-plot: what's left?
-
-===================================================================================================
-
-- Compare bright/hot pixels in white & grey images. Does grey image add anything new?
-- also compare to bright/hot pixels in offset-corrected image. (Try to refine definition)
-- identify shapes & superclusters for each image set (incl. corrected) separately, compare
-- after prepping code, run files with stricter parameters
-- recreate state transitions using new definitions (incl. shape)
-
-- for each bad px state, test whether it is corrected in flat field correction
-    (may help with threshold setting?)
-- also try moving thresholds to see how state transitions are affected
-    - is there a threshold at which populations stabilise?
+|_| compare locally non-uniform px with globally extreme px. 
+    Are global px identified at local level too?
     
-- get kernel density over histograms. Where kernel density is 0, give cutoff?
-
-- include test for spatial randomness of residuals when fitting models (esp. in brightest/dimmest px)
-
-===================================================================================================
-Revise thresholding classification in line with sd.levels()
-    (or revise plot colours in line with thresholding classification)
+|_| compare effectiveness of median-differencing vs pointwise convolution.
+    If same px identified: which is faster?
     
+|_| get superclusters with locally extreme pixels. Check state space development.
+
+|_| check effectiveness of local-uniformity classification over grey & white images too.
+    Any point adding one/both?
+    
+--------------------------------------------------------------------------------------------------
+
+|_| how stable is the state space, really? Add SD to mean table & replot.
+    Maybe also check max/min proportion changed at each step
+    
+--------------------------------------------------------------------------------------------------
+
+|_| SD behaviour for each bad pixel type
+    - do any 'healthy' px have particularly high SD over one day's images? At any power?
+    --> DO WE NEED TO ADD IN A SEPARATE 'NOISY' CATEGORY?
+        
+|_| check state transitions for all 20 images in a single acquisition date
+    (if not same, px will not be fixed by shading correction)
+    
+--------------------------------------------------------------------------------------------------
+
+|_| get all old images (should be 6? Check tech report)
+
+|_| run algorithm over old images. Particularly interested in development of column defects.
+
+--------------------------------------------------------------------------------------------------
+
+|_| remove known bad pixels from image and re-plot: what's left? SD/mean?
+
+|_| which categories are fixed by shading correction, which remain?
+
+|_| what's left in shading correction after removing bad px?
+    Do any locally non-uniform points remain? noisy points?
+
+--------------------------------------------------------------------------------------------------
+
+|_| check convolution of noise pattern with successively larger filter. Any diagonal element?
+    - also try to quantify this so that different images can be compared objectively
+
+|_| try a 2d Fourier transform of the noise pattern to try to identify directionality
+    
+--------------------------------------------------------------------------------------------------
+
+|_| chase Jay re .xtec(?) files to establish level of detector usage between acquisitions
+
+====================================================================================================
+
+AND SOME LESS IMPORTANT QUESTIONS...
+
 # how much dimmer should a tungsten spot be than the surrounding area? (based on density of material etc)
 
-# robustness: compare quantiles to Johnson distribution with various numbers of added hot pixels. Is Johnson dist really a more robust equivalent to fitting quantiles? (may not use this now...)
-
-# identification of dim spots: use Gaussian blurring first to soften/smooth edges?
-
-===================================================================================================
-PROPOSED BAD PIXEL VALUE DEFINITIONS:
-    - dead: dead in white images (or in any image? So small, probably doesn't matter)
-    - unresponsive: normal in black images, dim in grey/white images
-    - dim: dim pixels in grey/white images (may be able to ignore singletons? Check transition behaviour)
-    - bright: bright in white images, hot in grey images (?)
-    - hot: hot in black images
-    
-PROPOSED BAD PIXEL TYPES:
-    - dead (maybe limit to behaviour in white channel?)
-    - no response: normal in black channel, dim in white & grey
-    - dim blob in white/grey images: spot on screen (exclude)
-    - dim singleton
-    - bright line
-    - hot/bright singleton
-    - bright cluster
-    - supercluster of hot & bright pixels (may be linked to bright line)
-    
-Should also look at flat-field corrected image (maybe with parametric correction?) to find genuinely 'bad' pixels that need to be mapped for manual correction. (Maybe also in parallel?)
-
-Edge behaviour differs (edges prone to low values, not to the high values that cause lines)
-How do edges behave in flat-field-corrected image?
-
-===================================================================================================
+# robustness: compare quantiles to Johnson distribution with various numbers of added hot pixels. Is Johnson dist really a more robust equivalent to fitting quantiles?
