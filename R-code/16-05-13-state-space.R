@@ -3,17 +3,7 @@
 
 library("IO.Pixels"); library("CB.Misc")
 fpath <- "./Notes/Med-diff-classification/fig/"
-bp <- readRDS(paste0(fpath, "bad-px-maps.rds"))
 
-cat <- c("no response", "dead", "hot", 
-         "v.bright", "bright", "line.b", "l.bright", "s.bright", 
-         "screen spot", "line.d", "edge",
-         "v.dim", "dim", "l.dim", "s.dim")
-
-cat.cols <- c("purple", "black", "magenta3", 
-              "red", "orange", "gold", "gold", NA,
-              "grey", "violet", NA, 
-              "green3", "green", "lightskyblue", NA)
 
 ####################################################################################################
 # GET ALL BAD PIXEL MAPS (WITH LINES)
@@ -35,8 +25,35 @@ cat.cols <- c("purple", "black", "magenta3",
 
 ####################################################################################################
 
-# FIND GLOBALLY EXTREME VALUES                                                                  ####
+# SETUP                                                                                         ####
+
+bp <- readRDS(paste0(fpath, "bad-px-maps.rds"))
 load.pixel.means()
+
+# load median-filtered differences
+{
+    md.b <- readRDS("./Other-data/Median-diffs-black.rds")
+    md.g <- readRDS("./Other-data/Median-diffs-grey.rds")
+    md.w <- readRDS("./Other-data/Median-diffs-white.rds")
+}
+
+cat <- c("no response", "dead", "hot", 
+         "v.bright", "bright", "line.b", "l.bright", "s.bright", 
+         "screen spot", "line.d", "edge",
+         "v.dim", "dim", "l.dim", "s.dim")
+
+cat.cols <- c("purple", "black", "magenta3", 
+              "red", "orange", "gold", "gold", NA,
+              "grey", "violet", NA, 
+              "green3", "green", "lightskyblue", NA)
+
+headerCat <- c("normal", gsub("[ ]", "", gsub("[.]", "", cat)))
+fancyCat <- c("Normal", "No response", "Dead", "Hot", "V. bright", "Bright", "Bright line", "Locally bright", "Slighly bright", "Screen spot", "Dim line", "Edge", "V. dim", "Dim", "Locally dim", "Slightly dim")
+
+####################################################################################################
+
+# FIND GLOBALLY EXTREME VALUES                                                                  ####
+
 bp <- list()
 
 # hot, v.bright, v.dim, dead, no response, edge, dim spot
@@ -201,8 +218,6 @@ bp.im <- lapply(bp, bpx2im)
 
 bp.chng <- list()
 
-headerCat <- c("normal", gsub("[ ]", "", gsub("[.]", "", cat)))
-fancyCat <- c("Normal", "No response", "Dead", "Hot", "V. bright", "Bright", "Bright line", "Locally bright", "Slighly bright", "Screen spot", "Dim line", "Edge", "V. dim", "Dim", "Locally dim", "Slightly dim")
 
 for (i in 1:11) {
     tmp <- table(bp.im[[i]], bp.im[[i+1]])
@@ -286,13 +301,6 @@ write.csv(round(apply(sc.rate, 1:2, mean), 1), paste0(fpath, "sc-mean-rate.csv")
 # also test for complete spatial randomness
 
 # FIND LOCALLY EXTREME VALUES                                                                   ####
-
-# load median-filtered differences
-{
-    md.b <- readRDS("./Other-data/Median-diffs-black.rds")
-    md.g <- readRDS("./Other-data/Median-diffs-grey.rds")
-    md.w <- readRDS("./Other-data/Median-diffs-white.rds")
-}
 
 s.hist(md.b[["160430"]], ylim = c(0,1000))
 abline(v = mad(pw.m[,,"black", "160430"], na.rm = T) * c(-2, 2), col = "red")
@@ -399,9 +407,121 @@ unlist(lapply(md.b.th, sum, na.rm = T))
 ####################################################################################################
 
 # FIND SINGLETON BRIGHT/DIM PIXELS USING SINGLE-POINT KERNEL                                    ####
-
 # check stability of categories
 # better or worse than median differencing?
+
+k3 <- matrix(c(rep(-1, 4), 8, rep(-1,4)), ncol = 3)
+k5 <- matrix(c(rep(-1, 12), 24, rep(-1,12)), ncol = 5)
+
+# 3-square kernel
+{
+    hh.3 <- r2m(focal(m2r(pw.m[,,"black", "160430"]), k3))
+    
+    r2m(focal(m2r(matrix(c(rep(0, 40), ceiling(2 * mad(pw.m[,,"black", "160430"])),
+                           rep(0, 40)), ncol = 9)), k3))
+    
+    bp.k3 <- rbind(setNames(data.frame(which(threshold(hh.3, 
+                                                       level = floor(mad(pw.m[,,"black", "160430"]) * 2)) > 0,
+                                             arr.ind = T),
+                                       type = "l.bright"), c("x", "y", "type")),
+                   setNames(data.frame(which(threshold(hh.3, 
+                                                       level = floor(mad(pw.m[,,"black", "160430"]) * -2)) == 0,
+                                             arr.ind = T),
+                                       type = "l.dim"), c("x", "y", "type")))
+    
+    # repeat for grey & white images
+    {
+        bp.k3.g <- rbind(setNames(data.frame(which(threshold(r2m(focal(m2r(pw.m[,,"grey", "160430"]), k3)), 
+                                                             level = floor(mad(pw.m[,,"grey", "160430"]) * 2)) > 0,
+                                                   arr.ind = T),
+                                             type = "l.bright"), c("x", "y", "type")),
+                         setNames(data.frame(which(threshold(r2m(focal(m2r(pw.m[,,"grey", "160430"]), k3)), 
+                                                             level = floor(mad(pw.m[,,"grey", "160430"]) * -2)) == 0,
+                                                   arr.ind = T),
+                                             type = "l.dim"), c("x", "y", "type")))
+        
+        bp.k3.w <- rbind(setNames(data.frame(which(threshold(r2m(focal(m2r(pw.m[,,"white", "160430"]), k3)), 
+                                                             level = floor(mad(pw.m[,,"white", "160430"]) * 2)) > 0,
+                                                   arr.ind = T),
+                                             type = "l.bright"), c("x", "y", "type")),
+                         setNames(data.frame(which(threshold(r2m(focal(m2r(pw.m[,,"white", "160430"]), k3)), 
+                                                             level = floor(mad(pw.m[,,"white", "160430"]) * -2)) == 0,
+                                                   arr.ind = T),
+                                             type = "l.dim"), c("x", "y", "type")))
+    }
+    
+    zz <- data.frame(zz,
+                     l.b.3 = ordered(c("normal", "l.bright", "l.dim")[c(bpx2im(bp.k3)) + 1], levels = c("normal", "l.bright", "l.dim")),
+                     l.g.3 = ordered(c("normal", "l.bright", "l.dim")[c(bpx2im(bp.k3.g)) + 1], levels = c("normal", "l.bright", "l.dim")),
+                     l.w.3 = ordered(c("normal", "l.bright", "l.dim")[c(bpx2im(bp.k3.w)) + 1], levels = c("normal", "l.bright", "l.dim")))
+    
+    table("med.diff" = zz$lw, "3-kernel" = zz$l.w.3)
+}
+
+
+# 5-square kernel
+{
+    bp.k5.b <- rbind(setNames(data.frame(which(threshold(r2m(focal(m2r(pw.m[,,"black", "160430"]), k5)), 
+                                                         level = floor(mad(pw.m[,,"black", "160430"]) * 24)) > 0,
+                                               arr.ind = T),
+                                         type = "l.bright"), c("x", "y", "type")),
+                     setNames(data.frame(which(threshold(r2m(focal(m2r(pw.m[,,"black", "160430"]), k5)), 
+                                                         level = floor(mad(pw.m[,,"black", "160430"]) * -24)) == 0,
+                                               arr.ind = T),
+                                         type = "l.dim"), c("x", "y", "type")))
+    
+    bp.k5.g <- rbind(setNames(data.frame(which(threshold(r2m(focal(m2r(pw.m[,,"grey", "160430"]), k5)), 
+                                                         level = floor(mad(pw.m[,,"grey", "160430"]) * 24)) > 0,
+                                               arr.ind = T),
+                                         type = "l.bright"), c("x", "y", "type")),
+                     setNames(data.frame(which(threshold(r2m(focal(m2r(pw.m[,,"grey", "160430"]), k5)), 
+                                                         level = floor(mad(pw.m[,,"grey", "160430"]) * -24)) == 0,
+                                               arr.ind = T),
+                                         type = "l.dim"), c("x", "y", "type")))
+    
+    bp.k5.w <- rbind(setNames(data.frame(which(threshold(r2m(focal(m2r(pw.m[,,"white", "160430"]), k5)), 
+                                                         level = floor(mad(pw.m[,,"white", "160430"]) * 24)) > 0,
+                                               arr.ind = T),
+                                         type = "l.bright"), c("x", "y", "type")),
+                     setNames(data.frame(which(threshold(r2m(focal(m2r(pw.m[,,"white", "160430"]), k5)), 
+                                                         level = floor(mad(pw.m[,,"white", "160430"]) * -24)) == 0,
+                                               arr.ind = T),
+                                         type = "l.dim"), c("x", "y", "type")))
+    
+    zz$l.b.5 <- ordered(c("normal", "l.bright", "l.dim")[c(bpx2im(bp.k5.b)) + 1], levels = c("normal", "l.bright", "l.dim"))
+    zz$l.g.5 <- ordered(c("normal", "l.bright", "l.dim")[c(bpx2im(bp.k5.g)) + 1], levels = c("normal", "l.bright", "l.dim"))
+    zz$l.w.5 <- ordered(c("normal", "l.bright", "l.dim")[c(bpx2im(bp.k5.w)) + 1], levels = c("normal", "l.bright", "l.dim"))
+    
+    
+}
+
+    cbind(table("med.diff" = zz$local, "3-kernel" = zz$l.w.3),
+          table("med.diff" = zz$local, "5-kernel" = zz$l.w.5))
+
+# tables of results: median differencing vs kernel
+# all thresholded using 2 * image MAD as cutoff (scaled where necessary)
+{
+    #    BLACK IMAGES
+    #                               3-kernel                           5-kernel
+    #    med.diff       normal l.bright   l.dim            normal l.bright   l.dim
+    #    normal        2066822   863514 1036222           3909977    34219   22362
+    #    l.bright           11    16906     250               177    16831     159
+    #    l.dim               0        0     291                 5        0     286
+    
+    #    GREY IMAGES
+    #                   normal l.bright  l.dim             normal l.bright l.dim
+    #    normal        2153540   838861 974157            3925408    25469 15681
+    #    l.bright           25    16916    226                365    16673   129
+    #    l.dim               0        0    291                 24        3   264
+    
+    #    WHITE IMAGES
+    #                   normal l.bright  l.dim             normal l.bright l.dim
+    #    normal        3619041   197087 150430            3964889     1201   468
+    #    l.bright         1080    15948    139              14092     3073     2
+    #    l.dim              29        2    260                265       11    15
+}
+# far larger number of pixels identified as bad using essentially same thresholds.
+# Stick with median-differencing as a more direct & intuitive approach.
 
 ####################################################################################################
 
@@ -485,15 +605,87 @@ o.plot(old.b$"130613"[1372, ],add = T, col = "red")
 
 ####################################################################################################
 
-# DOES MEDIAN-FILTERED DIFF PICK UP ALL OTHER BAD PIXELS?                                       ####
+# DOES MEDIAN-FILTERED DIFF PICK UP ALL 'GLOBALLY' BAD PIXELS?                                  ####
 
 bp.local <- rbind(setNames(data.frame(which(threshold(md.b[["160430"]], level = mad(pw.m[,,"black", "160430"]) * 2) > 0, arr.ind = T),
                                        type = "l.bright"), c("x", "y", "type")),
                    setNames(data.frame(which(threshold(md.b[["160430"]], level = mad(pw.m[,,"black", "160430"]) * -2) == 0, arr.ind = T),
                                        type = "l.dim"), c("x", "y", "type")))
-bpx[[dt]] <- bpx[[dt]][order(bpx[[dt]]$type),]
-bpx[[dt]] <- bpx[[dt]][!duplicated(bpx[[dt]][,1:2]),]
 
+bp.global <- bp$"160430"
 
+hh <- data.frame(global = ordered(c("normal", cat)[c(bpx2im(bp.global)) + 1], levels = c("normal", cat)),
+                 local = ordered(c("normal", "l.bright", "l.dim")[c(bpx2im(bp.local)) + 1], levels = c("normal", "l.bright", "l.dim")))
+
+# repeat for grey & white images, to check composition
+{
+    bp.l.g <- rbind(setNames(data.frame(which(threshold(md.g[["160430"]], level = mad(pw.m[,,"grey", "160430"]) * 2) > 0, arr.ind = T),
+                                        type = "l.bright"), c("x", "y", "type")),
+                    setNames(data.frame(which(threshold(md.g[["160430"]], level = mad(pw.m[,,"grey", "160430"]) * -2) == 0, arr.ind = T),
+                                        type = "l.dim"), c("x", "y", "type")))
+    
+    bp.l.w <- rbind(setNames(data.frame(which(threshold(md.w[["160430"]], level = mad(pw.m[,,"white", "160430"]) * 2) > 0, arr.ind = T),
+                                        type = "l.bright"), c("x", "y", "type")),
+                    setNames(data.frame(which(threshold(md.w[["160430"]], level = mad(pw.m[,,"white", "160430"]) * -2) == 0, arr.ind = T),
+                                        type = "l.dim"), c("x", "y", "type")))
+    
+    zz <- data.frame(zz,
+                     lg = ordered(c("normal", "l.bright", "l.dim")[c(bpx2im(bp.l.g)) + 1], levels = c("normal", "l.bright", "l.dim")),
+                     lw = ordered(c("normal", "l.bright", "l.dim")[c(bpx2im(bp.l.w)) + 1], levels = c("normal", "l.bright", "l.dim")))
+}
+
+qq <- cbind(table(zz$global, zz$local),
+            table(zz$global, zz$lg),
+            table(zz$global, zz$lw))
+
+rownames(qq) <- fancyCat
+qq <- qq[rowSums(qq) > 0,]
+qq[qq == 0] <- "-"
+
+write.csv(qq, paste0(fpath, "global-vs-local-cat.csv"), quote = F)
+
+# compare px identified in black/white/grey images
+{
+    tbl <- cbind(table(zz[zz$local == "normal", c("lg", "lw")]),
+                 table(zz[zz$local == "l.bright", c("lg", "lw")]),
+                 table(zz[zz$local == "l.dim", c("lg", "lw")]))
+    
+    rownames(tbl) <- c("Uniform", "Locally bright", "Locally dim")
+    tbl[tbl == 0] <- "-"
+    
+    write.csv(tbl, paste0(fpath, "local-classes.csv"), quote = F)
+}
 
 ####################################################################################################
+
+# CHECK LOCALLY EXTREME PX IN ALL IMAGES, ALL POWERS                                            ####
+
+# does including the white image actually add anything?
+
+md.b <- readRDS("./Other-data/Median-diffs-black.rds")
+md.g <- readRDS("./Other-data/Median-diffs-grey.rds")
+md.w <- readRDS("./Other-data/Median-diffs-white.rds")
+
+{
+    zz <- lapply(dimnames(pw.m)[[4]], 
+                 function(x) data.frame("b" = ordered(c("normal", "l.bright", "l.dim")[c(bpx2im(rbind(setNames(data.frame(which(threshold(md.b[[x]], level = mad(pw.m[,,"black", x]) * 2) > 0, arr.ind = T),
+                                                                                                                          type = "l.bright"), c("x", "y", "type")),
+                                                                                                      setNames(data.frame(which(threshold(md.b[[x]], level = mad(pw.m[,,"black", x]) * -2) == 0, arr.ind = T),
+                                                                                                                          type = "l.dim"), c("x", "y", "type"))))) + 1],
+                                                      levels = c("normal", "l.bright", "l.dim")),
+                                        "g" = ordered(c("normal", "l.bright", "l.dim")[c(bpx2im(rbind(setNames(data.frame(which(threshold(md.g[[x]], level = mad(pw.m[,,"grey", x]) * 2) > 0, arr.ind = T),
+                                                                                                                          type = "l.bright"), c("x", "y", "type")),
+                                                                                                      setNames(data.frame(which(threshold(md.g[[x]], level = mad(pw.m[,,"grey", x]) * -2) == 0, arr.ind = T),
+                                                                                                                          type = "l.dim"), c("x", "y", "type"))))) + 1],
+                                                      levels = c("normal", "l.bright", "l.dim")),
+                                        "w" = ordered(c("normal", "l.bright", "l.dim")[c(bpx2im(rbind(setNames(data.frame(which(threshold(md.w[[x]], level = mad(pw.m[,,"white", x]) * 2) > 0, arr.ind = T),
+                                                                                                                          type = "l.bright"), c("x", "y", "type")),
+                                                                                                      setNames(data.frame(which(threshold(md.w[[x]], level = mad(pw.m[,,"white", x]) * -2) == 0, arr.ind = T),
+                                                                                                                          type = "l.dim"), c("x", "y", "type"))))) + 1],
+                                                      levels = c("normal", "l.bright", "l.dim"))))
+}
+
+        
+names(zz) <- dimnames(pw.m)[[4]]
+                               
+rbind.fill(lapply(lapply(lapply(lapply(zz, function(x) table(x[x$b == "normal" & x$g == "normal", c("w")])), as.matrix), t), as.data.frame))
