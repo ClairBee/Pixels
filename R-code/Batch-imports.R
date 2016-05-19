@@ -39,7 +39,32 @@ im <- load.daily(new.date)
     }
 }
 
-
+# pixelwise SD
+{
+    # black
+    {
+        b <- readRDS("./Other-data/Pixelwise-sds-black.rds")
+        b <- abind(b, pixelwise.sd(im[,,,1]), along = 3,
+                   new.names = list(NULL, NULL, c(dimnames(b)[[3]], new.date)))
+        saveRDS(b, "./Other-data/Pixelwise-sds-black.rds")
+    }
+    
+    # grey
+    {
+        g <- readRDS("./Other-data/Pixelwise-sds-grey.rds")
+        g <- abind(g, pixelwise.sd(im[,,,2]), along = 3,
+                   new.names = list(NULL, NULL, c(dimnames(g)[[3]], new.date)))
+        saveRDS(g, "./Other-data/Pixelwise-sds-grey.rds")
+    }
+    
+    # white
+    {
+        w <- readRDS("./Other-data/Pixelwise-sds-white.rds")
+        w <- abind(w, pixelwise.sd(im[,,,3]), along = 3,
+                   new.names = list(NULL, NULL, c(dimnames(w)[[3]], new.date)))
+        saveRDS(w, "./Other-data/Pixelwise-sds-white.rds")
+    }
+}
 ############################################################################################
 
 # ADD AN IMAGE TO MEDIAN-DIFFERENCE LIST                                                ####

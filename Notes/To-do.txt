@@ -4,15 +4,15 @@ TO DO
 17-May-16
 ===================================================================================================
 
-|_| compare locally non-uniform px with globally extreme px. 
+|x| compare locally non-uniform px with globally extreme px. 
     Are global px identified at local level too?
     
-|_| compare effectiveness of median-differencing vs pointwise convolution.
+|x| compare effectiveness of median-differencing vs pointwise convolution.
     If same px identified: which is faster?
     
-|_| get superclusters with locally extreme pixels. Check state space development.
+|| get superclusters with locally extreme pixels. Check state space development.
 
-|_| check effectiveness of local-uniformity classification over grey & white images too.
+|x| check effectiveness of local-uniformity classification over grey & white images too.
     Any point adding one/both?
     
 --------------------------------------------------------------------------------------------------
@@ -26,7 +26,7 @@ TO DO
     - do any 'healthy' px have particularly high SD over one day's images? At any power?
     --> DO WE NEED TO ADD IN A SEPARATE 'NOISY' CATEGORY?
         
-|_| check state transitions for all 20 images in a single acquisition date
+|x| check state transitions for all 20 images in a single acquisition date
     (if not same, px will not be fixed by shading correction)
     
 --------------------------------------------------------------------------------------------------
