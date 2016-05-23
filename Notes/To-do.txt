@@ -10,11 +10,13 @@ TO DO
 |x| compare effectiveness of median-differencing vs pointwise convolution.
     If same px identified: which is faster?
     
-|| get superclusters with locally extreme pixels. Check state space development.
+|_| get superclusters with locally extreme pixels. Check state space development.
 
 |x| check effectiveness of local-uniformity classification over grey & white images too.
     Any point adding one/both?
     
+|_| Chi-squared test across subpanels to test for similar distribution
+
 --------------------------------------------------------------------------------------------------
 
 |_| how stable is the state space, really? Add SD to mean table & replot.

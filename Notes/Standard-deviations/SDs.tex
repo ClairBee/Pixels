@@ -13,67 +13,262 @@
 	
 %----------------------------------------------------------------------
 
-\newcommand{\plotsc}{0.12}
+\newcommand{\plotsc}{0.2}
 
 \addtolength{\topmargin}{-0.5cm}
 \addtolength{\textheight}{1cm}
 	
+\newcommand{\spplot}[1]{
+\hskip-1.0cm\begin{tabular}{m{0.01\textwidth}m{0.97\textwidth}}
+	\rotatebox{90}{\textbf{Panel #1}} &
+	\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-#1}
+	\includegraphics[scale=\plotsc]{./sd-plots/sd-by-bpx-sp-#1}
+\end{tabular}
+}
 %======================================================================
 
 \begin{document}
 
-\begin{minipage}{0.48\textwidth}
-\flushleft
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U1}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U2}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U3}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U4}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U5}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U6}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U7}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U8}
-\end{minipage}
-%
-\vrule
-%
-\begin{minipage}{0.48\textwidth}
-\flushright
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U9}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U10}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U11}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U12}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U13}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U14}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U15}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U16}
-\end{minipage}
+\section*{Noisy pixels}
 
-\begin{minipage}{0.48\textwidth}
-\flushleft
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L1}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L2}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L3}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L4}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L5}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L6}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L7}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L8}
-\end{minipage}
-%
-\vrule
-%
-\begin{minipage}{0.48\textwidth}
-\flushright
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L9}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L10}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L11}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L12}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L13}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L14}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L15}
-\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L16}
-\end{minipage}
+The manual defines noisy pixels as those pixels with a pixelwise SD greater than $\tilde{x} + 6\sigma$, where $\tilde{x}$ is the median pixelwise standard deviation for that set of pixels, and $\sigma$ is the standard deviation of the standard deviations. In normally distributed data, this approach should classify 3.4 pixels per million as noisy (so we might reasonably expect to see 13 or 14 such pixels in our 1996-square detector) However, as with the pixelwise mean values, a damaged or defective pixel is likely to behave increasingly erratically over time, and to have a progressively higher than expected SD, rather than becoming less variable with increasing usage. The assumption of normality is therefore not one that we can necessarily rely on. This is particularly the case in the black images, where a `healthy' pixel has a very low pixelwise standard deviation.
 
-Suggests that treating each pixel as a point in 3d space and using a clustering algorithm may be a useful approach?
+\begin{figure}[!ht]
+\caption{Standard deviation compared across each power setting. The dotted lines show the threshold proposed in the manual, applied to each power setting.}
+\centering
+
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{SD of bad pixels already identified}
+\includegraphics[scale=0.18]{./fig/sd-plot-bad-px.png}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{SD of unclassified pixels}
+\includegraphics[scale=0.18]{./fig/sd-plot-unc-px.png}
+\end{subfigure}
+\end{figure}
+
+\todo{Standard deviation of pixels already identified as problematic}
+
+\todo{Try transforming data: what does that do to the standard deviation \& to thresholds based on it?} 
+
+\todo{Test existing thresholds over all images: are same pixels identified as noisy in black/white/grey? What about in successive acquisitions?}
+
+\newpage
+
+The pixels with the highest SD in each subpanel are already picked up as bad pixels by mean-value classification.
+
+All of the plots are truncated to the same scale for easy comparison; however, bright pixel SDs may exceed 1300, with a number as high as 4500. The unclassified pixels in this image never exceeded 4500.
+
+Black pixel SDs are much smaller than those in the grey and white images, and the black pixel SDs (unlike those of the grey and white images) are not normally distributed.
+
+\begin{figure}[!ht]
+\caption{}
+\centering
+\includegraphics[scale=0.55]{../Med-diff-classification/fig/sd-hist-black-160430}
+
+\end{figure}
+
+\begin{table}[!ht]
+\caption{Median pixelwise standard deviations, with thresholds applied according to those laid out in the detector manual.}
+\begin{footnotesize}
+	\csvreader[tabular=l|ccc|ccc|ccc, head to column names=true,
+				table head = & \multicolumn{3}{c|}{Median SD ($\tilde{x}$) with 95\% CI} & 
+								\multicolumn{3}{c|}{Threshold $\tilde{x} + 6\sigma$}  & 
+								\multicolumn{3}{c}{Noisy pixels found} \\
+							 & Black & Grey & White & Black & Grey & White & Black & Grey & White \\\hline]
+			{./fig/sd-thresholds.csv}{}%
+			{\dt & \medb \,(\clb, \cub) & \medg \,(\clg, \cug)  & \medw \, (\clw, \cuw)& \thb & \thg & \thw & \nbl & \ng & \nw}%
+\end{footnotesize}
+\end{table}
+
+
+
+			
+
+Furthermore, the black pixel SDs have a higher degree of spatial variability than those of the grey and white images.
+
+\todo{Numerical summary of unclassified SDs at each power setting}
+
+
+In the remaining points identified, what is the likely effect? (Use $6\sigma$ limit in both directions to assess effect in shading correction)
+
+$(X_i - Y_b) / (Y_w - Y_b) \times 60000$
+
+\begin{table}[!ht]
+\caption{Effect on a grey image after applying the shading correction, using the median images ($b, g, w$) and the median $\pm$ the SD threshold defined in the manual (median SD + $6\sigma_{SD}$)}
+\centering
+\csvreader[tabular=l|ccc|ccc|ccc, head to column names=true,
+				table head = & \multicolumn{3}{c}{w+}  & \multicolumn{3}{c}{w} & \multicolumn{3}{c}{w-} \\ & g+ & g & g- & g+ & g & g- & g+ & g & g- \\\hline ]%
+			{./fig/shading-corr-effect.csv}{}%
+			{\csvlinetotablerow}%
+\end{table}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{figure}[!ht]
+\caption{SD across all 32 subpanels of the detector in each acquisition. Solid line is upper panel, dashed is lower; green is white image, red is grey, and black is black. \\ Panels 5 and 10 of the upper bank are particularly variable in the black image (sometimes even in the grey image), with the leftmost subpanels of the upper row also becoming more variable over time.}
+\centering
+\includegraphics[scale=0.55]{./fig/sd-sigma-per-subpanel}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Per-subpanel scatterplots of pixelwise standard deviations at each power setting in the images acquired on 16-04-30.}
+
+\includegraphics[scale = 0.5]{./sd-plots/bpx-legend-1}
+\includegraphics[scale = 0.5]{./sd-plots/bpx-legend-2}
+\includegraphics[scale = 0.5]{./sd-plots/bpx-legend-3}
+\includegraphics[scale = 0.5]{./sd-plots/bpx-legend-4}
+
+\spplot{U1}
+
+\spplot{U2}
+
+\spplot{U3}
+
+\spplot{U4}
+
+\spplot{U5}
+
+\spplot{U6}
+
+\spplot{U7}
+
+\spplot{U8}
+
+\spplot{U9}
+
+\spplot{U10}
+
+\spplot{U11}
+
+\spplot{U12}
+
+\spplot{U13}
+
+\spplot{U14}
+
+\spplot{U15}
+
+\spplot{U16}
+
+\spplot{L1}
+
+\spplot{L2}
+
+\spplot{L3}
+
+\spplot{L4}
+
+\spplot{L5}
+
+\spplot{L6}
+
+\spplot{L7}
+
+\spplot{L8}
+
+\spplot{L9}
+
+\spplot{L10}
+
+\spplot{L11}
+
+\spplot{L12}
+
+\spplot{L13}
+
+\spplot{L14}
+
+\spplot{L15}
+
+\spplot{L16}
+
+%\begin{minipage}{0.48\textwidth}
+%\flushleft
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U1}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U2}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U3}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U4}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U5}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U6}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U7}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U8}
+%\end{minipage}
+%%
+%\vrule
+%%
+%\begin{minipage}{0.48\textwidth}
+%\flushright
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U9}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U10}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U11}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U12}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U13}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U14}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U15}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U16}
+%\end{minipage}
+%
+%\begin{minipage}{0.48\textwidth}
+%\flushleft
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L1}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L2}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L3}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L4}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L5}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L6}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L7}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L8}
+%\end{minipage}
+%%
+%\vrule
+%%
+%\begin{minipage}{0.48\textwidth}
+%\flushright
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L9}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L10}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L11}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L12}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L13}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L14}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L15}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L16}
+%\end{minipage}
+%
+%Suggests that treating each pixel as a point in 3d space and using a clustering algorithm may be a useful approach?
+%
+%\renewcommand{\plotsc}{0.15}
+%
+%\begin{minipage}{0.48\textwidth}
+%\flushleft
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-noresponse}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-dead}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-hot}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-vbright}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-bright}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-lbright}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-sbright}
+%
+%\end{minipage}
+%%
+%\vrule
+%%
+%\begin{minipage}{0.48\textwidth}
+%\flushright
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-lineb}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-screenspot}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-edge}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-vdim}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-dim}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-ldim}
+%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-sdim}
+%\end{minipage}
 
 \end{document}
