@@ -9,7 +9,7 @@
 	
 \titleformat{\subsection}
 	{\normalfont\bfseries}
-	{\llap{\parbox{1cm}{\thesubsection}}}{0em}{}
+	{\thesubsection}{1em}{}
 	
 %----------------------------------------------------------------------
 
@@ -17,7 +17,9 @@
 
 \addtolength{\topmargin}{-0.5cm}
 \addtolength{\textheight}{1cm}
-	
+
+%----------------------------------------------------------------------
+
 \newcommand{\spplot}[1]{
 \hskip-1.0cm\begin{tabular}{m{0.01\textwidth}m{0.97\textwidth}}
 	\rotatebox{90}{\textbf{Panel #1}} &
@@ -25,18 +27,70 @@
 	\includegraphics[scale=\plotsc]{./sd-plots/sd-by-bpx-sp-#1}
 \end{tabular}
 }
+
+%----------------------------------------------------------------------
+
+\newcommand{\statechange}[2]{
+	\begin{table}[!ht]
+	\begin{footnotesize}
+	
+		\caption{#2}
+		\centering
+		\hskip-0.75cm\resizebox{1.1\textwidth}{!}{%
+	
+			\csvreader[tabular=l|ccccccccccccccccc, head to column names=true,
+				table head = & Normal & No response & Dead & Hot & V. bright & Bright & Bright line & Local bright & 
+				Slightly bright & Screen spot & Edge	 & 	V. dim & Dim & Local dim & Slightly dim & Noisy\\\hline ]%
+			{#1}{}%
+			{\csvlinetotablerow}%
+		}
+	\end{footnotesize}
+	\end{table}
+	}
+	
 %======================================================================
 
 \begin{document}
 
+\todo{Section on revised thresholds, particularly in black image. Try transforming the data: log/Johnson transform?}
+
+\todo{Read through \& rewrite/comment where necessary}
+
+\todo{Standard deviation of pixels already identified as problematic: describe}
+
 \section*{Noisy pixels}
 
-The manual defines noisy pixels as those pixels with a pixelwise SD greater than $\tilde{x} + 6\sigma$, where $\tilde{x}$ is the median pixelwise standard deviation for that set of pixels, and $\sigma$ is the standard deviation of the standard deviations. In normally distributed data, this approach should classify 3.4 pixels per million as noisy (so we might reasonably expect to see 13 or 14 such pixels in our 1996-square detector) However, as with the pixelwise mean values, a damaged or defective pixel is likely to behave increasingly erratically over time, and to have a progressively higher than expected SD, rather than becoming less variable with increasing usage. The assumption of normality is therefore not one that we can necessarily rely on. This is particularly the case in the black images, where a `healthy' pixel has a very low pixelwise standard deviation.
+The manual defines noisy pixels as those pixels with a pixelwise SD greater than $\tilde{x} + 6\sigma$, where $\tilde{x}$ is the median pixelwise standard deviation for that set of pixels, and $\sigma$ is the standard deviation of the standard deviations. In normally distributed data, this approach should classify 3.4 pixels per million as noisy (so we might reasonably expect to see 13 or 14 such pixels in our 1996px$^2$ detector) However, as with the pixelwise mean values, a damaged or defective pixel is likely to behave increasingly erratically over time - having a progressively higher than expected SD - rather than becoming less variable with increasing usage; and so we might reasonably expect the distribution to become increasingly positively skewed. The assumption of normality is therefore not one that we should rely on. This is particularly the case in the black images, where a `healthy' pixel has a very low pixelwise standard deviation, and the predefined threshold is very close to the bulk of the data (see \autoref{fig:SD-unc}, or \autoref{app:subpanel} for a much clearer view). Applying the thresholding approach defined in the manual as our initial classification method, we see that a much larger number of noisy pixels are indeed detected in the black image than in the white or grey.
 
-\begin{figure}[!ht]
-\caption{Standard deviation compared across each power setting. The dotted lines show the threshold proposed in the manual, applied to each power setting.}
+%-----------------------------------------------------------------------------------------------------------
+\begin{table}[!ht] % Sd thresholds applied
+\begin{footnotesize}
+\caption{Median pixelwise standard deviations at each power setting in each acquisition, with thresholds applied according to those laid out in the detector manual.}
+
+\resizebox{\textwidth}{!}{
+	\csvreader[tabular=l|ccc|ccc|ccc, head to column names=true,
+				table head = & \multicolumn{3}{c|}{Median SD ($\tilde{x}$) with 95\% CI} & 
+								\multicolumn{3}{c|}{Threshold $\tilde{x} + 6\sigma$}  & 
+								\multicolumn{3}{c}{Noisy pixels found} \\
+							 & Black & Grey & White & Black & Grey & White & Black & Grey & White \\\hline]
+			{./fig/sd-thresholds.csv}{}%
+			{\dt & \medb \,(\clb, \cub) & \medg \,(\clg, \cug)  & \medw \, (\clw, \cuw)& \thb & \thg & \thw & \nbl & \ng & \nw}%
+}
+\end{footnotesize}
+\end{table}
+%-----------------------------------------------------------------------------------------------------------
+
+\FloatBarrier
+\section{Noise vs brightness}
+
+Given the known increasing relationship between the pixelwise mean and standard deviation, we might expect that brighter pixels will have a higher standard deviation. In fact, this certainly is the case (\autoref{fig:SD-by-type}); bright (yellow/orange) and hot (red) pixels show a high degree of scatter along all 3 SD axes, with the distribution of edge (green) and dim (light blue) pixels much closer in shape to the unclassified pixels. 
+
+%-----------------------------------------------------------------------------------------------------------
+\begin{figure}[!ht] % sd comparison across power settings in latest acq
+\caption{Standard deviation compared across each power setting in the images acquired on 16-04-30. The dotted lines show the threshold proposed in the manual, applied to each power setting.\\
+The majority of the noisy pixels - and the most egregious cases - have already been identified based on their pixelwise mean values alone. However, the thresholds set in the manual pass through the cluster remaining pixels (particularly in the black images), indicating that the present levels may not be appropriate.}
 \centering
-
+\label{fig:SD-by-type}
 \begin{subfigure}[t]{0.49\textwidth}
 \caption{SD of bad pixels already identified}
 \includegraphics[scale=0.18]{./fig/sd-plot-bad-px.png}
@@ -44,17 +98,129 @@ The manual defines noisy pixels as those pixels with a pixelwise SD greater than
 %
 \begin{subfigure}[t]{0.49\textwidth}
 \caption{SD of unclassified pixels}
+\label{fig:SD-unc}
 \includegraphics[scale=0.18]{./fig/sd-plot-unc-px.png}
 \end{subfigure}
 \end{figure}
+%-----------------------------------------------------------------------------------------------------------
 
-\todo{Standard deviation of pixels already identified as problematic}
+We can cross-reference the pixels identified as noisy at each power setting by these thresholds with those identified as defective on the basis of their pixelwise mean values. (Noisy pixels in the grey and white images have been combined because they are so few in number)
 
-\todo{Try transforming data: what does that do to the standard deviation \& to thresholds based on it?} 
+%-----------------------------------------------------------------------------------------------------------
+\begin{table}[!ht] % noisy px by colour over time vs type
+\begin{footnotesize}
+\caption{Mean number of noisy pixels identified in each combination of the black or grey and white images over the 12 acquisitions, matched against their category by pixelwise mean value.\\ The majority of noisy pixels are already identified as defective, with most being classified as locally bright. Around one third of the pixels identified as having an extremely high SD are not already identified.}
 
-\todo{Test existing thresholds over all images: are same pixels identified as noisy in black/white/grey? What about in successive acquisitions?}
+\resizebox{\textwidth}{!}{
+\csvreader[tabular =	 c|ccccccccccccccc, head to column names=true,
+			table head = & No response & Dead & Hot & V. bright & Bright & Bright line & Local bright & 
+							Slightly bright & Screen spot & Edge	 & 	V. dim & Dim & Local dim & Slightly dim & Noisy\\\hline]
+			{./fig/mean-bad-px-types.csv}{}%
+		{\csvlinetotablerow}%
+}
+\end{footnotesize}
+\end{table}
+%-----------------------------------------------------------------------------------------------------------
 
-\newpage
+\section{Persistence of noisy pixels}
+
+It may be that there is very little point in checking the SD of a classification image: noisiness is an inherently unstable state, so pixels identified as noisy in one batch may be stable in another and - more importantly - vice versa. If a high SD in one set of images doesn't necessarily indicate a high SD in another set - even in one taken on the same day - then using the pixelwise SD to identify noisy pixels may remove otherwise well-behaved pixels.
+
+\todo{Test existing thresholds over all images: are same pixels identified as noisy in black/white/grey? What about in successive acquisitions? We know the proportion that persist between two acquisitions: what is their black SD value? Median difference of pwm? Do they persist for more than two acquisitions?}
+
+
+\FloatBarrier
+\subsection{Noisy pixels in successive acquisitions}
+
+\begin{table}[!ht] % noisy px by colour over time
+\begin{footnotesize}
+\caption{Number of noisy pixels identified in each combination of the black, grey and white images over the 12 acquisitions.\\ Increasing numbers of noisy pixels have been identified over time, with the majority of noisy pixels being identified in the black images only. Again, this suggests that the threshold proposed is not appropriate for the black images.}
+
+\resizebox{\textwidth}{!}{
+\csvreader[tabular =	 c|cccccccccccc, head to column names=true,
+			table head =  & 14-10-09 & 14-11-18 & 14-12-17 & 15-01-08 & 15-01-13 & 15-01-26 & 15-05-29 & 15-07-30 & 15-08-28 & 15-10-15 & 16-03-14 & 16-04-30 \\\hline]
+			{./fig/tbl-noisy-px-by-col.csv}{}%
+		{\csvlinetotablerow}%
+}
+\end{footnotesize}
+\end{table}
+
+Most of the noisy pixels are also identified as locally bright pixels. Next question: of the noisy pixels not already identified as locally bright, how locally bright are their mean values? \nb{Repeat this table, but with pixels already identified removed}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\statechange{./fig/transition-px-mean.csv}{Mean number of pixels transitioning between states at each acquisition}
+
+\statechange{./fig/transition-px-sd.csv}{Standard deviation of number of pixels transitioning between states at each acquisition}
+
+\statechange{./fig/transition-prop-mean.csv}{Mean proportion of pixels transitioning between states at each acquisition}
+
+\statechange{./fig/transition-prop-sd.csv}{Standard deviation of proportion of pixels transitioning between states at each acquisition}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\FloatBarrier
+\subsection{Noisy pixels at different power settings on the same date}
+
+As part of the investigation into bright lines, on May 2nd we obtained 5 batches of 20 images, each at a different power setting. All 100 images were acquired within a 30-minute window, so we might expect to see more consistent behaviour within these 5 sets than we would within batches taken weeks or months apart.
+
+\begin{table}[!ht] % noisy pixels identified at different power settings
+\begin{footnotesize}
+\caption{Noisy pixels identified across the 5 power settings, also classified according to their pixelwise mean value. $N$ denotes the number of power settings in which a pixel was identified as noisy.}
+
+\csvreader[tabular =	 c|cccccc|c|c, head to column names=true,
+			table head = $N$ & Very bright & Bright & Bright line & Locally bright & Slightly bright & Edge & Not classified & TOTAL \\\hline]
+			{./fig/tbl-noisy-by-type.csv}{}%
+		{\csvlinetotablerow}%
+\end{footnotesize}
+
+\end{table}
+
+\begin{figure}[!ht] % histograms of SD at different power settings
+\caption{Histograms of pixelwise SD in images taken within a 30-minute period on 16-04-30, at five different power settings. In each case, the threshold is marked with a red line; the distribution of all 777 noisy pixels identified across the 5 image batches is shown in turquoise; and in gold, the distribution of the 131 pixels identified as noisy and not already identified as defective on the basis of their mean value.}
+
+\centering
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{ua20}
+\includegraphics[scale=0.2]{./sd-plots/power-sd-plots-ua20}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{ua40}
+\includegraphics[scale=0.2]{./sd-plots/power-sd-plots-ua40}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{ua60}
+\includegraphics[scale=0.2]{./sd-plots/power-sd-plots-ua60}
+\end{subfigure}
+
+\vspace{10pt}
+
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{ua80}
+\includegraphics[scale=0.2]{./sd-plots/power-sd-plots-ua80}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{ua100}
+\includegraphics[scale=0.2]{./sd-plots/power-sd-plots-ua100}
+\end{subfigure}
+\end{figure}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Spatial differences in standard deviation}
+
+\todo{Is spatial distribution of each type of bad pixel same? (eg. hot pixels may be independent of location - bright pixels less so?)}
+
+\todo{Needs editing}
 
 The pixels with the highest SD in each subpanel are already picked up as bad pixels by mean-value classification.
 
@@ -68,23 +234,6 @@ Black pixel SDs are much smaller than those in the grey and white images, and th
 \includegraphics[scale=0.55]{../Med-diff-classification/fig/sd-hist-black-160430}
 
 \end{figure}
-
-\begin{table}[!ht]
-\caption{Median pixelwise standard deviations, with thresholds applied according to those laid out in the detector manual.}
-\begin{footnotesize}
-	\csvreader[tabular=l|ccc|ccc|ccc, head to column names=true,
-				table head = & \multicolumn{3}{c|}{Median SD ($\tilde{x}$) with 95\% CI} & 
-								\multicolumn{3}{c|}{Threshold $\tilde{x} + 6\sigma$}  & 
-								\multicolumn{3}{c}{Noisy pixels found} \\
-							 & Black & Grey & White & Black & Grey & White & Black & Grey & White \\\hline]
-			{./fig/sd-thresholds.csv}{}%
-			{\dt & \medb \,(\clb, \cub) & \medg \,(\clg, \cug)  & \medw \, (\clw, \cuw)& \thb & \thg & \thw & \nbl & \ng & \nw}%
-\end{footnotesize}
-\end{table}
-
-
-
-			
 
 Furthermore, the black pixel SDs have a higher degree of spatial variability than those of the grey and white images.
 
@@ -119,10 +268,14 @@ $(X_i - Y_b) / (Y_w - Y_b) \times 60000$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+\begin{appendix}
+
 \section{Per-subpanel scatterplots of pixelwise standard deviations at each power setting in the images acquired on 16-04-30.}
 
+\label{app:subpanel}
+\centering
 \includegraphics[scale = 0.5]{./sd-plots/bpx-legend-1}
-\includegraphics[scale = 0.5]{./sd-plots/bpx-legend-2}
+\includegraphics[scale = 0.5]{./sd-plots/bpx-legend-2}\\
 \includegraphics[scale = 0.5]{./sd-plots/bpx-legend-3}
 \includegraphics[scale = 0.5]{./sd-plots/bpx-legend-4}
 
@@ -190,85 +343,5 @@ $(X_i - Y_b) / (Y_w - Y_b) \times 60000$
 
 \spplot{L16}
 
-%\begin{minipage}{0.48\textwidth}
-%\flushleft
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U1}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U2}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U3}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U4}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U5}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U6}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U7}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U8}
-%\end{minipage}
-%%
-%\vrule
-%%
-%\begin{minipage}{0.48\textwidth}
-%\flushright
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U9}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U10}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U11}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U12}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U13}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U14}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U15}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-U16}
-%\end{minipage}
-%
-%\begin{minipage}{0.48\textwidth}
-%\flushleft
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L1}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L2}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L3}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L4}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L5}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L6}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L7}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L8}
-%\end{minipage}
-%%
-%\vrule
-%%
-%\begin{minipage}{0.48\textwidth}
-%\flushright
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L9}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L10}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L11}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L12}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L13}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L14}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L15}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-power-L16}
-%\end{minipage}
-%
-%Suggests that treating each pixel as a point in 3d space and using a clustering algorithm may be a useful approach?
-%
-%\renewcommand{\plotsc}{0.15}
-%
-%\begin{minipage}{0.48\textwidth}
-%\flushleft
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-noresponse}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-dead}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-hot}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-vbright}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-bright}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-lbright}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-sbright}
-%
-%\end{minipage}
-%%
-%\vrule
-%%
-%\begin{minipage}{0.48\textwidth}
-%\flushright
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-lineb}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-screenspot}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-edge}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-vdim}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-dim}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-ldim}
-%\includegraphics[scale=\plotsc]{./sd-plots/sd-by-type-sdim}
-%\end{minipage}
-
+\end{appendix}
 \end{document}

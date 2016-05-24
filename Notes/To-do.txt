@@ -4,6 +4,8 @@ TO DO
 17-May-16
 ===================================================================================================
 
+|_| locally bright pixels in black vs grey images. Suspect most 'spaff' is in black images.
+
 |x| compare locally non-uniform px with globally extreme px. 
     Are global px identified at local level too?
     
