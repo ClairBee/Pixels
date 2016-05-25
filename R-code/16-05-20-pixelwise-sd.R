@@ -12,19 +12,20 @@ Cat <- c("no response", "dead", "hot", "v.bright", "bright", "line.b", "l.bright
 Cat.cols <- c("purple", "black", "magenta3", "red", "orange", "gold", "gold", "yellow", "grey", "violet", "green", "green3", "green", "skyblue", "lightskyblue")
 fancyCat <- c("No response", "Dead", "Hot", "V. bright", "Bright", "Bright line", "Locally bright", "Slightly bright", "Screen spot", "Dim line", "Edge", "V. dim", "Dim", "Locally dim", "Slightly dim")
 headerCat <- gsub("[ ]", "", gsub("[.]", "", Cat))
-longCat <- c("normal", Cat, "noisy")
+longCat <- c("normal", Cat)
 
 load.pixel.means()
+sc <- readRDS("./Other-data/Shading-corrections.rds")
+
 
 ####################################################################################################
+
 # EXPLORATORY                                                                                   ####
 
 # no point in using median-differencing: pattern is not so systematic
 
 # try Johnson quantiles instead?
 # 'official' definition is > 6 sigma from median
-
-
 
 # plot per-colour SD relation: bad px and unclassified px
 png(paste0(fpath.fig, "sd-plot-bad-px.png"), width = 1200, height = 600, pointsize = 28); {
@@ -47,7 +48,7 @@ png(paste0(fpath.fig, "sd-plot-bad-px.png"), width = 1200, height = 600, pointsi
 }
 
 sdn.b <- pw.sd[,,"black", "160430"]; sdn.b[as.matrix(bp$"160430"[,1:2])] <- NA
-sdn.b <- pw.sd[,,"grey", "160430"]; sdn.b[as.matrix(bp$"160430"[,1:2])] <- NA
+sdn.g <- pw.sd[,,"grey", "160430"]; sdn.g[as.matrix(bp$"160430"[,1:2])] <- NA
 sdn.w <- pw.sd[,,"white", "160430"]; sdn.w[as.matrix(bp$"160430"[,1:2])] <- NA
 
 png(paste0(fpath.fig, "sd-plot-unc-px.png"), width = 1200, height = 600, pointsize = 28); {
@@ -497,7 +498,7 @@ npx <- lapply(apply(pw.sd, 4, apply, 3, function(x) which(x > (median(x) + 6 * s
 # list all pixels identified as noisy
 {
     noisy <- rbind.fill(lapply(npx, "[", 1:2))
-    noisy <- noisy[!dupliCated(noisy),]
+    noisy <- noisy[!duplicated(noisy),]
     
     n.summ <- lapply(npx, function(x) count(x[,3:5]))
     
@@ -510,7 +511,7 @@ npx <- lapply(apply(pw.sd, 4, apply, 3, function(x) which(x > (median(x) + 6 * s
                                                           rep("g", 7)[qq$src.g], 
                                                           rep("w", 7)[qq$src.w]), 1, paste, collapse = "")),
                               qq[,4:15]),
-                   c("Found", sapply(names(df.list), fancy.date)))
+                   c("Found", sapply(names(npx), fancy.date)))
     
     qq[is.na(qq)] <- "-"
     
@@ -525,13 +526,24 @@ bpx <- list()
 for (dt in dimnames(pw.sd)[[4]]) {
     tmp <- rbind(data.frame(npx[[dt]][is.na(npx[[dt]]$src.b),1:2], noisy = "gw"),
                 data.frame(npx[[dt]][,1:2], noisy = "b"))
-    tmp <- tmp[!dupliCated(tmp[,1:2]),]
+    tmp <- tmp[!duplicated(tmp[,1:2]),]
     
     bpx[[dt]] <- merge(bp[[dt]], tmp, by = c(1:2), all = T)
     levels(bpx[[dt]]$type) <- c(levels(bpx[[dt]]$type), "noisy")
     bpx[[dt]]$type[is.na(bpx[[dt]]$type)] <- "noisy"
 }
 
+# keeping grey & black noise as separate categories
+for (dt in dimnames(pw.sd)[[4]]) {
+    tmp <- rbind(data.frame(npx[[dt]][is.na(npx[[dt]]$src.b),1:2], noisy = "gw"),
+                 data.frame(npx[[dt]][,1:2], noisy = "b"))
+    tmp <- tmp[!duplicated(tmp[,1:2]),]
+    
+    bpx[[dt]] <- merge(bp[[dt]], tmp, by = c(1:2), all = T)
+    levels(bpx[[dt]]$type) <- c(levels(bpx[[dt]]$type), "noisy.b", "noisy.gw")
+    bpx[[dt]]$type[is.na(bpx[[dt]]$type) & bpx[[dt]]$noisy == "b"] <- "noisy.b"
+    bpx[[dt]]$type[is.na(bpx[[dt]]$type) & bpx[[dt]]$noisy == "gw"] <- "noisy.gw"
+}
 saveRDS(bpx, "./Notes/Standard-deviations/bad-px-maps-with-noise.rds")
 
 # state transitions including noise
@@ -546,7 +558,7 @@ saveRDS(bpx, "./Notes/Standard-deviations/bad-px-maps-with-noise.rds")
 }
 
 # mean transition rates
-tr <- array(unlist(tr), dim = c(17, 17, 11), dimnames = list(longCat, c("Normal", fancyCat, "Noisy"), names(tr)))
+tr <- array(unlist(tr), dim = c(18, 18, 11), dimnames = list(longCat, c("Normal", fancyCat, "NoisyB", "NoisyGW"), names(tr)))
 
 write.csv(prep.csv(apply(tr, 1:2, mean), dp = 0)[-11, -11],
           paste0(fpath.fig, "transition-px-mean.csv"), quote = F)
@@ -561,7 +573,7 @@ write.csv(prep.csv(apply(array(apply(tr, 3, function(x) x / rowSums(x)), dim = d
           paste0(fpath.fig, "transition-prop-sd.csv"), quote = F)
 
 # pixels identified as each type
-vv <- array(unlist(lapply(lapply(bpx, "[", 4:3), table, useNA = "ifany")), dim = c(3, 16, 12),
+vv <- array(unlist(lapply(lapply(bpx, "[", 4:3), table, useNA = "ifany")), dim = c(3, 17, 12),
             dimnames = list(c("gw", "b", "-"), longCat[-1], names(bpx)))
 
 write.csv(prep.csv(apply(vv, 1:2, mean), dp = 0)[, -10],
@@ -570,11 +582,282 @@ write.csv(prep.csv(apply(vv, 1:2, mean), dp = 0)[, -10],
 write.csv(prep.csv(apply(vv, 1:2, sd), dp = 0)[, -10],
           paste0(fpath.fig, "sd-bad-px-types.csv"), quote = F)
 
+# noisy pixels persisting for 3 or more acquisitions
+{
+    # get list of all bad pixels ever identified
+    noisy <- rbind.fill(lapply(bpx, "[", 1:2))
+    noisy <- noisy[!duplicated(noisy),]
+    
+    bb <- rmerge.df.list(noisy, lapply(bpx, "[", 1:3), by = c(1:2), all = T)
+    
+    bn <- bb[apply(bb[,3:14], 1, function(x) any(x == "noisy", na.rm = T)),]
+    
+    # convert to string, with non-noisy string as separator 
+    bnp <- bn[which(apply(bn[,3:14], 1, function(x) length(which(x == "noisy"))) > 2),]
+    bnp[sapply(bnp, is.factor)] <- lapply(bnp[sapply(bnp, is.factor)], as.character)  
+    bnp[is.na(bnp)] <- ";"
+    bnp[bnp == "noisy"] <- "1"
+    bnp[bnp == "l.bright"] <- "x"
+    bnp[bnp == "s.bright"] <- "x"
+    bnp[bnp == "bright"] <- "x"
+    bnp[bnp == "screen spot"] <- ";"; bnp[bnp == "s.dim"] <- ";"
+    bnp[bnp == "line.b"] <- ";"; bnp[bnp == "s.dim"] <- ";"
+    
+    # maximum run length including bright pixels
+    hh <- apply(bnp[,3:14], 1, paste, collapse = "")
+    hh.split <- sapply(hh, strsplit, ";")
+    hh.l <- unlist(lapply(hh.split, function(x) max(sapply(x, nchar))))
+    
+        # hh.l
+        # 1    2   3   4   5   6   7   8   9  10  11  12 
+        # 49 155 164  72  48  30  15  31   5   4   6   9 
+    
+    # maximum run length EXcluding bright pixels
+    bnp[bnp == "x"] <- ";"
+    hh <- apply(bnp[,3:14], 1, paste, collapse = "")
+    hh.split <- sapply(hh, strsplit, ";")
+    hh.l <- unlist(lapply(hh.split, function(x) max(sapply(x, nchar))))
+    
+        # hh.l 
+        # 1    2   3   4   5   6   7   8   9  10  12 
+        # 70 227 149  62  40  14   7  11   2   3   3
+}
+
 ####################################################################################################
 
-# NOISE VS LOCAL BRIGHTNESS                                                                     ####
+# NOISE & LOCAL BRIGHTNESS: NEW THRESHOLD                                                       ####
+
+md.b <- readRDS("./Other-data/Median-diffs-black.rds")
+md.g <- readRDS("./Other-data/Median-diffs-grey.rds")
+md.w <- readRDS("./Other-data/Median-diffs-white.rds")
+
+df <- data.frame(pwm.b = apply(pw.m[,,"black", ], 3, mad, na.rm = T),
+                 pwm.g = apply(pw.m[,,"grey", ], 3, mad, na.rm = T),
+                 pwm.w = apply(pw.m[,,"white", ], 3, mad, na.rm = T),
+                 md.b = unlist(lapply(md.b, mad, na.rm = T)),
+                 md.g = unlist(lapply(md.g, mad, na.rm = T)),
+                 md.w = unlist(lapply(md.w, mad, na.rm = T)),
+                 md.b.sd = unlist(lapply(md.b, sd, na.rm = T)),
+                 md.g.sd = unlist(lapply(md.g, sd, na.rm = T)),
+                 md.w.sd = unlist(lapply(md.w, sd, na.rm = T)))
+
+write.csv(round(df, 1), paste0(fpath.fig, "md-thresholds.csv"), quote = F)
+
+# plot histograms with thresholds
+{
+    pdf(paste0(fpath.fig, "med-diff-thresholds-b.pdf"), height = 4, width = 7); {
+        par(mar = c(2, 2, 1, 0.5))
+        s.hist(md.b[["160430"]], ylim = c(0,50000), main = "")
+        abline(v = mad(pw.m[,,"black", "160430"]) * 2, col = "red")
+        abline(v = mad(pw.m[,,"black", "160430"]) * 1, col = "red", lty = 3)
+        abline(v = mad(md.b[["160430"]], na.rm = T) * 2, col = "cyan3")
+        abline(v = mad(md.b[["160430"]], na.rm = T) * 1, col = "cyan3", lty = 3)
+        abline(v = sd(md.b[["160430"]], na.rm = T) * 2, col = "blue")
+        abline(v = sd(md.b[["160430"]], na.rm = T) * 1, col = "blue", lty = 3)
+        dev.off()
+    }
+    
+    pdf(paste0(fpath.fig, "med-diff-thresholds-g.pdf"), height = 4, width = 7); {
+        par(mar = c(2, 2, 1, 0.5))
+        s.hist(md.g[["160430"]], ylim = c(0,50000), main = "")
+        abline(v = mad(pw.m[,,"grey", "160430"]) * 2, col = "red")
+        abline(v = mad(pw.m[,,"grey", "160430"]) * 1, col = "red", lty = 3)
+        abline(v = mad(md.g[["160430"]], na.rm = T) * 2, col = "cyan3")
+        abline(v = mad(md.g[["160430"]], na.rm = T) * 1, col = "cyan3", lty = 3)
+        abline(v = sd(md.g[["160430"]], na.rm = T) * 2, col = "blue")
+        abline(v = sd(md.g[["160430"]], na.rm = T) * 1, col = "blue", lty = 3)
+        dev.off()
+    }
+    
+    pdf(paste0(fpath.fig, "med-diff-thresholds-w.pdf"), height = 4, width = 7); {
+        par(mar = c(2, 2, 1, 0.5))
+        s.hist(md.w[["160430"]], xlim = c(-3500, 3500), ylim = c(0,50000), main = "")
+        abline(v = mad(pw.m[,,"white", "160430"]) * 2, col = "red")
+        abline(v = mad(pw.m[,,"white", "160430"]) * 1, col = "red", lty = 3)
+        abline(v = mad(md.w[["160430"]], na.rm = T) * 2, col = "cyan3")
+        abline(v = mad(md.w[["160430"]], na.rm = T) * 1, col = "cyan3", lty = 3)
+        abline(v = sd(md.w[["160430"]], na.rm = T) * 2, col = "blue")
+        abline(v = sd(md.w[["160430"]], na.rm = T) * 1, col = "blue", lty = 3)
+        dev.off()
+    }
+}
+
+# get bad pixel coords
+{
+    px <- list(data.frame(which(threshold(md.b[["160430"]], level = mad(pw.m[,,"black", "160430"]) * 2) > 0, arr.ind = T), mad2.b = T),
+               data.frame(which(threshold(md.g[["160430"]], level = mad(pw.m[,,"grey", "160430"]) * 2) > 0, arr.ind = T), mad2.g = T),
+               data.frame(which(threshold(md.g[["160430"]], level = mad(pw.m[,,"white", "160430"]) * 2) > 0, arr.ind = T), mad2.w = T),
+               data.frame(which(threshold(md.b[["160430"]], level = mad(pw.m[,,"black", "160430"]) * 1) > 0, arr.ind = T), mad1.b = T),
+               data.frame(which(threshold(md.g[["160430"]], level = mad(pw.m[,,"grey", "160430"]) * 1) > 0, arr.ind = T), mad1.g = T),
+               data.frame(which(threshold(md.g[["160430"]], level = mad(pw.m[,,"white", "160430"]) * 1) > 0, arr.ind = T), mad1.w = T))
+    
+    zz.mad2 <- rmerge.df.list(unique(rbind.fill(lapply(px[1:3], "[", 1:2))), px[1:3], by = c(1:2), all = T)
+    zz.mad1 <- rmerge.df.list(unique(rbind.fill(lapply(px[4:6], "[", 1:2))), px[4:6], by = c(1:2), all = T)
+    
+    unc.b1 <- pw.sd[,,"black", "141009"]; unc.b1[as.matrix(zz.mad1[,1:2])] <- NA
+    unc.g1 <- pw.sd[,,"grey", "141009"]; unc.g1[as.matrix(zz.mad1[,1:2])] <- NA
+    unc.w1 <- pw.sd[,,"white", "141009"]; unc.w1[as.matrix(zz.mad1[,1:2])] <- NA
+    
+    unc.b2 <- pw.sd[,,"black", "141009"]; unc.b2[as.matrix(zz.mad2[,1:2])] <- NA
+    unc.g2 <- pw.sd[,,"grey", "141009"]; unc.g2[as.matrix(zz.mad2[,1:2])] <- NA
+    unc.w2 <- pw.sd[,,"white", "141009"]; unc.w2[as.matrix(zz.mad2[,1:2])] <- NA
+}
 
 
+# plot outcome with different thresholds
+{
+    png(paste0(fpath.fig, "local-th-mad1-141009.png"), width = 1218, height = 683, pointsize = 28); {
+        par(mfrow = c(1,2), mar = c(2, 2, 3, 0.5))
+        plot(pw.sd[,,"black", "141009"][as.matrix(zz.mad1[,1:2])],
+             pw.sd[,,"grey", "141009"][as.matrix(zz.mad1[,1:2])], 
+             xlim = c(0,2000), ylim = c(0,2000), asp = T,
+             pch = 20, cex = 0.7,  col = "gold", xlab = "", ylab = "")
+        points(unc.b1, unc.g1, pch = 20, cex = 0.7)
+        text(1800, 0, "black"); text(00, 1800, "grey", srt = 90)
+
+        plot(pw.sd[,,"white", "141009"][as.matrix(zz.mad1[,1:2])],
+             pw.sd[,,"grey", "141009"][as.matrix(zz.mad1[,1:2])], 
+             xlim = c(0,2000), ylim = c(0,2000), asp = T,
+             pch = 20, cex = 0.7,  col = "gold", xlab = "", ylab = "")
+        points(unc.w1, unc.g1, pch = 20, cex = 0.7)
+        text(1800, 0, "white"); text(00, 1800, "grey", srt = 90)
+     
+        dev.off()
+    }
+}
+
+{
+    png(paste0(fpath.fig, "local-th-mad2-141009.png"), width = 1218, height = 683, pointsize = 28); {
+        par(mfrow = c(1,2), mar = c(2, 2, 3, 0.5))
+        plot(pw.sd[,,"black", "141009"][as.matrix(zz.mad2[,1:2])],
+             pw.sd[,,"grey", "141009"][as.matrix(zz.mad2[,1:2])], 
+             xlim = c(0,2000), ylim = c(0,2000), asp = T,
+             pch = 20, cex = 0.7,  col = "gold", xlab = "", ylab = "")
+        points(unc.b2, unc.g2, pch = 20, cex = 0.7)
+        text(1800, 0, "black"); text(00, 1800, "grey", srt = 90)
+        
+        plot(pw.sd[,,"white", "141009"][as.matrix(zz.mad2[,1:2])],
+             pw.sd[,,"grey", "141009"][as.matrix(zz.mad2[,1:2])], 
+             xlim = c(0,2000), ylim = c(0,2000), asp = T,
+             pch = 20, cex = 0.7,  col = "gold", xlab = "", ylab = "")
+        points(unc.w2, unc.g2, pch = 20, cex = 0.7)
+        text(1800, 0, "white"); text(00, 1800, "grey", srt = 90)
+        
+        dev.off()
+    }
+}
+
+#==============================================================================================
+# in the latest batches at least,  no pixels are locally bright only in the white images
+
+# Default bad pixel map with mad-2 limit (black & grey only) - minimum no. px
+bp <- readRDS("./Other-data/bad-px-maps.rds")
+    
+# get extra bad pixels
+{
+    # mad-1 limit (black & grey only)
+    px.mad1 <- lapply(dimnames(pw.m)[[4]],
+                 function(x) rbind(data.frame(which(threshold(md.b[[x]], level = mad(pw.m[,,"black", x]) * 1) > 0, arr.ind = T), type = "l.bright"),
+                                   data.frame(which(threshold(md.b[[x]], level = mad(pw.m[,,"black", x]) * -1) == 0, arr.ind = T), type = "l.dim"),
+                                   data.frame(which(threshold(md.g[[x]], level = mad(pw.m[,,"grey", x]) * 1) > 0, arr.ind = T), type = "l.bright"),
+                                   data.frame(which(threshold(md.g[[x]], level = mad(pw.m[,,"grey", x]) * -1) == 0, arr.ind = T), type = "l.dim")))
+    names(px.mad1) <- dimnames(pw.m)[[4]]
+    
+    px.mad1w <- lapply(dimnames(pw.m)[[4]],
+                      function(x) rbind(data.frame(which(threshold(md.w[[x]], level = mad(pw.m[,,"white", x]) * 1) > 0, arr.ind = T), type = "l.bright"),
+                                        data.frame(which(threshold(md.w[[x]], level = mad(pw.m[,,"white", x]) * -1) == 0, arr.ind = T), type = "l.dim")))
+    names(px.mad1w) <- dimnames(pw.m)[[4]]
+    
+    px.mad2w <- lapply(dimnames(pw.m)[[4]],
+                       function(x) rbind(data.frame(which(threshold(md.w[[x]], level = mad(pw.m[,,"white", x]) * 2) > 0, arr.ind = T), type = "l.bright"),
+                                         data.frame(which(threshold(md.w[[x]], level = mad(pw.m[,,"white", x]) * -2) == 0, arr.ind = T), type = "l.dim")))
+    names(px.mad2w) <- dimnames(pw.m)[[4]]
+}
+
+# merge into full bad pixel lists
+{
+    tr.mad1 <- list()
+    qq <- lapply(names(bp), function(x) rbind(bp[[x]], px.mad1[[x]]))       # join dfs
+    qq <- lapply(qq, function(x) x[!duplicated(x[,1:2]),])                  # remove duplicates
+    
+    for (i in 1:(length(qq) - 1)) {
+        tr.mad1[[i]] <- table("From" = ordered(longCat[c(bpx2im(qq[[i]])) + 1], levels = longCat),
+                         "To" = ordered(longCat[c(bpx2im(qq[[i+1]])) + 1], levels = longCat))
+        names(tr.mad1)[[i]] <- paste(names(qq)[c(i,(i+1))], collapse = "-")
+    }
+    
+    tr.mad1 <- array(unlist(tr.mad1), dim = c(16, 16, 11), dimnames = list(longCat, c("Normal", fancyCat), names(tr.mad1)))
+    
+    # transition matrix
+    tr.m1 <- abind(round(apply(tr.mad1, 1:2, mean),0),
+                   round(apply(tr.mad1, 1:2, sd), 1), 
+                   round(apply(array(apply(tr.mad1, 3, function(x) x / rowSums(x)), dim = dim(tr.mad1)), 1:2, mean, na.rm = T) * 100, 1),
+                   round(apply(array(apply(tr.mad1, 3, function(x) x / rowSums(x)), dim = dim(tr.mad1)), 1:2, sd, na.rm = T) * 100, 1),
+                   along = 3)
+}
+
+unlist(lapply(qq, function(x) length(which(x$type == "l.bright"))) )/ 
+    unlist(lapply(bp, function(x) length(which(x$type == "l.bright"))))
+
+#   141009   141118   141217   150108   150113   150126   150529   150730   150828   151015   160314   160430 
+# 4.708995 4.838439 4.588119 5.593594 4.274086 4.179144 4.330482 3.885318 3.978368 3.409759 3.765219 3.671274
+
+
+tr.mean <- apply(abind(round(apply(tr, 1:2, mean),0), 
+                       array(" \\textcolor{red}{", dim = dim(tr)[1:2]),
+                       round(apply(tr.mad1, 1:2, mean),0), 
+                       array("}", dim = dim(tr)[1:2]),
+                       along = 3), 1:2, paste, collapse = "")[-11,-11]
+write.csv(tr.mean, paste0(fpath.fig, "transition-px-mean-th.csv"), quote = F)
+
+tr.p <- array(apply(tr, 3, function(x) x / rowSums(x)), dim = dim(tr))[-11, -11,]
+tr1.p <- array(apply(tr.mad1, 3, function(x) x / rowSums(x)), dim = dim(tr.mad1))[-11, -11,]
+
+tr.prop <- apply(abind(round(apply(tr.p, 1:2, mean, na.rm = T) * 100, 1), 
+                       array(" \\textcolor{red}{", dim = dim(tr.p)[1:2]),
+                       round(apply(tr1.p, 1:2, mean, na.rm = T) * 100, 1), 
+                       array("}", dim = dim(tr.p)[1:2]),
+                       along = 3), 1:2, paste, collapse = "")
+rownames(tr.prop) <- fancyCat
+write.csv(tr.prop, paste0(fpath.fig, "transition-prop-mean-th.csv"), quote = F)
+
+
+# does including the white images actually add anything?
+{
+    w1 <- lapply(names(px.mad1), function(x) rbind(bp[[x]], px.mad1[[x]], px.mad1w[[x]]))       # join dfs
+    w1.u <- lapply(w1, function(x) x[!duplicated(x[,1:2]),])            
+    unlist(lapply(w1.u, nrow)) - unlist(lapply(qq, nrow))
+        # 1 3 2 5 0 0 0 0 1 1 0 0
+    
+    w2 <- lapply(names(bp), function(x) rbind(bp[[x]], px.mad2w[[x]]))
+    w2.u <- lapply(w2, function(x) x[!duplicated(x[,1:2]),])  
+    unlist(lapply(w2.u, nrow)) - unlist(lapply(bp, nrow))
+        # 141009 141118 141217 150108 150113 150126 150529 150730 150828 151015 160314 160430 
+        # 0      0      0      1      0      0      0      0      0      0      0      0 
+}
+# not really. Occasionally 1 bright pixel added. Slightly more dim ones.
+{
+lb1 <- lapply(dimnames(pw.m)[[4]],
+       function(x) which((threshold(md.w[[x]], level = mad(pw.m[,,"white", x]) * 1) > 0) & 
+            (threshold(md.g[[x]], level = mad(pw.m[,,"grey", x]) * 1) == 0) & 
+            (threshold(md.b[[x]], level = mad(pw.m[,,"black", x]) * 1) == 0), arr.ind = T))
+
+lb2 <- lapply(dimnames(pw.m)[[4]],
+              function(x) which((threshold(md.w[[x]], level = mad(pw.m[,,"white", x]) * 2) > 0) & 
+                                    (threshold(md.g[[x]], level = mad(pw.m[,,"grey", x]) * 2) == 0) & 
+                                    (threshold(md.b[[x]], level = mad(pw.m[,,"black", x]) * 2) == 0), arr.ind = T))
+
+ld1 <- lapply(dimnames(pw.m)[[4]],
+              function(x) which((threshold(md.w[[x]], level = mad(pw.m[,,"white", x]) * -1) == 0) & 
+                                    (threshold(md.g[[x]], level = mad(pw.m[,,"grey", x]) * -1) > 0) & 
+                                    (threshold(md.b[[x]], level = mad(pw.m[,,"black", x]) * -1) > 0), arr.ind = T))
+
+ld2 <- lapply(dimnames(pw.m)[[4]],
+              function(x) which((threshold(md.w[[x]], level = mad(pw.m[,,"white", x]) * -2) == 0) & 
+                                    (threshold(md.g[[x]], level = mad(pw.m[,,"grey", x]) * -2) > 0) & 
+                                    (threshold(md.b[[x]], level = mad(pw.m[,,"black", x]) * -2) > 0), arr.ind = T))
+}
+unlist(lapply(lb1, nrow)); unlist(lapply(lb2, nrow)); unlist(lapply(ld1, nrow)); unlist(lapply(ld2, nrow))
 
 ####################################################################################################
 
@@ -615,7 +898,7 @@ th <- data.frame(med = unlist(lapply(j, median)),
 npx <- lapply(j.sd, function(x) which(x > (median(x) + 6 * sd(x)), arr.ind = T))
 
 zz <- rbind.fill(lapply(npx, as.data.frame))
-zz <- zz[!dupliCated(zz),]
+zz <- zz[!duplicated(zz),]
 
 hh <- merge(merge(merge(merge(merge(zz, data.frame(npx[[1]], ua20 = T), by = c(1,2), all = T),
             data.frame(npx[[2]], ua40 = T), by = c(1,2), all = T),
@@ -704,7 +987,7 @@ count(hh[3:7])[rev(order(count(hh[3:7])[,6])),]
                 data.frame(which(threshold(mdb, level = mad(j.mean[[1]]) * -2) == 0, arr.ind = T), type = "l.dim"))
     
     bp <- bp[order(bp$type),]
-    bp <- bp[!dupliCated(bp[,1:2]),]
+    bp <- bp[!duplicated(bp[,1:2]),]
 }
 
 hh <- merge(hh, bp, by = c(1:2), all.x = T)
@@ -840,3 +1123,61 @@ lines(c(0:500), dJohnson(c(0:500), JohnsonFit(sdn.g[!is.na(sdn.g)])), col = "ora
 
 
 # apply Johnson transformation
+
+# SHADING CORRECTION                                                                            ####
+
+bpx <- readRDS("./Notes/Standard-deviations/bad-px-maps-with-noise.rds")
+sc <- readRDS("./Other-data/Shading-corrections.rds")
+
+npx <- lapply(bpx, function(x) x[x$type %in% c("noisy.gw", "noisy.b"),])
+
+# noisy grey/white pixels
+bpx[[1]][bpx[[1]]$type == "noisy.gw",]
+
+# noisiest black pixels
+tmp <- cbind(bpx[[1]], sd.b = pw.sd[,,"black", 1][as.matrix(bpx[[1]][,1:2])])
+tmp <- tmp[rev(order(tmp$sd.b)),]
+head(tmp[tmp$type == "noisy.b",])
+
+high.sd.plot <- function(x, y, d, byrow = T) {
+    if (byrow) {
+        o.plot(sc[x,,d], xlim = y + c(-50,50))
+        lines(pw.sd[x,,"grey", d] + mean(sc[x,y + (-50:50),d]) - mean(pw.sd[x,y + (-50:50),"grey", d]), col = "orange")
+        lines(pw.sd[x,,"black", d] + mean(sc[x,y + (-50:50),d]) - mean(pw.sd[x,y + (-50:50),"black", d]), col = "green3")
+        lines(pw.sd[x,,"white", d] + mean(sc[x,y + (-50:50),d]) - mean(pw.sd[x,y + (-50:50),"white", d]), col = "cyan3")
+    } else {
+        o.plot(sc[,y,d], xlim = x + c(-50,50))
+        lines(pw.sd[,y,"grey", d] + mean(sc[x + (-50:50),y,d]) - mean(pw.sd[x + (-50:50),y,"grey", d]), col = "orange")
+        lines(pw.sd[,y,"black", d] + mean(sc[x + (-50:50),y,d]) - mean(pw.sd[x + (-50:50),y,"black", d]), col = "green3")
+        lines(pw.sd[,y,"white", d] + mean(sc[x + (-50:50),y,d]) - mean(pw.sd[x + (-50:50),y,"white", d]), col = "cyan3")
+    }
+}
+
+high.sd.plot(158, 747, 1)
+high.sd.plot(256, 999, 1)
+high.sd.plot(265, 1256, 1)
+high.sd.plot(1272, 989, 1)
+high.sd.plot(1446, 904, 1)
+high.sd.plot(1462, 1659, 1)
+
+# pick the 6 worst noisy black pixels to plot as well...
+high.sd.plot(320, 895, 1)
+high.sd.plot(22, 260, 1)
+high.sd.plot(529, 1699, 1)
+high.sd.plot(84, 849, 1)
+high.sd.plot(1544, 285, 1)
+high.sd.plot(583, 217, 1)
+
+####################################################################################################
+
+# MED DIFFS OVER SHADING CORRECTION?                                                            ####
+
+md.sc <- med.diffs(sc[,,"160430"])
+md.sc[is.infinite(md.sc)] <- 0
+mad(sc[,,"160430"], na.rm = T)
+
+# any locally non-u px in the shading-corrected image?
+sc.non.u <- which(threshold(md.sc, level = 2 * mad(sc[,,"160430"], na.rm = T)) > 0, arr.ind = T)
+
+bp.sc <- merge(bp[[1]], data.frame(sc.non.u, non.u = "non-U"), by = c(1:2), all = T)
+table(bp.sc$type, bp.sc$non.u, useNA = "ifany")

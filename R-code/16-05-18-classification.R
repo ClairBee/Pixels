@@ -132,8 +132,8 @@ bp <- readRDS(paste0(fpath, "bad-px-maps.rds"))
 tr <- list()
 
 for (i in 1:(length(bp) - 1)) {
-    tr[[i]] <- table("From" = ordered(c("normal", cat)[c(bpx2im(bp[[i]])) + 1], levels = c("normal", cat)),
-                   "To" = ordered(c("normal", cat)[c(bpx2im(bp[[i+1]])) + 1], levels = c("normal", cat)))
+    tr[[i]] <- table("From" = ordered(c("normal", Cat)[c(bpx2im(bp[[i]])) + 1], levels = c("normal", Cat)),
+                   "To" = ordered(c("normal", Cat)[c(bpx2im(bp[[i+1]])) + 1], levels = c("normal", Cat)))
     names(tr)[[i]] <- paste(names(bp)[c(i,(i+1))], collapse = "-")
 }
 
@@ -155,7 +155,7 @@ for (i in 1:length(tr)) {
 
 # mean transition rates
 tr <- array(unlist(tr), dim = c(16, 16, 11), 
-            dimnames = list(c("normal", cat), c("normal", cat), names(tr)))
+            dimnames = list(c("normal", Cat), c("normal", Cat), names(tr)))
 
 write.csv(prep.csv(apply(tr, 1:2, mean), dp = 0)[-11, -11],
           paste0(fpath, "transition-px-mean.csv"), quote = F)

@@ -38,9 +38,9 @@
 		\centering
 		\hskip-0.75cm\resizebox{1.1\textwidth}{!}{%
 	
-			\csvreader[tabular=l|ccccccccccccccccc, head to column names=true,
+			\csvreader[tabular=l|cccccccccccccccccc, head to column names=true,
 				table head = & Normal & No response & Dead & Hot & V. bright & Bright & Bright line & Local bright & 
-				Slightly bright & Screen spot & Edge	 & 	V. dim & Dim & Local dim & Slightly dim & Noisy\\\hline ]%
+				Slightly bright & Screen spot & Edge	 & 	V. dim & Dim & Local dim & Slightly dim & Noisy B & Noisy GW\\\hline ]%
 			{#1}{}%
 			{\csvlinetotablerow}%
 		}
@@ -51,16 +51,13 @@
 %======================================================================
 
 \begin{document}
-
-\todo{Section on revised thresholds, particularly in black image. Try transforming the data: log/Johnson transform?}
-
-\todo{Read through \& rewrite/comment where necessary}
-
+\todo{How much of black SD is accounted for by oscillation?}
+\todo{Is spatial distribution of each type of bad pixel same? (eg. hot pixels may be independent of location - bright pixels less so?)}
 \todo{Standard deviation of pixels already identified as problematic: describe}
 
 \section*{Noisy pixels}
 
-The manual defines noisy pixels as those pixels with a pixelwise SD greater than $\tilde{x} + 6\sigma$, where $\tilde{x}$ is the median pixelwise standard deviation for that set of pixels, and $\sigma$ is the standard deviation of the standard deviations. In normally distributed data, this approach should classify 3.4 pixels per million as noisy (so we might reasonably expect to see 13 or 14 such pixels in our 1996px$^2$ detector) However, as with the pixelwise mean values, a damaged or defective pixel is likely to behave increasingly erratically over time - having a progressively higher than expected SD - rather than becoming less variable with increasing usage; and so we might reasonably expect the distribution to become increasingly positively skewed. The assumption of normality is therefore not one that we should rely on. This is particularly the case in the black images, where a `healthy' pixel has a very low pixelwise standard deviation, and the predefined threshold is very close to the bulk of the data (see \autoref{fig:SD-unc}, or \autoref{app:subpanel} for a much clearer view). Applying the thresholding approach defined in the manual as our initial classification method, we see that a much larger number of noisy pixels are indeed detected in the black image than in the white or grey.
+The manual defines noisy pixels as those pixels with a pixelwise SD greater than $\tilde{x} + 6\sigma$, where $\tilde{x}$ is the median pixelwise standard deviation for that set of pixels, and $\sigma$ is the standard deviation of the pixelwise standard deviations. In normally distributed data, this approach should classify 3.4 pixels per million as noisy (so we might reasonably expect to see 13 or 14 such pixels in our 1996px$^2$ detector). However, as with the pixelwise mean values, a damaged or defective pixel is likely to behave increasingly erratically over time - having a progressively higher than expected SD - rather than becoming less variable with increasing usage; and so we might reasonably expect the distribution to become increasingly positively skewed. The assumption of normality is therefore not one that we should rely on. This is particularly the case in the black images, where a `healthy' pixel has a very low pixelwise standard deviation, and the predefined threshold runs through the bulk of the data (see \autoref{fig:SD-unc}, or \autoref{app:subpanel} for a much clearer view of the threshold applied to each subpanel). Applying the thresholding approach defined in the manual as our initial classification method, we see that a much larger number of noisy pixels are indeed detected in the black image than in the white or grey.
 
 %-----------------------------------------------------------------------------------------------------------
 \begin{table}[!ht] % Sd thresholds applied
@@ -83,7 +80,7 @@ The manual defines noisy pixels as those pixels with a pixelwise SD greater than
 \FloatBarrier
 \section{Noise vs brightness}
 
-Given the known increasing relationship between the pixelwise mean and standard deviation, we might expect that brighter pixels will have a higher standard deviation. In fact, this certainly is the case (\autoref{fig:SD-by-type}); bright (yellow/orange) and hot (red) pixels show a high degree of scatter along all 3 SD axes, with the distribution of edge (green) and dim (light blue) pixels much closer in shape to the unclassified pixels. 
+Given the known increasing relationship between the pixelwise mean and standard deviation, we might expect that classifying pixels as defective according to their pixelwise mean value would identify a large number of the noisier pixels. In practice, this certainly is the case (\autoref{fig:SD-by-type}); bright (yellow/orange) and hot (red) pixels show a high degree of scatter along all 3 SD axes, with the distribution of edge (green) and dim (light blue) pixels much closer in shape to the unclassified pixels. 
 
 %-----------------------------------------------------------------------------------------------------------
 \begin{figure}[!ht] % sd comparison across power settings in latest acq
@@ -104,8 +101,6 @@ The majority of the noisy pixels - and the most egregious cases - have already b
 \end{figure}
 %-----------------------------------------------------------------------------------------------------------
 
-We can cross-reference the pixels identified as noisy at each power setting by these thresholds with those identified as defective on the basis of their pixelwise mean values. (Noisy pixels in the grey and white images have been combined because they are so few in number)
-
 %-----------------------------------------------------------------------------------------------------------
 \begin{table}[!ht] % noisy px by colour over time vs type
 \begin{footnotesize}
@@ -122,14 +117,20 @@ We can cross-reference the pixels identified as noisy at each power setting by t
 \end{table}
 %-----------------------------------------------------------------------------------------------------------
 
+Most of the noisy pixels are also identified as locally bright pixels. Next question: of the noisy pixels not already identified as locally bright, how locally bright are their mean values? 
+
+%-----------------------------------------------------------------------------------------------------------
+
 \section{Persistence of noisy pixels}
 
 It may be that there is very little point in checking the SD of a classification image: noisiness is an inherently unstable state, so pixels identified as noisy in one batch may be stable in another and - more importantly - vice versa. If a high SD in one set of images doesn't necessarily indicate a high SD in another set - even in one taken on the same day - then using the pixelwise SD to identify noisy pixels may remove otherwise well-behaved pixels.
 
-\todo{Test existing thresholds over all images: are same pixels identified as noisy in black/white/grey? What about in successive acquisitions? We know the proportion that persist between two acquisitions: what is their black SD value? Median difference of pwm? Do they persist for more than two acquisitions?}
+\todo{Test existing thresholds over all images: are same pixels identified as noisy in black/white/grey? What about in successive acquisitions? We know the proportion that persist between two acquisitions: what is their black SD value? Are they the most extreme values? Median difference of pwm? Do they persist for more than two successive acquisitions?}
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \FloatBarrier
+
 \subsection{Noisy pixels in successive acquisitions}
 
 \begin{table}[!ht] % noisy px by colour over time
@@ -145,9 +146,6 @@ It may be that there is very little point in checking the SD of a classification
 \end{footnotesize}
 \end{table}
 
-Most of the noisy pixels are also identified as locally bright pixels. Next question: of the noisy pixels not already identified as locally bright, how locally bright are their mean values? \nb{Repeat this table, but with pixels already identified removed}
-
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -161,10 +159,18 @@ Most of the noisy pixels are also identified as locally bright pixels. Next ques
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+Despite the large number of noisy pixels identified in the lack images, only a relatively small proportion of them remain from one acquisition to the next (and an even smaller proportion of those identified in the grey and white images). A small but not insignificant number also move from a noisy to a locally bright state, but rarely in the other direction - reinforcing the idea that a noisy pixel is likely to have a pixelwise mean value that differs from its neighbours to some degree.
+
+An even smaller number of pixels - just 291 - persists in a noisy state for more than two acquisitions; a slightly higher number (384) persists in either a noisy or bright state for three or more consecutive acquisitions. Noisiness seems (as we might intuitively expect) to be an inherently unstable state.
+
+\nb{Thresholding over locally bright pixels currently uses MAD of original image. However, we know that the raw images are convex/concave if plotted in 3d, and so will have a higher MAD than a flat image. What is MAD of median-differenced image? Would this give a better threshold? May need a different threshold for CT scanning vs imaging.}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \FloatBarrier
 \subsection{Noisy pixels at different power settings on the same date}
 
-As part of the investigation into bright lines, on May 2nd we obtained 5 batches of 20 images, each at a different power setting. All 100 images were acquired within a 30-minute window, so we might expect to see more consistent behaviour within these 5 sets than we would within batches taken weeks or months apart.
+As part of the investigation into bright lines, on May 2nd we obtained 5 batches of 20 images, each at a different power setting. All 100 images were acquired within a 30-minute window, so we might expect to see more consistent behaviour within these 5 sets than we would within batches taken weeks or months apart. However, even here, a little over half of the noisy pixels were only identified as such in one of the acquisitions, with only 50 pixels identified as noisy in all 5 batches of images - all but 7 of which were already identified as defective based on their pixelwise mean values. It seems that identifying noisy pixels on the basis of their standard deviation alone does not provide us with any meaningful information for image correction, even when the calibration images used for classification are taken only a very short time before the target image.
 
 \begin{table}[!ht] % noisy pixels identified at different power settings
 \begin{footnotesize}
@@ -179,7 +185,7 @@ As part of the investigation into bright lines, on May 2nd we obtained 5 batches
 \end{table}
 
 \begin{figure}[!ht] % histograms of SD at different power settings
-\caption{Histograms of pixelwise SD in images taken within a 30-minute period on 16-04-30, at five different power settings. In each case, the threshold is marked with a red line; the distribution of all 777 noisy pixels identified across the 5 image batches is shown in turquoise; and in gold, the distribution of the 131 pixels identified as noisy and not already identified as defective on the basis of their mean value.}
+\caption{Histograms of pixelwise SD in images taken within a 30-minute period on 16-04-30, at five different power settings. In each case, the threshold is marked with a red line; the distribution of all 777 noisy pixels identified across the 5 image batches is shown in turquoise; and in gold, the distribution of the 131 pixels identified as noisy and not already identified as defective on the basis of their mean value. }
 
 \centering
 \begin{subfigure}[t]{0.32\textwidth}
@@ -216,57 +222,95 @@ As part of the investigation into bright lines, on May 2nd we obtained 5 batches
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\section{Spatial differences in standard deviation}
+\section{Behaviour of noisy pixels after shading correction}
 
-\todo{Is spatial distribution of each type of bad pixel same? (eg. hot pixels may be independent of location - bright pixels less so?)}
+For the purposes of this investigation, consider a shading-corrected image to be $60000 * (Y_G - Y_B) / (Y_W - Y_B)$, with $Y_x$ being the pixelwise mean image obtained from the grey, black or white images respectively.
 
-\todo{Needs editing}
+\section{Alternative method to identify noisy pixels}
 
-The pixels with the highest SD in each subpanel are already picked up as bad pixels by mean-value classification.
+\todo{Section on revised thresholds, particularly in black image. Try transforming the data: log/Johnson transform?}
 
-All of the plots are truncated to the same scale for easy comparison; however, bright pixel SDs may exceed 1300, with a number as high as 4500. The unclassified pixels in this image never exceeded 4500.
+Noisy pixels are not only unlikely to appear consistently over time; they are also more likely to appear in some regions of the detector than others (see \autoref{app:subpanel} for plots of pixelwise standard deviation in each subpanel; subpanels toward the edges of the detector are more likely to display a high pixelwise SD than those in the centre of the detector, particularly in dark images. This suggests that a global threshold to identify noisy pixels may not be appropriate. Furthermore, most of the noisy pixels identified by the `official' threshold were also identified as locally bright pixels based on their pixelwise mean value; adjusting that threshold to make that classifier more sensitive may be able to identify those few persistently noisy pixels. Since noisy pixels are particularly problematic when scanning slices for reconstruction (less so when the intention is to obtain a single image), it may be useful to apply a more stringent set of filtering criteria depending on the purpose of the image.
 
-Black pixel SDs are much smaller than those in the grey and white images, and the black pixel SDs (unlike those of the grey and white images) are not normally distributed.
+The original classification of `locally bright' pixels was any pixel that differed from the median of its immediate neighbourhood by more than twice the MAD of the source image. This threshold highlights only relatively extreme locally bright pixels, as in \autoref{fig:med-diff-hists}. Setting a stricter threshold will classify more pixels as defective, but is likely to make the state less stable. Actually, as shown in \autoref{tab:tr-prop} and \ref{tab:tr-num}, the number of pixels identified as locally bright using the stricter threshold is about 4 times that of the original number identified, while the proportion remaining in that state from one acquisition to the next falls from 83\% to 75\%. Using either method, a number of discernibly noisy (in this acquisition
 
-\begin{figure}[!ht]
-\caption{}
-\centering
-\includegraphics[scale=0.55]{../Med-diff-classification/fig/sd-hist-black-160430}
+%-----------------------------------------------------------------------------------------------------------
+\begin{figure}[!ht] % histograms of median differences
+\caption{Pixelwise median differences in the most recent acquisition (16-04-30), showing potential thresholds at 1 or 2 x the image MAD (red lines), the median-differenced MAD (turquoise lines), or the median-differenced SD (blue lines).}
+\label{fig:med-diff-hists}
+\begin{subfigure}[c]{0.32\textwidth}
+\caption{Black images}
+\includegraphics[scale=0.3]{./fig/med-diff-thresholds-b}
+\end{subfigure}
+%
+\begin{subfigure}[c]{0.32\textwidth}
+\caption{Grey images}
+\includegraphics[scale=0.3]{./fig/med-diff-thresholds-g}
+\end{subfigure}
+%
+\begin{subfigure}[c]{0.32\textwidth}
+\caption{White images}
+\includegraphics[scale=0.3]{./fig/med-diff-thresholds-w}
+\end{subfigure}
+
+\end{figure} 
+%-----------------------------------------------------------------------------------------------------------
+\begin{figure}[!ht] % plots of SD with locally bright at MAD-1 vs MAD-2
+\caption{Pixelwise standard deviations of locally bright pixels (gold) and locally uniform pixels (black) in the images acquired on 16-04-30.}
+
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{Thresholded at 1 MAD}
+\includegraphics[scale=0.19]{./fig/local-th-mad1.png}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{Thresholded at 2 MAD}
+\includegraphics[scale=0.19]{./fig/local-th-mad2.png}
+\end{subfigure}
 
 \end{figure}
-
-Furthermore, the black pixel SDs have a higher degree of spatial variability than those of the grey and white images.
-
-\todo{Numerical summary of unclassified SDs at each power setting}
-
-
-In the remaining points identified, what is the likely effect? (Use $6\sigma$ limit in both directions to assess effect in shading correction)
-
-$(X_i - Y_b) / (Y_w - Y_b) \times 60000$
-
+%-----------------------------------------------------------------------------------------------------------
 \begin{table}[!ht]
-\caption{Effect on a grey image after applying the shading correction, using the median images ($b, g, w$) and the median $\pm$ the SD threshold defined in the manual (median SD + $6\sigma_{SD}$)}
+\begin{footnotesize}
+	
+\caption{Mean proportion of pixels moving between each pair of states using 2MAD (black) and 1MAD (red) as cutoffs.}
+\label{tab:tr-prop}
 \centering
-\csvreader[tabular=l|ccc|ccc|ccc, head to column names=true,
-				table head = & \multicolumn{3}{c}{w+}  & \multicolumn{3}{c}{w} & \multicolumn{3}{c}{w-} \\ & g+ & g & g- & g+ & g & g- & g+ & g & g- \\\hline ]%
-			{./fig/shading-corr-effect.csv}{}%
+\hskip-0.75cm\resizebox{1.1\textwidth}{!}{%
+	
+\csvreader[tabular=l|cccccccccccccccc, head to column names=true,
+				table head = & Normal & No response & Dead & Hot & V. bright & Bright & Bright line & Local bright & 
+				Slightly bright & Screen spot & Edge	 & 	V. dim & Dim & Local dim & Slightly dim \\\hline ]%
+			{./fig/transition-prop-mean-th.csv}{}%
 			{\csvlinetotablerow}%
+		}
+\end{footnotesize}
 \end{table}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\clearpage
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\begin{figure}[!ht]
-\caption{SD across all 32 subpanels of the detector in each acquisition. Solid line is upper panel, dashed is lower; green is white image, red is grey, and black is black. \\ Panels 5 and 10 of the upper bank are particularly variable in the black image (sometimes even in the grey image), with the leftmost subpanels of the upper row also becoming more variable over time.}
+%-----------------------------------------------------------------------------------------------------------
+\begin{table}[!ht]
+\begin{footnotesize}
+	
+\caption{Mean number of pixels moving between each pair of states using 2MAD (black) and 1MAD (red) as cutoffs.}
+\label{tab:tr-num}
 \centering
-\includegraphics[scale=0.55]{./fig/sd-sigma-per-subpanel}
-\end{figure}
+\hskip-0.75cm\resizebox{1.1\textwidth}{!}{%
+	
+\csvreader[tabular=l|cccccccccccccccc, head to column names=true,
+				table head = & Normal & No response & Dead & Hot & V. bright & Bright & Bright line & Local bright & 
+				Slightly bright & Screen spot & Edge	 & 	V. dim & Dim & Local dim & Slightly dim \\\hline ]%
+			{./fig/transition-px-mean-th.csv}{}%
+			{\csvlinetotablerow}%
+		}
+\end{footnotesize}
+\end{table}
+%-----------------------------------------------------------------------------------------------------------
+
+\todo{Multiple testing}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \clearpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 \begin{appendix}
 
@@ -343,5 +387,87 @@ $(X_i - Y_b) / (Y_w - Y_b) \times 60000$
 
 \spplot{L16}
 
+\section{Locally bright pixels identified in first acquisition (14-10-09) and last acquisition (16-04-30), for comparison of the state of the detector screen}
+
+\begin{figure}[!ht]
+\caption{Pixelwise standard deviations of locally bright pixels (gold) and locally uniform pixels (black) in the first and last acquisitions.\\ There has clearly been an increase in variability at all three power settings; the number of high-SD pixels not identified as locally bright has also increased.}
+
+
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{14-10-09, thresholded at 2MAD}
+	\includegraphics[scale=0.19]{./fig/local-th-mad2-141009}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{16-04-30, thresholded at 2MAD}
+	\includegraphics[scale=0.19]{./fig/local-th-mad2}
+\end{subfigure}
+
+\end{figure}
+
 \end{appendix}
 \end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%\todo{Needs editing}
+%
+%The pixels with the highest SD in each subpanel are already picked up as bad pixels by mean-value classification.
+%
+%All of the plots are truncated to the same scale for easy comparison; however, bright pixel SDs may exceed 1300, with a number as high as 4500. The unclassified pixels in this image never exceeded 4500.
+%
+%Black pixel SDs are much smaller than those in the grey and white images, and the black pixel SDs (unlike those of the grey and white images) are not normally distributed.
+%
+%\begin{figure}[!ht]
+%\caption{}
+%\centering
+%\includegraphics[scale=0.55]{../Med-diff-classification/fig/sd-hist-black-160430}
+%
+%\end{figure}
+%
+%Furthermore, the black pixel SDs have a higher degree of spatial variability than those of the grey and white images.
+%
+%\todo{Numerical summary of unclassified SDs at each power setting}
+%
+%
+%In the remaining points identified, what is the likely effect? (Use $6\sigma$ limit in both directions to assess effect in shading correction)
+%
+%$(X_i - Y_b) / (Y_w - Y_b) \times 60000$
+%
+%\begin{table}[!ht]
+%\caption{Effect on a grey image after applying the shading correction, using the median images ($b, g, w$) and the median $\pm$ the SD threshold defined in the manual (median SD + $6\sigma_{SD}$)}
+%\centering
+%\csvreader[tabular=l|ccc|ccc|ccc, head to column names=true,
+%				table head = & \multicolumn{3}{c}{w+}  & \multicolumn{3}{c}{w} & \multicolumn{3}{c}{w-} \\ & g+ & g & g- & g+ & g & g- & g+ & g & g- \\\hline ]%
+%			{./fig/shading-corr-effect.csv}{}%
+%			{\csvlinetotablerow}%
+%\end{table}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\clearpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%\begin{figure}[!ht]
+%\caption{SD across all 32 subpanels of the detector in each acquisition. Solid line is upper panel, dashed is lower; green is white image, red is grey, and black is black. \\ Panels 5 and 10 of the upper bank are particularly variable in the black image (sometimes even in the grey image), with the leftmost subpanels of the upper row also becoming more variable over time.}
+%\centering
+%\includegraphics[scale=0.55]{./fig/sd-sigma-per-subpanel}
+%\end{figure}
