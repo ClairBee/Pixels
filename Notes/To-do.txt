@@ -1,52 +1,43 @@
 
 TO DO
 
-17-May-16
+26-May-16
 ===================================================================================================
-
-|_| locally bright pixels in black vs grey images. Suspect most 'spaff' is in black images.
-
-|x| compare locally non-uniform px with globally extreme px. 
-    Are global px identified at local level too?
-    
-|x| compare effectiveness of median-differencing vs pointwise convolution.
-    If same px identified: which is faster?
-    
-|_| get superclusters with locally extreme pixels. Check state space development.
-
-|x| check effectiveness of local-uniformity classification over grey & white images too.
-    Any point adding one/both?
-    
-|_| Chi-squared test across subpanels to test for similar distribution
-
---------------------------------------------------------------------------------------------------
-
-|_| how stable is the state space, really? Add SD to mean table & replot.
-    Maybe also check max/min proportion changed at each step
-    
---------------------------------------------------------------------------------------------------
-
-|_| SD behaviour for each bad pixel type
-    - do any 'healthy' px have particularly high SD over one day's images? At any power?
-    --> DO WE NEED TO ADD IN A SEPARATE 'NOISY' CATEGORY?
-        
-|x| check state transitions for all 20 images in a single acquisition date
-    (if not same, px will not be fixed by shading correction)
-    
---------------------------------------------------------------------------------------------------
-
-|_| get all old images (should be 6? Check tech report)
 
 |_| run algorithm over old images. Particularly interested in development of column defects.
 
 --------------------------------------------------------------------------------------------------
 
+|_| locally bright pixels in black vs grey images. Suspect most 'spaff' is in black images.
+     - do we actually need both?
+
+|_| get superclusters with locally extreme pixels. Check state space development.
+
+|_| Check spatial distribution of each bad pixel type: over whole image/over subpanels
+|_| Chi-squared test across subpanels to test for similar distribution of each bad pixel type
+
+--------------------------------------------------------------------------------------------------
+
+|_| look at SD as time series, as per JB suggestion.
+     - autocorrelation/partial autocorrelation                                                |_|
+     - total variation/quadratic variation                                                    |_|
+     - try to define shape as well as degree of veriation: homogeneity/oscillation?           |_|
+     
+|_| change colour scale to try to reveal circular spot in SD images
+     
+|_| any difference between change in noise over short time period (15-01-xx) to long (15-05-29)?
+     - also: something odd about 15-01-08, why so different to the others?
+     
+--------------------------------------------------------------------------------------------------
+
 |_| remove known bad pixels from image and re-plot: what's left? SD/mean?
 
-|_| which categories are fixed by shading correction, which remain?
+|_| how does each category appear after shading correction?
+     - which are fixed, which remain?
 
-|_| what's left in shading correction after removing bad px?
-    Do any locally non-uniform points remain? noisy points?
+--------------------------------------------------------------------------------------------------
+
+|_| possible mechanism behind dim/bright lines?
 
 --------------------------------------------------------------------------------------------------
 
@@ -58,6 +49,12 @@ TO DO
 --------------------------------------------------------------------------------------------------
 
 |_| chase Jay re .xtec(?) files to establish level of detector usage between acquisitions
+
+--------------------------------------------------------------------------------------------------
+
+|_| put together 'glossary' page containing all definitions, send to Julia
+
+|_| start to tidy notes into single document
 
 ====================================================================================================
 

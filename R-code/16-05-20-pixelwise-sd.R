@@ -8,7 +8,7 @@ load.pixel.sds()
 bp <- readRDS("./Other-data/bad-px-maps.rds")
 bpx <- readRDS("./Notes/Standard-deviations/bad-px-maps-with-noise.rds")
 
-Cat <- c("no response", "dead", "hot", "v.bright", "bright", "line.b", "l.bright", "s.bright", "screen spot", "line.d", "edge", "v.dim", "dim", "l.dim", "s.dim")
+Cat <- c("no response", "dead", "hot", "v.bright", "bright", "line.b", "l.bright", "s.bright", "screen spot", "line.d", "edge", "v.dim", "dim", "l.dim", "s.dim", "noisy")
 Cat.cols <- c("purple", "black", "magenta3", "red", "orange", "gold", "gold", "yellow", "grey", "violet", "green", "green3", "green", "skyblue", "lightskyblue")
 fancyCat <- c("No response", "Dead", "Hot", "V. bright", "Bright", "Bright line", "Locally bright", "Slightly bright", "Screen spot", "Dim line", "Edge", "V. dim", "Dim", "Locally dim", "Slightly dim")
 headerCat <- gsub("[ ]", "", gsub("[.]", "", Cat))
@@ -107,19 +107,67 @@ length(which(pw.sd[,,"black", "160430"] > median(pw.sd[,,"black", "160430"]) + (
              quantile(data, quantiles), pch = 20, asp = T, ylab = "Observed quantile", xlab = "Normal quantile", ...)
         abline(0,1,col = "red")
         
-        abline(h = quantile(data, grid.quantiles), col = "skyblue", 
+        abline(h = quantile(data, grid.quantiles), col = c("skyblue", "green3"), 
                lty = 2)
-        abline(v = qnorm(grid.quantiles, mean(data), sd(data)), col = "skyblue", 
+        abline(v = qnorm(grid.quantiles, mean(data), sd(data)), col = c("skyblue", "green3"), 
                lty = 2)
+        legend("topleft", cex = 0.7, title = "Gridlines: ", legend = paste0("Q", grid.quantiles * 100),
+               lty = 2, col = c("skyblue", "green3"))
     }
     
-    QQ.norm(pw.sd[,,"black", "160430"], grid.quantiles = c(0.999, 0.99))     # very very not normal
-    QQ.norm(pw.sd[,,"grey", "160430"], grid.quantiles = c(0.999, 0.99))      # close to normal
-    QQ.norm(pw.sd[,,"white", "160430"], grid.quantiles = c(0.999, 0.99))     # close to normal
+    pdf(paste0(fpath.fig, "SD-QQnorm-black.pdf")); {
+        par(mar = c(3, 3, 0.5, 0.5))
+        QQ.norm(pw.sd[,,"black", "160430"], grid.quantiles = c(0.999, 0.99), main = "")     # very very not normal
+        dev.off()
+    }
+    pdf(paste0(fpath.fig, "SD-QQnorm-grey.pdf")); {
+        par(mar = c(3, 3, 0.5, 0.5))
+        QQ.norm(pw.sd[,,"grey", "160430"], grid.quantiles = c(0.999, 0.99), main = "")      # close to normal
+        dev.off()
+    }
+    pdf(paste0(fpath.fig, "SD-QQnorm-white.pdf")); {
+        par(mar = c(3, 3, 0.5, 0.5))
+        QQ.norm(pw.sd[,,"white", "160430"], grid.quantiles = c(0.999, 0.99))     # close to normal
+        dev.off()
+    }
     
     Johnson.QQ(pw.sd[,,"black", "160430"], grid.quantiles = c(0.999, 0.99))
     Johnson.QQ(pw.sd[,,"grey", "160430"], grid.quantiles = c(0.999, 0.99))
     Johnson.QQ(pw.sd[,,"white", "160430"], grid.quantiles = c(0.999, 0.99))
+    
+    QQ.lnorm <- function(data, quantiles = c(1:999)/1000, grid.quantiles = c(0.01, 0.99),...) {
+        data <- log(data)
+        data <- data[!is.infinite(data)] 
+        plot(qnorm(quantiles, mean(data, na.rm = T), sd(data)),
+             quantile(data, quantiles), pch = 20, asp = T, ylab = "Observed quantile", xlab = "Normal quantile", ...)
+        abline(0,1,col = "red")
+        
+        abline(h = quantile(data, grid.quantiles), col = c("skyblue", "green3"), 
+               lty = 2)
+        abline(v = qnorm(grid.quantiles, mean(data), sd(data)), col = c("skyblue", "green3"), 
+               lty = 2)
+        legend("topleft", cex = 0.7, title = "Gridlines: ", legend = paste0("Q", grid.quantiles * 100),
+               lty = 2, col = c("skyblue", "green3"))
+    }
+    
+    pdf(paste0(fpath.fig, "sd-qq-plots-160430.pdf")); {
+        par(mfrow = c(3, 3), mar = c(4, 4, 4, 1))
+        
+        QQ.norm(pw.sd[,,"black", "160430"], grid.quantiles = c(0.999, 0.99), main = "Normal QQ, black")     # very very not normal
+        QQ.norm(pw.sd[,,"grey", "160430"], grid.quantiles = c(0.999, 0.99), main = "Normal QQ, grey")     # very very not normal
+        QQ.norm(pw.sd[,,"white", "160430"], grid.quantiles = c(0.999, 0.99), main = "Normal QQ, white")     # very very not normal
+     
+        QQ.lnorm(pw.sd[,,"black", "160430"], grid.quantiles = c(0.999, 0.99), main = "Lognormal QQ, black")
+        QQ.lnorm(pw.sd[,,"grey", "160430"], grid.quantiles = c(0.999, 0.99), main = "Lognormal QQ, grey")
+        QQ.lnorm(pw.sd[,,"white", "160430"], grid.quantiles = c(0.999, 0.99), main = "Lognormal QQ, white")
+        
+        Johnson.QQ(pw.sd[,,"black", "160430"], grid.quantiles = c(0.999, 0.99), title = "Johnson QQ, black")
+        Johnson.QQ(pw.sd[,,"grey", "160430"], grid.quantiles = c(0.999, 0.99), title = "Johnson QQ, grey")
+        Johnson.QQ(pw.sd[,,"white", "160430"], grid.quantiles = c(0.999, 0.99), title = "Johnson QQ, white")
+        dev.off()
+    }
+    
+    
 }
 
 # summarise standard deviations
@@ -154,7 +202,22 @@ unlist(lapply(sd.summ, function(x) x$median[3] / x$th[1]))
 unlist(lapply(sd.summ, function(x) x$q9999[2] / x$th[2]))
 unlist(lapply(sd.summ, function(x) x$q9999[3] / x$th[3]))
 
+png(paste0(fpath.fig, "noisy-plot-160430.png"), width = 600, height = 600, pointsize = 28); {
+    par(mar = c(2, 2, 1, 0.5))
+    plot(npx$"160430"[npx$"160430"$src.b == T, 1:2], pch = 20, xlim = c(0,1996), ylim = c(0,1996))
+    points(npx$"160430"[npx$"160430"$src.g == T, 1:2], pch = 20, col = "cyan3")
+    points(npx$"160430"[npx$"160430"$src.w == T, 1:2], pch = 20, col = "gold")
+    dev.off()
+}
 
+png(paste0(fpath.fig, "noisy-plot-141009.png"), width = 600, height = 600, pointsize = 28); {
+    par(mar = c(2, 2, 1, 0.5))
+    plot(npx$"141009"[npx$"141009"$src.b == T, 1:2], pch = 20, xlim = c(0,1996), ylim = c(0,1996))
+    points(npx$"141009"[npx$"141009"$src.g == T, 1:2], pch = 20, col = "cyan3")
+    points(npx$"141009"[npx$"141009"$src.w == T, 1:2], pch = 20, col = "gold")
+    dev.off()
+}
+    
 ####################################################################################################
 
 # SD CORRELATION BETWEEN POWER SETTINGS                                                         ####
@@ -623,6 +686,22 @@ write.csv(prep.csv(apply(vv, 1:2, sd), dp = 0)[, -10],
         # 70 227 149  62  40  14   7  11   2   3   3
 }
 
+# spatial distribution of noisy px only
+png(paste0(fpath.fig, "noisy-plot-160430.png"), width = 600, height = 600, pointsize = 28); {
+    par(mar = c(2, 2, 1, 0.5))
+    plot(bpx$"160430"[bpx$"160430"$type == "noisy.b", 1:2], pch = 20, xlim = c(0,1996), ylim = c(0,1996))
+    points(bpx$"160430"[bpx$"160430"$type == "noisy.gw", 1:2], pch = 20, col = "red")
+    dev.off()
+}
+
+png(paste0(fpath.fig, "noisy-plot-141009.png"), width = 600, height = 600, pointsize = 28); {
+    par(mar = c(2, 2, 1, 0.5))
+    plot(bpx$"141009"[bpx$"141009"$type == "noisy.b", 1:2], pch = 20, xlim = c(0,1996), ylim = c(0,1996))
+    points(bpx$"141009"[bpx$"141009"$type == "noisy.gw", 1:2], pch = 20, col = "red")
+    dev.off()
+}
+
+
 ####################################################################################################
 
 # NOISE & LOCAL BRIGHTNESS: NEW THRESHOLD                                                       ####
@@ -896,22 +975,68 @@ th <- data.frame(med = unlist(lapply(j, median)),
                  th = unlist(lapply(j, function(x) median(x) + 6 * sd(x))))
 
 npx <- lapply(j.sd, function(x) which(x > (median(x) + 6 * sd(x)), arr.ind = T))
+names(npx) <- apply(matrix(c(rep("ua", 5), 20, 40, 60, 80, 100), ncol = 2), 1, paste, collapse = "")
 
-zz <- rbind.fill(lapply(npx, as.data.frame))
-zz <- zz[!duplicated(zz),]
-
-hh <- merge(merge(merge(merge(merge(zz, data.frame(npx[[1]], ua20 = T), by = c(1,2), all = T),
-            data.frame(npx[[2]], ua40 = T), by = c(1,2), all = T),
-            data.frame(npx[[3]], ua60 = T), by = c(1,2), all = T),
-            data.frame(npx[[4]], ua80 = T), by = c(1,2), all = T),
+hh <- merge(merge(merge(merge(merge(unique(rbind.fill(lapply(npx, as.data.frame))),
+                                    data.frame(npx[[1]], ua20 = T), by = c(1,2), all = T),
+                              data.frame(npx[[2]], ua40 = T), by = c(1,2), all = T),
+                        data.frame(npx[[3]], ua60 = T), by = c(1,2), all = T),
+                  data.frame(npx[[4]], ua80 = T), by = c(1,2), all = T),
             data.frame(npx[[5]], ua100 = T), by = c(1,2), all = T)
+
 hh[is.na(hh)] <- F
 
 table(hh[,3:4]); table(hh[,4:5]); table(hh[,5:6]); table(hh[,6:7]); table(hh[,c(7, 3)])
 
 length(which(apply(hh[3:7], 1, all)))
 
-count(hh[3:7])[rev(order(count(hh[3:7])[,6])),]
+qq <- count(hh[3:7])[rev(order(count(hh[3:7])[,6])),]
+qq[qq == T] <- "$\\bullet$"
+qq[qq == F] <- "-"
+qq$freq[qq$freq == "$\\bullet$"] <- 1
+qq$N <- apply(qq[,1:5], 1, function(x) length(which(x == "$\\bullet$")))
+colnames(qq) <- c(letters[1:5], "freq", "N")
+
+write.csv(qq, paste0(fpath.fig, "sd-progress-ua.csv"), quote = F)
+
+# transition matrix
+# state transitions including noise
+{
+    px2im <- function(px) {
+        im <- array(0, dim = c(1996, 1996))
+        im[as.matrix(px[, 1:2])] <- 1
+        return(im)
+    }
+    
+    tr.j <- list()
+    
+    for (i in 1:(length(npx) - 1)) {
+        tr.j[[i]] <- table("From" = c(px2im(npx[[i]])),
+                         "To" = c(px2im(npx[[i+1]])))
+        names(tr.j)[[i]] <- paste(names(npx)[c(i,(i+1))], collapse = "-")
+    }
+}
+
+# mean transition rates
+tr.j <- array(unlist(tr.j), dim = c(2, 2, 4),
+              dimnames = list(NULL, NULL, names(tr.j)))
+{
+    write.csv(round(apply(tr.j, 1:2, mean), 0),
+              paste0(fpath.fig, "transition-px-mean-ua.csv"), quote = F)
+    
+    write.csv(round(apply(tr.j, 1:2, sd), 0),
+              paste0(fpath.fig, "transition-px-sd-ua.csv"), quote = F)
+    
+    write.csv(round(apply(array(apply(tr.j, 3, function(x) x / rowSums(x)),
+                                   dim = dim(tr.j), dimnames = dimnames(tr.j)), 1:2, mean, na.rm = T) * 100, 2),
+              paste0(fpath.fig, "transition-prop-mean-ua.csv"), quote = F)
+    
+    write.csv(round(apply(array(apply(tr.j, 3, function(x) x / rowSums(x)),
+                                dim = dim(tr.j), dimnames = dimnames(tr.j)), 1:2, sd, na.rm = T) * 100, 2),
+              paste0(fpath.fig, "transition-prop-sd-ua.csv"), quote = F)
+}
+
+
 
 # get bad pixel map & compare: which of those px are already identified?
 {
@@ -1181,3 +1306,72 @@ sc.non.u <- which(threshold(md.sc, level = 2 * mad(sc[,,"160430"], na.rm = T)) >
 
 bp.sc <- merge(bp[[1]], data.frame(sc.non.u, non.u = "non-U"), by = c(1:2), all = T)
 table(bp.sc$type, bp.sc$non.u, useNA = "ifany")
+
+####################################################################################################
+
+# LOG-TRANSFORM BLACK SDS                                                                       ####
+
+ls <- log(pw.sd[,,"black", "160430"])
+ls[is.infinite(ls)] <- NA
+
+th <- median(ls, na.rm = T) + 6 * sd(ls, na.rm = T)
+
+hist(ls, breaks = "fd")
+abline(v = median(ls, na.rm = T) + 6 * sd(ls, na.rm = T), col = "red")
+
+plot(ls,pw.sd[,,"black", "160430"], pch = 20, cex = 0.6)
+
+# this was a terrible idea. Moving on...
+
+####################################################################################################
+
+# INCREASE THRESHOLD OF BLACK SD                                                                ####
+
+# try doubling threshold for black images to test effect
+{
+    npx <- apply(pw.sd[,,"black", ], 3, function(x) data.frame(which(x > (median(x) + 12 * sd(x)), arr.ind = T),
+                                                               n.type = "noisy"))
+    
+    # merge with existing bad pixel map
+    bpx <- list()
+    for (dt in dimnames(pw.sd)[[4]]) {
+        
+        bpx[[dt]] <- merge(bp[[dt]], npx[[dt]], by = c(1:2), all = T)
+        levels(bpx[[dt]]$type) <- c(levels(bpx[[dt]]$type), "noisy")
+        bpx[[dt]]$type[is.na(bpx[[dt]]$type)] <- "noisy"
+    }
+    
+    # state transitions including noise
+    tr <- list()
+        
+    for (i in 1:(length(bpx) - 1)) {
+        tr[[i]] <- table("From" = ordered(longCat[c(bpx2im(bpx[[i]])) + 1], levels = longCat),
+                         "To" = ordered(longCat[c(bpx2im(bpx[[i+1]])) + 1], levels = longCat))
+        names(tr)[[i]] <- paste(names(bpx)[c(i,(i+1))], collapse = "-")
+    }
+    tr <- array(unlist(tr), dim = c(dim(tr[[1]]), length(tr)), 
+                dimnames = list(dimnames(tr[[1]])[[1]], dimnames(tr[[1]])[[2]], names(tr)))
+    
+    # csv of result
+    write.csv(prep.csv(apply(tr, 1:2, mean), dp = 0)[-11, -11],
+              paste0(fpath.fig, "mean-bad-px-types-th2.csv"), quote = F)
+    
+    write.csv(prep.csv(apply(tr, 1:2, sd), dp = 0)[-11, -11],
+              paste0(fpath.fig, "transition-px-sd-th2.csv"), quote = F)
+    
+    write.csv(prep.csv(apply(array(apply(tr, 3, function(x) x / rowSums(x)), dim = dim(tr), dimnames = dimnames(tr)),
+                             1:2, mean, na.rm = T) * 100)[-11, -11],
+              paste0(fpath.fig, "transition-prop-mean-th2.csv"), quote = F)
+    
+    write.csv(prep.csv(apply(array(apply(tr, 3, function(x) x / rowSums(x)), dim = dim(tr), dimnames = dimnames(tr)),
+                             1:2, sd, na.rm = T) * 100)[-11, -11],
+              paste0(fpath.fig, "transition-prop-sd-th2.csv"), quote = F)
+}
+
+
+# what is SD of RHS of black SD distribution? Can we mirror it to get threshold?
+
+# what about if we apply threshold to each subpanel individually?
+
+####################################################################################################
+
