@@ -122,10 +122,9 @@ bp <- readRDS(paste0(fpath, "bad-px-maps.rds"))
     hh <- setNames(as.data.frame(do.call("cbind", lapply(lapply(lapply(bp, "[", "type"), table), as.matrix))),
                    sapply(names(bp), function (x) paste0(substring(x, 1, 2), "-", substring(x, 3,4), "-", substring(x, 5,6))))
     
-    rownames(hh) <- fancyCat
-    write.csv(hh, paste0(fpath, "bad-px-identified.csv"), quote = F)
 }
 
+plot(bp$"140129", pch = 15, cex = 0.3, col = cat.co)
 ####################################################################################################
 
 # TRACK ALL STATE TRANSITIONS                                                                   ####

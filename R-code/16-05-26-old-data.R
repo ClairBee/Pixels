@@ -1,5 +1,10 @@
 
+library("IO.Pixels"); library("CB.Misc")
+
 pw.m <- readRDS("./Other-data/Old-data/Pixelwise-means.rds")
+Cat <- c("no response", "dead", "hot", "v.bright", "bright", "line.b", "l.bright", "s.bright", "screen spot", "line.d", "edge", "v.dim", "dim", "l.dim", "s.dim")
+Cat.cols <- c("purple", "black", "magenta3", "red", "orange", "gold", "gold", "yellow", "grey", "violet", NA, "green3", "green", "lightskyblue", "grey")
+
 
 p.dim <- panel.edges(left.crop = 24, upper.crop = 24, x.dim = 2000, y.dim = 2000)
 
@@ -39,8 +44,8 @@ load.images <- function(dt, direct = F) {
     dt <- toString(dt)
     fpath <- paste0("./Other-data/Old-data/", dt)
     tmp.b <- readTIFF(paste0(fpath, "/BadPixelMapBlack.tif"), as.is = T)
-    tmp.g <- readTIFF(paste0(fpath, "/BadPixelMapBlack.tif"), as.is = T)
-    tmp.w <- readTIFF(paste0(fpath, "/BadPixelMapBlack.tif"), as.is = T)
+    tmp.g <- readTIFF(paste0(fpath, "/BadPixelMapGrey.tif"), as.is = T)
+    tmp.w <- readTIFF(paste0(fpath, "/BadPixelMapWhite.tif"), as.is = T)
     
     if (direct) {
         pw.m[,,"black", dt] <<- t(tmp.b[nrow(tmp.b):1, , drop = FALSE])
@@ -78,13 +83,13 @@ pw.m[,,,"131122"] <- abind(array(dim = c(2000, 200, 3)),
 load.images(140128, direct = T)
 load.images(140129, direct = T)
 
-saveRDS(pw.m, "./Other-data/Old-data/Pixelwise-means.rds", as.is = T)
+saveRDS(pw.m, "./Other-data/Old-data/Pixelwise-means.rds")
 
 # MEDIAN DIFFERENCES
 
-md.b <- array(unlist(apply(pw.m[,,"black", ], 3, med.diffs), dim = dim(pw.m)))
-md.g <- array(unlist(apply(pw.m[,,"grey", ], 3, med.diffs), dim = dim(pw.m)))
-md.w <- array(unlist(apply(pw.m[,,"white", ], 3, med.diffs), dim = dim(pw.m)))
+md.b <- array(unlist(apply(pw.m[,,"black", ], 3, med.diffs)), dim = dim(pw.m[,,"black",]), dimnames = dimnames(pw.m[,,"black",]))
+md.g <- array(unlist(apply(pw.m[,,"grey", ], 3, med.diffs)), dim = dim(pw.m[,,"grey", ]), dimnames = dimnames(pw.m[,,"grey",]))
+md.w <- array(unlist(apply(pw.m[,,"white", ], 3, med.diffs)), dim = dim(pw.m[,,"white", ]), dimnames = dimnames(pw.m[,,"white",]))
 
 saveRDS(md.b, "./Other-data/Old-data/Med-diffs-black.rds")
 saveRDS(md.g, "./Other-data/Old-data/Med-diffs-grey.rds")
@@ -97,24 +102,25 @@ saveRDS(md.w, "./Other-data/Old-data/Med-diffs-white.rds")
 md.b <- readRDS("./Other-data/Old-data/Med-diffs-black.rds")
 md.g <- readRDS("./Other-data/Old-data/Med-diffs-grey.rds")
 md.w <- readRDS("./Other-data/Old-data/Med-diffs-white.rds")
+md <- abind(md.b, md.g, md.w, along = 2.5, new.names = dimnames(pw.m))
 
 {
     bp <- lapply(dimnames(pw.m)[[4]],
-                 function(x) rbind(data.frame(edge.px(pw.m), type = ordered("edge", levels = cat)),
+                 function(x) rbind(data.frame(edge.px(pw.m), type = ordered("edge", levels = Cat)),
                                    data.frame(no.response(x), type = "no response"),
-                                   data.frame(which(pw.m[, , "black", x] == 65535, arr.ind = T), type = "hot"),
-                                   data.frame(which(pw.m[, , "white", x] == 0, arr.ind = T), type = "dead"),
-                                   screen.spots.xy(x),
+                                   hot.px(x),
+                                   dead.px(x),
                                    get.dim.bright.px(pw.m[,,"white", x]),
                                    get.dim.bright.px(pw.m[,,"grey", x]),
                                    get.dim.bright.px(pw.m[,,"black", x]),
-                                   data.frame(which(find.lines(pw.m[, , "black", x]) > 0, arr.ind = T), type = "line.b"),
-                                   data.frame(which(threshold(md.b[,,x], level = mad(pw.m[,,"black", x]) * 2) > 0, arr.ind = T), type = "l.bright"),
-                                   data.frame(which(threshold(md.b[[x]], level = mad(pw.m[,,"black", x]) * -2) == 0, arr.ind = T), type = "l.dim"),
-                                   data.frame(which(threshold(md.g[[x]], level = mad(pw.m[,,"grey", x]) * 2) > 0, arr.ind = T), type = "l.bright"),
-                                   data.frame(which(threshold(md.g[[x]], level = mad(pw.m[,,"grey", x]) * -2) == 0, arr.ind = T), type = "l.dim")))
-    
-    bp <- lapply(lapply(bp, 
+                                   data.frame(which(find.lines(pw.m[, , "black", x], midline = 1000.5) > 0, arr.ind = T), type = "line.b"),
+                                   data.frame(which(find.lines(pw.m[, , "grey", x], dim.lines = T, midline = 1000.5) > 0, arr.ind = T), type = "line.d"),
+                                   locally.bright.px(x, "black"),
+                                   locally.dim.px(x, "black"),
+                                   locally.bright.px(x, "grey"),
+                                   locally.dim.px(x, "grey")))
+
+bp <- lapply(lapply(bp, 
                         function(x) x[order(x$type),]),
                  function(x) x[!duplicated(x[,1:2]),])
     names(bp) <- dimnames(pw.m)[[4]]
@@ -122,6 +128,39 @@ md.w <- readRDS("./Other-data/Old-data/Med-diffs-white.rds")
     saveRDS(bp, "./Other-data/Old-data/bad-px-maps.rds")
 }
 bp <- readRDS("./Other-data/Old-data/bad-px-maps.rds")
+
+# single-image bad pixel list, while working out details
+{
+    bp <- list()
+    {
+        bp$edge <- data.frame(edge.px(pw.m[,,"black", "131002"]), type = ordered("edge", levels = Cat))
+        bp$noResp <- data.frame(no.response("131002"), type = "no response")
+        bp$hot <- hot.px("131002")
+        bp$dead <- dead.px("131002")
+        # no dim spots visible in images, so don't run (need to update function to capture this)
+        bp$db <- rbind(get.dim.bright.px(pw.m[,,"black", "131002"]),
+                       get.dim.bright.px(pw.m[,,"grey", "131002"]),
+                       get.dim.bright.px(pw.m[,,"white", "131002"]))
+        bp$line.b <- data.frame(which(find.lines(pw.m[, , "black", "131002"], midline = 1000.5) > 0, arr.ind = T), type = "line.b")
+        bp$local.b <- locally.bright.px("131002", "black")
+        bp$local.g <- locally.bright.px("131002", "grey")
+        bp$local.w <- locally.bright.px("131002", "white")
+        bp$local.b.d <- locally.dim.px("131002", "black")
+        bp$local.g.d <- locally.dim.px("131002", "grey")
+        bp$local.w.d <- locally.dim.px("131002", "white")
+    }
+    
+    sapply(bp, nrow)
+    
+    all.bp <- rbind.fill(bp)
+    all.bp <- all.bp[order(all.bp$type),]
+    all.bp <- all.bp[!duplicated(all.bp[,1:2]),]
+    
+    table(all.bp$type)
+    
+    plot(bp$"140129", pch = 15, cex = 0.4, col = Cat.cols[bp$"140129"$type])
+}
+
 
 ####################################################################################################
 
