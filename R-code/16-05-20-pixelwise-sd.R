@@ -1,6 +1,7 @@
 
 library("IO.Pixels"); library("CB.Misc")
 
+
 fpath <- "./Notes/Standard-deviations/sd-plots/"
 fpath.fig <- "./Notes/Standard-deviations/fig/"
 
@@ -217,7 +218,43 @@ png(paste0(fpath.fig, "noisy-plot-141009.png"), width = 600, height = 600, point
     points(npx$"141009"[npx$"141009"$src.w == T, 1:2], pch = 20, col = "gold")
     dev.off()
 }
-    
+
+# daily plot ####
+
+d.141009 <- load.daily("141009")
+
+o.plot(d.141009[158,747,,"black"])      # decreasing
+o.plot(d.141009[158,747,,"grey"])
+o.plot(d.141009[158,747,,"white"])
+
+o.plot(d.141009[256,999,,"black"])      # decreasing
+o.plot(d.141009[256,999,,"grey"]) 
+o.plot(d.141009[256,999,,"white"]) 
+
+o.plot(d.141009[265,1256,,"black"], ylim = c(5200, 5700))
+lines(d.141009[265,1257,,"black"], col = "blue")
+lines(d.141009[265,1255,,"black"], col = "red")
+
+o.plot(d.141009[265,1256,,"grey"])
+o.plot(d.141009[265,1256,,"white"])
+
+o.plot(d.141009[265,1257,,"black"])
+o.plot(d.141009[265,1255,,"black"])
+
+
+high.sd.plot(265, 1256, 1)
+high.sd.plot(1272, 989, 1)
+high.sd.plot(1446, 904, 1)
+high.sd.plot(1462, 1659, 1)
+
+# pick the 6 worst noisy black pixels to plot as well...
+high.sd.plot(320, 895, 1)
+high.sd.plot(22, 260, 1)
+high.sd.plot(529, 1699, 1)
+high.sd.plot(84, 849, 1)
+high.sd.plot(1544, 285, 1)
+high.sd.plot(583, 217, 1)
+
 ####################################################################################################
 
 # SD CORRELATION BETWEEN POWER SETTINGS                                                         ####
@@ -1277,6 +1314,8 @@ high.sd.plot <- function(x, y, d, byrow = T) {
         lines(pw.sd[,y,"white", d] + mean(sc[x + (-50:50),y,d]) - mean(pw.sd[x + (-50:50),y,"white", d]), col = "cyan3")
     }
 }
+
+
 
 high.sd.plot(158, 747, 1)
 high.sd.plot(256, 999, 1)
