@@ -4,9 +4,21 @@ TO DO
 26-May-16
 ===================================================================================================
 
-|_| run algorithm over old images. Particularly interested in development of column defects.
+|_| Can we detect CTE (Charge Transfer Error) as in the Hubble images?
 
 --------------------------------------------------------------------------------------------------
+
+|_| try to identify persistently noisy pixels (ignoring all other classifications)
+    look for identifying characteristics
+
+--------------------------------------------------------------------------------------------------
+
+|_| change loess-per-column function to use 1/sqrt(n) as default smoothing span
+    May need to adjust this - give some justification (discuss bias vs variance tradeoff)
+
+--------------------------------------------------------------------------------------------------
+
+|_| Reclassify bright pixels by source: over-responsive px are bright under spot but not otherwise?
 
 |_| locally bright pixels in black vs grey images. Suspect most 'spaff' is in black images.
      - do we actually need both?

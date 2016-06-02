@@ -1,0 +1,37 @@
+
+Possible structure for final write-up
+
+· general introduction to image acquisition process & data
+
+· literature review (probably quite brief, since mostly patents, so not very much in PD.)
+    · refer to Hubble similarities & differences
+    · comment on generally applicability to any CCD device
+
+· describe panel structure & difference in behaviour (variability & response) across subpanels
+    · mention possibility of linear gradient model + circular spot as parametric approach
+    
+· definitions of defective pixels
+    · mention different levels of stringency depending on process type 
+      (CT reconstruction vs static image, correction vs assessment of detector)
+    · relate to original thresholds in manual
+
+· spatial distribution of defective pixels
+    · are some types of defect more likely to occur in certain regions than others?
+    
+· describe specific features: lines, clusters, singletons
+
+· state spaces of individual defective pixels, with transition rates
+    · hopefully link transition rates to detector usage using .xtec files
+    
+· state spaces of features (lines, superclusters, singletons)
+
+· behaviour of each defective pixel type/feature type under shading correction
+    · how severe does a defect need to be to remain after correction?
+
+· apply method to old data as well as new (discuss effect on threshold selection?)
+
+----------------------------------------------------------------------------------------------
+
+What is the purpose of the paper?
+    - are we looking to describe a methodology to assess the state of the screen?
+    - or just to describe observed features?
