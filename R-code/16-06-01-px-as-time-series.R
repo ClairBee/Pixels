@@ -356,6 +356,7 @@ dd <- readRDS(paste0(fpath, "persisting-noisy-px.rds"))
     dimnames(dd.all) <- list(NULL, NULL, dimnames(pw.sd)[[3]], dimnames(pw.sd)[[4]])
     saveRDS(dd.all, paste0(fpath, "all-noisy-px.rds"))
 }
+dd <- readRDS(paste0(fpath, "all-noisy-px.rds"))
 # BUT where do these persistently noisy pixels sit in terms of non-persistent pixels?
 
 # histograms of key xteristics, split by 'all px' / 7+ images / 10+ images. Compare distribution
@@ -391,7 +392,36 @@ qq <- data.frame(n = p$freq,
                  qlc.w = apply(dd.all[,,"white", "160430"], 1, qfit.l),
                  qqc.b = apply(dd.all[,,"black", "160430"], 1, qfit.q),
                  qqc.g = apply(dd.all[,,"grey", "160430"], 1, qfit.q),
-                 qqc.w = apply(dd.all[,,"white", "160430"], 1, qfit.q))
+                 qqc.w = apply(dd.all[,,"white", "160430"], 1, qfit.q),
+                 iqr.b = apply(dd.all[,,"black", "160430"], 1, IQR),
+                 iqr.g = apply(dd.all[,,"grey", "160430"], 1, IQR),
+                 iqr.w = apply(dd.all[,,"white", "160430"], 1, IQR),
+                 lq.b = apply(dd.all[,,"black", "160430"], 1, quantile, 0.25),
+                 lq.g = apply(dd.all[,,"grey", "160430"], 1, quantile, 0.25),
+                 lq.w = apply(dd.all[,,"white", "160430"], 1, quantile, 0.25),
+                 uq.b = apply(dd.all[,,"black", "160430"], 1, quantile, 0.75),
+                 uq.g = apply(dd.all[,,"grey", "160430"], 1, quantile, 0.75),
+                 uq.w = apply(dd.all[,,"white", "160430"], 1, quantile, 0.75))
+
+qq$rng.b <- qq$max.b - qq$min.b
+qq$rng.g <- qq$max.g - qq$min.g
+qq$rng.w <- qq$max.w - qq$min.w
+
+qq$mmr.b <- qq$mean.b / qq$median.b
+    qq$mmr.b[is.na(qq$mmr.b)] <- 0
+qq$mmr.g <- qq$mean.g / qq$median.g
+    qq$mmr.g[is.na(qq$mmr.g)] <- 0
+qq$mmr.w <- qq$mean.w / qq$median.w
+    qq$mmr.w[is.na(qq$mmr.w)] <- 0
+    
+qq$skew.b <- apply(dd.all[,,"black", "160430"], 1, skewness)
+qq$skew.g <- apply(dd.all[,,"grey", "160430"], 1, skewness)
+qq$skew.w <- apply(dd.all[,,"white", "160430"], 1, skewness)
+
+qq$kurt.b <- apply(dd.all[,,"black", "160430"], 1, kurtosis)
+qq$kurt.g <- apply(dd.all[,,"grey", "160430"], 1, kurtosis)
+qq$kurt.w <- apply(dd.all[,,"white", "160430"], 1, kurtosis)
+
 
 # used for EEG clustering (Siuly et al, 2011):
 #   minimum; maximum; mean; median; modus; first quartile; third quartile; inter-quartile range; standard deviation
@@ -399,11 +429,18 @@ qq <- data.frame(n = p$freq,
 # used by Barton:
 #   mean; minimum; maximum; linear coefficient; quadratic coefficient
 
+qq.cols <- c(rep("black", 6), rep("gold", 3), rep("red", 3))
+png(paste0(fpath, "xteristics-splot-black.png"), width = 6000, height = 4000, pointsize = 48)
+plot(qq[,c("sd.b", "tv.b", "rng.b", "iqr.b", "mean.b", "lq.b", "uq.b", "lc.b", "qqc.b", "mmr.b", "skew.b", "kurt.b")], pch = 20, col = qq.cols[qq$n], lower.panel = panel.cor, cex.cor = 1.4,
+     labels = c("SD", "Total variance", "Range", "IQR", "Mean", "Q1", "Q3", "Linear coeff", "Quadratic coeff", "Mean/Median", "Skewness", "Kurtosis"))
+dev.off()
+
 # histograms of various characteristics
 {
     # custom histogram function to speed this up
     c.hist <- function(qq.col, d = 4, ...) {
         
+        qq.col <- qq.col[!is.na(qq.col)]
         b <- c(floor(min(qq.col, 0)/d):ceiling(max(qq.col)/d))*d
         hh.low <- hist(qq.col[qq$n <= 6], breaks = b, plot = F)
         hh.mid <- hist(qq.col[qq$n > 6 & qq$n <= 9], breaks = b, plot = F)
@@ -473,6 +510,26 @@ qq <- data.frame(n = p$freq,
             c.hist(qq$qqc.w, xlim = c(-100, 100), d = 1, main = "White quadratic coefficient", xlab = "", ylab = "")
         }
         
+        # mean/median ratio
+        {
+            c.hist(qq$mmr.b, d = 0.001, xlim = c(0.9, 1.1), main = "Black Mean/Median", xlab = "", ylab = "")
+            c.hist(qq$mmr.g, d = 0.001, xlim = c(0.95, 1.05), main = "Grey Mean/Median", xlab = "", ylab = "")
+            c.hist(qq$mmr.w, d = 0.001, xlim = c(0.95, 1.05), main = "White Mean/Median", xlab = "", ylab = "")
+        }
+        
+        # skewness
+        {
+            c.hist(qq$skew.b, d = 0.1, main = "Black skewness", xlab = "", ylab = "")
+            c.hist(qq$skew.g, d = 0.1, main = "Grey skewness", xlab = "", ylab = "")
+            c.hist(qq$skew.w, d = 0.1, main = "White skewness", xlab = "", ylab = "")
+        }
+        
+        # kurtosis
+        {
+            c.hist(qq$kurt.b, d = 0.1, main = "Black kurtosis", xlab = "", ylab = "")
+            c.hist(qq$kurt.g, d = 0.1, main = "Grey kurtosis", xlab = "", ylab = "")
+            c.hist(qq$kurt.w, d = 0.1, main = "White kurtosis", xlab = "", ylab = "")
+        }
         dev.off()
     }
     
@@ -502,6 +559,167 @@ pdf(paste0(fpath, "tmp.pdf")); {
 
 
 # propose some thresholds, use the 147 persistent noisy px as 'true positives', assess performance
+
+####################################################################################################
+
+# DIFFERENT DISTANCE METRICS                                                                    ####
+
+library(RMallow)
+library(distrEx)
+
+# supremum norm
+{
+    # only interested in variation, so subtract pixel mean
+    dd.0 <- apply(dd.all, c(1, 3:4), function(x) x - mean(x))
+    
+    dist.max.0 <- dist(t(dd.0[,,"black", "160430"]), method = "max")
+    hc.max.0 <- hclust(dist.max.0)
+    
+    pdf(paste0(fpath, "hclust-supnorm-black-0.pdf"))
+    plot(hc.max.0, labels = F, xlab = "", ylab = "", main = "Sup. norm: black, centred at 0")
+    dev.off()
+    
+    table(cutree(hc.max.0, k = 20), p$freq)
+    
+    pdf(paste0(fpath, "hclust-supnorm-black-0.pdf"), height = 4, width = 7); {
+        par(mar = c(2, 2, 1, 1))
+        plot(hc.max.0, labels = F, xlab = "", ylab = "", main = "")
+        rect(-10,0,15000,-10000, col = "white", border = NA)
+        abline(h = hc.max.0$height[rev(order(hc.max.0$height))][c(2, 5, 10, 20)], col = c("red", "purple", "blue", "green3"), lty = 2)
+        dev.off()
+        crop.pdf(paste0(fpath, "hclust-supnorm-black-0.pdf"))
+    }
+    
+    #==========================================================================================
+    
+    # try with mean included, just to see
+    dist.max <- dist(dd.all[,,"black", "160430"], method = "max")
+    hc.max <- hclust(dist.max)
+    
+    pdf(paste0(fpath, "hclust-supnorm-black.pdf"), height = 4, width = 7); {
+        par(mar = c(2, 2, 1, 1))
+        plot(hc.max, labels = F, xlab = "", ylab = "", main = "")
+        rect(-10,0,15000,-10000, col = "white", border = NA)
+        abline(h = hch[c(2, 5, 10, 20)] + 1, col = c("red", "purple", "blue", "green3"), lty = 2)
+        dev.off()
+        crop.pdf(paste0(fpath, "hclust-supnorm-black.pdf"))
+    }
+
+    {
+        tmp <- table(cutree(hc.max, k = 2), p$freq)
+        write.csv(prep.csv(rbind(tmp[which(rowSums(tmp) > 10),],
+                                 xx = colSums(tmp[which(rowSums(tmp) <= 10),]))), 
+                  paste0(fpath, "hclust-tab-supnorm-black-k2.csv"), quote = F)
+        
+        write.csv(prep.csv(table(cutree(hc.max, k = 5), p$freq)), 
+                  paste0(fpath, "hclust-tab-supnorm-black-k5.csv"), quote = F)
+        
+        tmp <- table(cutree(hc.max, k = 10), p$freq)
+        write.csv(prep.csv(rbind(tmp[which(rowSums(tmp) > 10),],
+                                 xx = colSums(tmp[which(rowSums(tmp) <= 10),]))), 
+                  paste0(fpath, "hclust-tab-supnorm-black-k10.csv"), quote = F)
+        
+        tmp <- table(cutree(hc.max, k = 20), p$freq)
+        write.csv(prep.csv(rbind(tmp[which(rowSums(tmp) > 10),],
+                                 xx = colSums(tmp[which(rowSums(tmp) <= 10),]))), 
+                  paste0(fpath, "hclust-tab-supnorm-black-k20.csv"), quote = F)
+        
+        tmp <- table(cutree(hc.max, k = 50), p$freq)
+        write.csv(prep.csv(rbind(tmp[which(rowSums(tmp) > 10),],
+                                 xx = colSums(tmp[which(rowSums(tmp) <= 10),]))),
+                  paste0(fpath, "hclust-tab-supnorm-black-k50.csv"), quote = F)
+    }
+
+
+    
+    # and now, over the grey images
+    dist.max.g <- dist(dd.all[,,"grey", "160430"], method = "max")
+    hc.max.g <- hclust(dist.max.g)
+    {
+        write.csv(prep.csv(table(cutree(hc.max.g, k = 2), p$freq)),
+                  paste0(fpath, "hclust-tab-supnorm-grey-k2.csv"), quote = F)
+        
+        write.csv(prep.csv(table(cutree(hc.max.g, k = 5), p$freq)),
+                  paste0(fpath, "hclust-tab-supnorm-grey-k5.csv"), quote = F)
+        
+        write.csv(prep.csv(table(cutree(hc.max.g, k = 10), p$freq)),
+                  paste0(fpath, "hclust-tab-supnorm-grey-k10.csv"), quote = F)
+        
+        write.csv(prep.csv(table(cutree(hc.max.g, k = 20), p$freq)),
+                  paste0(fpath, "hclust-tab-supnorm-grey-k20.csv"), quote = F)
+    }
+    
+    pdf(paste0(fpath, "hclust-supnorm-grey.pdf"), height = 4, width = 7); {
+        par(mar = c(2, 2, 1, 1))
+        plot(hc.max.g, labels = F, xlab = "", ylab = "", main = "")
+        rect(-10,0,15000,-10000, col = "white", border = NA)
+        abline(h = hc.max.g$height[rev(order(hc.max.g$height))][c(2, 5, 10, 20)], col = c("red", "purple", "blue", "green3"), lty = 2)
+        dev.off()
+        crop.pdf(paste0(fpath, "hclust-supnorm-grey.pdf"))
+    }
+    
+    # tables with mean pixel value removed
+    {
+        write.csv(prep.csv(table(cutree(hc.max.0, k = 2), p$freq)),
+                  paste0(fpath, "hclust-tab-supnorm-black-0-k2.csv"), quote = F)
+        
+        tmp <- table(cutree(hc.max.0, k = 5), p$freq)
+        write.csv(prep.csv(rbind(tmp[which(rowSums(tmp) > 10),],
+                                 xx = colSums(tmp[which(rowSums(tmp) <= 10),]))),
+                  paste0(fpath, "hclust-tab-supnorm-black-0-k5.csv"), quote = F)
+        
+        tmp <- table(cutree(hc.max.0, k = 10), p$freq)
+        write.csv(prep.csv(rbind(tmp[which(rowSums(tmp) > 10),],
+                                 xx = colSums(tmp[which(rowSums(tmp) <= 10),]))),
+                  paste0(fpath, "hclust-tab-supnorm-black-0-k10.csv"), quote = F)
+        
+        tmp <- table(cutree(hc.max.0, k = 20), p$freq)
+        write.csv(prep.csv(rbind(tmp[which(rowSums(tmp) > 10),],
+                                 xx = colSums(tmp[which(rowSums(tmp) <= 10),]))),
+                  paste0(fpath, "hclust-tab-supnorm-black-0-k20.csv"), quote = F)
+        
+        tmp <- table(cutree(hc.max.0, k = 50), p$freq)
+        write.csv(prep.csv(rbind(tmp[which(rowSums(tmp) > 10),],
+                                 xx = colSums(tmp[which(rowSums(tmp) <= 10),]))),
+                  paste0(fpath, "hclust-tab-supnorm-black-0-k50.csv"), quote = F)
+    }
+}
+
+# Mallows distance
+{
+    BestFit(t(dd.all[1:3,,"black","160430"]), N = 10, iter = 10, G = 2)
+    Mallows(t(dd.all[1:3,,"black","160430"]), G = 2)
+}
+
+# Hellinger distance
+{
+    # can't use on two sets of observations. Try distance from Gaussian?
+    HellingerDist(Norm(), dd.all[1,,"black","160430"])
+    
+    x <- dd.all[1,,"black","160430"]
+    HellingerDist(Norm(mean(dd.all[1,,"black","160430"]), sd(dd.all[1,,"black","160430"])), x)
+    
+    d.Hell.b <- apply(dd.all[,,"black","160430"], 1,
+                      function(x) if (max(x) == min(x)) {NA} else {HellingerDist(x, Norm(mean(x), sd(x)))})
+    
+    qq <- apply(dd.all[,,"black","160430"], 1, sd)
+}
+
+# Kolmogorov distance
+{
+    KolmogorovDist(dd.all[1,,"black","160430"], Norm(mean(dd.all[1,,"black","160430"]), sd(dd.all[1,,"black","160430"])))
+
+}
+
+# Cramer-von Mises distance
+{
+    
+}
+
+# total variation
+{
+    
+}
 
 ####################################################################################################
 

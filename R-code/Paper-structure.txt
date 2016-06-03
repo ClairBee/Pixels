@@ -17,6 +17,7 @@ Possible structure for final write-up
 
 · spatial distribution of defective pixels
     · are some types of defect more likely to occur in certain regions than others?
+    (where is the most dangerous place for a pixel to be?)
     
 · describe specific features: lines, clusters, singletons
 

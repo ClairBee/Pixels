@@ -1414,3 +1414,30 @@ plot(ls,pw.sd[,,"black", "160430"], pch = 20, cex = 0.6)
 
 ####################################################################################################
 
+# INTERMITTENCE OF NOISY PIXELS                                                                 ####
+
+# identify all noisy pixels in each image
+npx <- lapply(lapply(apply(pw.sd, 4, apply, 3, function(x) data.frame(which(x > (median(x) + 6 * sd(x)), arr.ind = T),
+                                                       type = "noisy")),
+                     rbind.fill), function(x) x[!duplicated(x[,1:2]),])
+
+npx.im <- abind(lapply(npx, bpx2im), along = 3)
+
+plot(npx[[1]][,1:2], xlim = c(0,1996), ylim = c(0,1996), asp = T, pch = 15, cex = 0.4)
+points(npx[[2]][,1:2], pch = 15, cex = 0.3, col = "red")
+
+nn <- apply(npx.im, 1:2, sum)
+
+table(c(nn))
+
+# get proportion of noisy identifications in last 6 acquisitions
+nn.12 <- apply(npx.im, 1:2, sum) / 12
+nn.9 <- apply(npx.im[,,4:12], 1:2, sum) / 9
+nn.6 <- apply(npx.im[,,7:12], 1:2, sum) / 6
+nn.3 <- apply(npx.im[,,10:12], 1:2, sum) / 3
+
+table("All 12:" = round(c(nn.12), 2), "Last 9:" = round(c(nn.9), 2))
+table("Last 9:" = round(c(nn.9), 2), "Last 6:" = round(c(nn.6), 2))
+prep.csv(table( "Last 6:" = round(c(nn.6), 2), "Last 3:" = round(c(nn.3), 2)) / 
+    colSums(table( "Last 6:" = round(c(nn.6), 2), "Last 3:" = round(c(nn.3), 2))), dp = 2)
+
