@@ -1,0 +1,147 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\thesubsection}{1em}{}
+	
+	
+%----------------------------------------------------------------------
+% SPECIFY BIBLIOGRAPHY FILE & FIELDS TO EXCLUDE
+\addbibresource{refs.bib}
+%\AtEveryBibitem{\clearfield{url}}
+%\AtEveryBibitem{\clearfield{doi}}
+%\AtEveryBibitem{\clearfield{isbn}}
+%\AtEveryBibitem{\clearfield{issn}}
+
+%----------------------------------------------------------------------
+
+\renewcommand{\todo}[1]{
+	\begin{minipage}{\textwidth}
+	\textcolor{black}{
+					\begin{tabular}{p{0.01\textwidth}p{0.95\textwidth}}
+						$\vartriangleright$ & \textit{#1}
+					\end{tabular}
+					}
+	\end{minipage}
+}
+%======================================================================
+
+\begin{document}
+
+\section{Bad pixel mapping \cite{badpxmapping}}
+
+Apply the quivalent of the Hippocratic Oath to bad pixel mapping: don't mark a pixel as bad, unless it is consistently and unambiguously bad.
+ 
+\subsection{Thresholding}
+Appropriate thresholds and settings will depend strongly on the purpose for which the detector is to be used. An essential feature is that the specifications be stable over time.
+ 
+In CCDs, pixels may be rendered \textbf{inaccessible} by deep charge traps, hot pixels, or even a clock electrode failure.
+
+For a survey with a constant exposure time it is relatiely straightforward to identify pixels whose signal is too low or noisy to be trusted. The threshold for bad pixel classification may vary with sky brightness level. As a simplification, the worstcase scenario is usually adopted since the difference in the number of pixels rejected is small.
+
+\todo{Tabulate worst-case vs best-case scenario when classifying bad pixels. Quantify difference per class if we reverse the sort order}
+ 
+CCDs typically have very few randomly located bad pixels \emph{(presumably when only exposed to visible light, this is the cae, but radiation apparently causes hot pixels)}
+
+Conventional outlier threshold is $3\sigma$; for Gaussian distribution, only 0.3\% of samples would lie above this. For most of the parameters measured, the core of the distribution was normally distributed only because it was dominated by statistical errors (inverted arabola around mode in log-scaled histograms produced). Only the extended tails appear to be real fluctuations in pixel performance.
+
+\todo{Plot threshold (in terms of $\sigma$) vs \% pixels identified as problematic}
+\todo{Relate threshold to behaviour in shading correction? (boxplot of median difference/mean value at each multiple of $\sigma$, perhaps)}
+
+\subsection{Sensitivity \& linearity}
+
+Pixels with low sensitivity are still useable if they are linear, and have acceptable noise and dark current.
+
+To test linearity a ratio image was computed for a three-fold exposure time increase. Dark frames with matched exposure times were subtracted prior to computing the image ratio. The mean signal evel in the bright frame was 13,650 e-, so any pixel with less well capacity than this will also be flagged as non-linear. Some pixels with extreme dark current suffer sufficient dynamic range to show up as non-linear notwithstanding the dark frame subtraction. Pixels with more than 15\% signal deficit in the brighter image are flagged as non-linear. The threshold is set well below the normally distributed histogram core, which is probably dominated by measurement errors.
+
+\todo{Look for a way to test signal linearity using the uA images. Aim to replicate figure 6.}
+
+Noise outliers caused by \textbf{Random Telegraph Signal} (RTS) in the pixel buffer can appear at any frame rate, and the same RTS noise can be concealed at other frame rates \emph{(can frame rate substitute for power setting here?)}
+
+RTS is a bi-stable FET gain, switching between states randomly but with some characteristic frequency. When the RTS switching rate is faster than the frame rate, it is strongly attenuated by sample averaging. Thus the location of high noise pixels on the detector can change significantly even if the number of noise outliers does not.
+
+\todo{Try to identify RTS? Cut 20 readings at mid-point, get SD of those above \& below. Also distance from midrange.}
+The noise histograms (figs 10-13) are highly skewed and extend on the high side with no clear delineation between core and outliers. The extended high side and steep slope on the low side are typical of noise processes: the choice of bad ixel threshold is thus highly subjective and clearly required simulation to test the impact on science. While the high-side of the histogram may appear to be similar across the frequency range, examination of the noise maps shows that pixels are moving in and out of the tail as frame rate changes.  
+
+\subsection{Tests for accuracy}
+\subsubsection{Per-pixel photon transfer curves}
+
+A measurement of variance versus mean signal, often called a Photon Transfer Curve, is a fundamental test to show that a sensor is performing correctly. This test is sensitive to non-linearity, well capacity, gain instability and subtleties such as signal dependent pixel to pixel crosstalk or charge redistribution. It would therefore seem like an excellent candidate for bad pixel mapping.
+
+Per-pixel photon transfer curves were constructed by sampling each pixel at 15 consecutive (?) exposures, 500 times. For each sample of 15, produce a CDS image for each frame: 1-2, 1-3, 1-4, ..., 1-15 (gives 500 CDS images at each of 14 signal levels). Get mean and SD across the 500: for each pixel we now have a set of mean/variance points based on a time series of 500 samples, for each of 14 different signal levels. Fit a line to these points in mean/variance space: the slope
+of mean versus variance is conversion gain (e-/ADU), with one value per pixel location. Arranging this into an image produces a pixel map of system gains. The fitting routine also produces $R^2$, the "coefficient of determination", a statistical measure, which indicates how well the data fit a straight line. 
+
+The conversion gain map (fig 15) shows spatial correlations, while the histogram reveals sub-populations with extreme values.
+
+\subsubsection{Statistical accuracy}
+
+To test the contribution of statistical errors to dispersion in the parameter being measured one can construct histograms using subsets of the data, then plot sigma as function of number of samples used. If the width of the histogram is that of the intrinsic distribution in the parameter being measured with little statistical error, then the width will not change (much), if the dominant source of histogram width is statistical error, then sigma will scale as square root of the number of samples.
+
+Figures show conversion gain histograms for progressively fewer samples (but could have been performed using any of the metrics described). The core of the histogram is dominated entirely by statistical error so it is better to use the mean conversion gain, rather than per-pixel value.
+
+It remains to be determined whether the conversion gain outlier are merely unusual or actually malfunctioning. High e-/ADU represents lower than average electronic gain, which is feasible. a-/ADU near zero implies many ADU per electron, but extreme electronic gain is infeasible since the source follower in the H2RG mux can only produce gain less than unity. It is more likely that the variance estimate has been corrupted by some other noise source and that the conversion gain value is erroneous and/or the pixel is malfunctioning in some way.  
+
+\section{Hot pixels on ACS}
+
+\subsection{A first look \cite{ISR-0206}}
+
+
+\subsubsection{Hot pixels}
+Hot pixels may result from a close interaction of an incident heavy nuleon with Si nuclei in a pixel creating new Si-SiO$_2$ interface states. Once producd such pixels almost always remain hot... producing a continuum of excess dark current rates over 1 to 4 orders of magnitude greater than the mean value.
+
+Dark current distribution on the WFC is well described by a Gaussian with a centre at 0.0022 e/sec and rms of 0.0029 e/sc . As expected from experience with earlier HST cameras, very significant tails in these distriutions are seen from much `warmer' or `hotter' pixels.
+
+Even with 16 million pixels, the WFC would not be expected to have \emph{any} pixels with dark current more than 6SD from the mean were it not for the effects of radiation damage. A conservative limit of twice that has been used as a threshold aove which a pixel is considered to be `hot' ad not part of the normal distribution of pixel dark current.
+
+\todo{Get equivalent to grey-value threshold in terms of $\sigma$}
+
+For most hot pixels, the observed noise is well approximated by the Poisson noise of the dark current. 
+
+\todo{Recreate figure 5 (observed daily variation of individual dark current in hot pixels, with normal pixels also shown - \emph{although plot is for HRC, not WFC, so may not be applicable}); is behaviour the same here?}
+
+\todo{Do hot pixels spontaneously `heal'? With what probability?}
+
+
+\subsubsection{Transfer efficiency}
+
+By combining the profiles of a large number of hot pixels we can look for excess charge along the trailing edge of hot pixels, a good measure of CTE fot which the trapped charge is retained on the timescale of a few parallel shifts.
+
+\todo{Get mean flux profile for rows \& columns containing hot pixels} 
+ 
+\subsection{Projected growth \cite{ISR-0209}}
+
+Hot pixels are usually flagged and discarded; in principle they can be corrected without discarding, but because the noise in hot pixels is greater than Poisson corrections are only of limited value. \emph{(this may be the case if a flat-field correction is applied; however, a median-switching approach may have similar effect to dithering, so probably ok for us)}
+
+\todo{Did any hot pixels persist after refurbishment? Do we know what was actually done at refurbishment? (Was annealing used?)}
+
+\todo{Replicate fig 1, showing growth of hot pixels}
+
+Hot pixel threshold was changed between WFPC2 and ACS WFC: why?
+
+
+\section{Relative gain values among the four WFC amplifiers \cite{ISR-0203}}
+
+Absolute gain values were calculated elsewhere. relative gains are measured along eight pixel wide strips at adjacent edges of the amplifier pairs on each chip and at the adjacent edges of the midline etween the two chips using the program \texttt{gainrat.pro}.
+
+\todo{Get relative gain of each subpanel in each image. How does relative gain change over successive acquisitions? Within acquisitions? At different power settings? And can this be used to improve the flat field correction?}
+
+\section{Other things to check}
+\vspace{-10pt}
+\todo{Can we convert grey values to electrons/sec?}
+\todo{what is quantum efficiency? Linearity? Can we separate dark current from read noise?}
+\todo{compare hot/warm (dark) vs bright (grey/white): should we split these out?}
+\todo{use mean/SD ratio (or mean/var) as a characteristic: any use in identifying persistently noisy pixels?}
+\hrulefill
+\todo{identify locally bright/dim pixels in shading correction and use as pos/neg to assess classification performance of other thresholds. False positive not strictly an error - if state transition rate is stable then should retain for detector assessment (but not for bad pixel map for correction) Does false negative rate relate to noisy pixels at all?}
+\todo{relate thresholds to behaviour in shading correction (eg. mean SC value/median diff of pixels at 4, 5, 6, ... $\sigma$: does this suggest anything about where threshold should be set?}
+
+\hrulefill
+\printbibliography
+\end{document}

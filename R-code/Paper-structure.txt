@@ -4,7 +4,7 @@ Possible structure for final write-up
 · general introduction to image acquisition process & data
 
 · literature review (probably quite brief, since mostly patents, so not very much in PD.)
-    · refer to Hubble similarities & differences
+    · refer to Hubble similarities & differences (& reasons why similar/different: eg. no spot pattern/damage)
     · comment on generally applicability to any CCD device
 
 · describe panel structure & difference in behaviour (variability & response) across subpanels
