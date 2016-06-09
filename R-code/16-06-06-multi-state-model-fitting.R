@@ -288,36 +288,68 @@ system.time(msm <- msm(state2 ~ acq, subject = id, data = df, qmatrix = Q, censo
 # try splitting subpanel in 2 (and then 2 again & again to obtain squares, if necessary)...
 {
     df <- data.frame(id = sort(rep(1:length(sp.u4[,1:512,1]), 12)),
-                     acq = rep(as.Date(names(bp), "%y%m%d") - as.Date(names(bp)[1], "%y%m%d"), length(sp.u4[,1:512,1])),
+                     acq = rep(as.Date(names(bp), "%y%m%d") - as.Date(names(bp)[1], "%y%m%d"), length(sp.u4[,1:512,1])) / 365,
                      state = c(t(apply(sp.u4[,1:512,], 3, c))))
     
     # simplify states
     Cat.conv <- data.frame(org = c(0:15), 
                            new = c(1,7,6,4,4,3,8,2,1,1,1,99,6,6,5,1))
     ns <- c("ok", "l.bright", "bright", "hot", "l.dim", "dim", "no.resp", "line")
+    df$state2 <- Cat.conv$new[match(df$state, Cat.conv$org)]
     table(df$state2)
 
     st <- statetable.msm(state2, id, data = df)
     rownames(st) <- ns[as.numeric(rownames(st))]
     colnames(st) <- ns[as.numeric(colnames(st))]
     st
-    round(sweep(st, 1, rowSums(st), "/") * 100, 4)
+    round(sweep(st, 1, rowSums(st), "/"), 3)
     
-    Q <- rbind (c(1,0.03,0,0,0.001,0,0,0.001),      # can move from healthy to locally bright, locally dim, or lines
-                c(0.15,1,0.01,0,0,0,0,0.01),      # locally bright can recover or become bright (or part of a line)
-                c(0,0.10,1,0.41,0,0,0,.01),      # bright > locally bright, or hot
-                c(0,0,.05,1,0,0,0,0.01),      # 'hot' may be misclassified as very bright?
-                c(0.25,0,0,0,1,.01,0,0),      # locally dim can recover or become dim (or part of a line)
-                c(0,0,0,0,0.01,1,0.01,0),      # dim > locally dim or non-responsive? (or part of a line)
-                c(0,0,0,0,0,0.01,1,0.01),      # no response > absorbing (in this model)
-                c(0.01,0,0,0,0,0,0,1))      # lines will remain as such (until classification changes)
-    system.time(msm.sp2 <- msm(state2 ~ acq, subject = id, data = df, qmatrix = Q))
-    # numerical overflow & absorbing-absorbing transition at obs 312348
+    Q <- rbind (c(1,0.001,0,0,0.0001,0,0,0.001),      # can move from healthy to locally bright, locally dim, or lines
+                c(0.154,1,0.013,0,0,0,0,0.001),       # locally bright can recover or become bright (or part of a line)
+                c(0,0.09,1,0.038,0,0,0,.019),         # bright > locally bright, or hot
+                c(0,0,.042,1,0,0,0,0.0001),           # 'hot' may be misclassified as very bright?
+                c(0.25,0,0,0,1,.0001,0,0),            # locally dim can recover or become dim (or part of a line)
+                c(0,0,0,0,0.01,1,0.0001,0),           # dim > locally dim or non-responsive? (or part of a line)
+                c(0,0,0,0,0,0.01,1,0.0001),           # no response > absorbing (in this model)
+                c(0.0001,0,0,0,0,0,0,1))              # lines will remain as such (until classification changes)
     
-   df$state2[312347:312349]
+    system.time(msm.sp2 <- msm(state2 ~ acq, subject = id, data = df, qmatrix = Q, 
+                               control = list(fnscale = 5000)))
+
+    # numerical overflow in calculating likelihood -> add 'control = list(fnscale = 5000)'
+    # BUT failed to converge before reaching iteration limit (after ~4mins)
+    
+    system.time(msm.sp2 <- msm(state2 ~ acq, subject = id, data = df, qmatrix = Q, 
+                               method = "SANN",                     # simulated annealing in optim instead
+                               control = list(fnscale = 5000)))
+    
+    
+    
+    system.time(msm.sp2 <- msm(state2 ~ acq, subject = id, data = df, qmatrix = Q, 
+                               opt.method = "fisher",
+                               control = list(fnscale = 5000, damp = 1)))
+    # back to the overflow problem, despite scaling
+    # added damp = 1: system is computationally singular/
+    
+    system.time(msm.sp2 <- msm(state2 ~ acq, subject = id, data = df, qmatrix = Q, 
+                               opt.method = "nlm", fscale = 5000))
+    # numerical overflow again
+    
 }
 
-
+# view msm obtained
+{
+    statetable.msm(state2, id, data = df)
+    
+    qm <- prep.csv(qmatrix.msm(msm.sp2, ci = "none"), dp = 3)
+    colnames(qm) <- rownames(qm) <- ns    
+    write.csv(qm, paste0(bpm.fpath, "qm-2.csv")) 
+    
+    pm <- prep.csv(pmatrix.msm(msm.sp2), dp = 3)
+    colnames(pm) <- rownames(pm) <- ns
+    write.csv(pm, paste0(bpm.fpath, "pm-2.csv")) 
+    
+}
 ####################################################################################################
 
 # COMPARE MSM FOR DIFFERENT BAD PIXEL MAPS                                                      ####

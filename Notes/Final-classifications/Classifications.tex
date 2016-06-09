@@ -1,0 +1,64 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\thesubsection}{1em}{}
+	
+%----------------------------------------------------------------------
+\renewcommand{\todo}[1]{
+	\begin{minipage}{\textwidth}
+	\textcolor{black}{
+					\begin{tabular}{p{0.01\textwidth}p{0.95\textwidth}}
+						$\square$ & #1
+					\end{tabular}
+					}
+	\end{minipage}
+}
+
+
+%======================================================================
+
+\begin{document}
+
+Several proposed classification approaches...
+
+\begin{description}
+\item[Mean-valued:] pixels are classified only according to their value. Graduations of locally-bright/dim to hot/dead are included, so severity of defect can be traced.
+
+\item[Mean-valued grey/black:] as above, but only the grey and black imges are used for classification - the white image is completely ignored, so we use only a single illuminated image.
+
+\item[Qualitative:] pixels are classified according to their behaviour: bright in black image, or grey?
+
+\item[Feature-based:] pixels may be subsumed by a feature rooted in an adjacent pixel (such as a cluster or line).
+\end{description}
+
+\vspace{15pt}
+
+Also several means of assessing quality of each approach:
+
+\begin{description}
+
+\item[State stability:] do pixels tend to remain in the same state (suggesting a genuine difference in state) or move between adjacent states (suggesting an inappropriate threshold?) - both mean transition rate and standard deviation of transition rate
+
+\item[Path stability:] if we group pixels according to the path taken through the proposed state space, are there a lot of paths? Do pixels tend to fluctuate between a number of states (suggesting poor thresholding) or to progress from less to more severe?
+
+\item[Observed vs expected prevalence:] since all pixels were observed at each acquisition, we can compare the model's predictions with the observed data (expected vs observed counts in each category) - either numerically or with plots of O/E over time. Could use $\chi^2$ test of goodness of fit?
+\end{description}
+
+\vspace{15pt}
+
+\todo{Compare classifications obtained using each set of criteria: does much change?}
+
+\todo{check if transition rates are constant: if proportion changing at each step is plotted in real time, what is the trend? Do proportions remain constant over time, or is there evidence of an increase?}
+
+
+%\newpage
+%\printbibliography
+\end{document}
