@@ -13,3 +13,6 @@ DF[sapply(DF, is.character)] <- lapply(DF[sapply(DF, is.character)], as.factor)
 \ifelse
 %alternative text
 \fi
+
+
+rep(c("JAPANESE", "REDWOOD", "CELLS"), each = 5)

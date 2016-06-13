@@ -1,0 +1,47 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\thesubsection}{1em}{}
+	
+%----------------------------------------------------------------------
+% SPECIFY BIBLIOGRAPHY FILE & FIELDS TO EXCLUDE
+%\addbibresource{bibfile.bib}
+%\AtEveryBibitem{\clearfield{url}}
+%\AtEveryBibitem{\clearfield{doi}}
+%\AtEveryBibitem{\clearfield{isbn}}
+%\AtEveryBibitem{\clearfield{issn}}
+
+%----------------------------------------------------------------------
+% define code format
+\lstnewenvironment{code}[1][R]{			% default language is R
+	\lstset{language = #1,
+        		columns=fixed,
+    			tabsize = 4,
+    			breakatwhitespace = true,
+			showspaces = false,
+    			xleftmargin = .75cm,
+    			lineskip = {0pt},
+			showstringspaces = false,
+			extendedchars = true
+    }}
+    {}
+    
+%======================================================================
+
+\begin{document}
+
+\code{blah}
+
+Type some text...
+
+%\newpage
+%\printbibliography
+\end{document}
