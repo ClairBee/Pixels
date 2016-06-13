@@ -6,6 +6,8 @@ xtekct <- as.data.frame(t(as.matrix(read.csv("~/Documents/Pixels/Other-data/Old-
     
 ####################################################################################################
 
+# GET ALL FILES                                                                                 ####
+
 list.xtec.files <- function(path.head, extensions = c(".xtec", ".xtekct")) {
     folders <- list.dirs(path.head, full.names = F, recursive = T)
     
@@ -34,3 +36,16 @@ grab.xtec.data <- function(f.list, n = c(1:length(f.list))) {
 fl <- list.xtec.files("./Other-data/Z/CT data/", extensions = c(".xtec", ".xtekct", ".xml"))
 
 df <- grab.xtec.data(fl, n = c(3))
+
+
+####################################################################################################
+
+# AND NOW, IN PYTHON                                                                            ####
+
+import os
+
+for root, dirs, files in os.walk("./Other-data/Z/CT data/"):
+    for file in files:
+    if file.endswith(".xtec"):
+    return(os.path.join(root, file))
+
