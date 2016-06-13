@@ -2,6 +2,7 @@
 \usepackage{/home/clair/Documents/mystyle}
 
 %----------------------------------------------------------------------
+
 % reformat section headers to be smaller \& left-aligned
 \titleformat{\section}
 	{\normalfont\bfseries}
@@ -11,21 +12,13 @@
 	{\normalfont\bfseries}
 	{\thesubsection}{1em}{}
 	
-%----------------------------------------------------------------------
-\renewcommand{\todo}[1]{
-	\begin{minipage}{\textwidth}
-	\textcolor{black}{
-					\begin{tabular}{p{0.01\textwidth}p{0.95\textwidth}}
-						$\square$ & #1
-					\end{tabular}
-					}
-	\end{minipage}
-}
 
 
 %======================================================================
 
 \begin{document}
+
+\section*{Possible approaches}
 
 Several proposed classification approaches...
 
@@ -57,6 +50,30 @@ Also several means of assessing quality of each approach:
 \todo{Compare classifications obtained using each set of criteria: does much change?}
 
 \todo{check if transition rates are constant: if proportion changing at each step is plotted in real time, what is the trend? Do proportions remain constant over time, or is there evidence of an increase?}
+
+
+%======================================================================
+\newpage
+%======================================================================
+
+
+\section{Mean-valued classification}
+
+	\begin{table}[!ht]
+	\begin{footnotesize}
+	
+		\caption{Mean transition proportions observed \textit{(SD in brackets)}}
+		\centering
+		\hskip-0.75cm\resizebox{1.1\textwidth}{!}{%
+	
+			\csvreader[tabular=l|ccccccccccc, head to column names=true,
+				table head = & Normal & No response & Dead & Hot & V. bright & Bright & Bright line & Local bright & 
+				V. dim & Dim & Local dim \\\hline ]%
+			{./fig/mean-valued-tr-props.csv}{}%
+			{\csvlinetotablerow}%
+		}
+	\end{footnotesize}
+	\end{table}
 
 
 %\newpage

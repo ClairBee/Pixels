@@ -1,0 +1,42 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+\usepackage{subfiles}
+\usetikzlibrary{automata, positioning, shapes.multipart, arrows}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\thesubsection}{1em}{}
+	
+%----------------------------------------------------------------------
+% SPECIFY BIBLIOGRAPHY FILE & FIELDS TO EXCLUDE
+%\addbibresource{bibfile.bib}
+%\AtEveryBibitem{\clearfield{url}}
+%\AtEveryBibitem{\clearfield{doi}}
+%\AtEveryBibitem{\clearfield{isbn}}
+%\AtEveryBibitem{\clearfield{issn}}
+
+%----------------------------------------------------------------------
+    
+%======================================================================
+
+\begin{document}
+
+\subfile{./sections/state-model/state-model.tex}
+
+\section{Spatial distribution of pixel defects}
+
+\subsection{Distribution of defective pixel types across subpanels}
+
+\subsection{Distribution of defective pixel types as function of distance from centre}
+
+\subsection{Distribution of features across subpanels}
+%\newpage
+%\printbibliography
+\end{document}

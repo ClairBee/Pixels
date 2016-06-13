@@ -61,7 +61,11 @@ md.g <- readRDS("./Other-data/Median-diffs-grey.rds")
     saveRDS(bp.local, paste0(fpath, "bad-px-local-bright-dim-pixels.rds"))
 }
 
-# function to combine & rationalise partial bad pixel maps
+####################################################################################################
+
+# FUNCTIONS                                                                                     ####
+
+# combine & rationalise partial bad pixel maps
 merge.bp.lists <- function(bp.list, cat.order) {
     
     bpx <- list()
@@ -75,11 +79,31 @@ merge.bp.lists <- function(bp.list, cat.order) {
     return(bpx)
 }
 
+# plot transition proportion at each acquisition
+tr.prop.plot <- function(tr.mat, times, from, to, add = F, ...) {
+    
+    if (add) {
+        lines(times[2:length(times)] - times[1], 
+              tr.mat[from, to,], type = "o", pch = 20, ...)
+    } else {
+        plot(times[2:length(times)] - times[1],
+             tr.mat[from, to,], type = "o", pch = 20, 
+             ylab = "Proportion transitioning" , xlab = "Time after first acquisition", ...)
+    }
+}
+
+# get gradient of line fitted to transition proportion at each acquisition
+tr.prop.slope <- function(tr.mat, times, from, to) {
+    
+    line(times[2:length(times)] - times[1],
+         tr.mat[from, to,])$coef[2]
+}
+
 ####################################################################################################
 
 # MEAN-VALUED CLASSIFICATION                                                                    ####
     # this is the 'standard' classification approach used throughout the project so far.
-    # simplest approah - use as baseline against which to look for improvements.
+    # simplest approach - use as baseline against which to look for improvements.
 
 # define possible bad pixel states 
 Cat <- c("no.resp", "dead", "hot", "v.bright", "bright", "line.b", "edge", "l.bright", "line.d", "screen.spot", "v.dim", "dim", "l.dim")
@@ -99,7 +123,7 @@ Cat.cols <- c("purple", "black", "magenta3", "red", "orange", "gold", "yellow", 
                                                   type = "dim")))
     saveRDS(bp.th, paste0(fpath, "bad-px-thresholded-mean-values-incl-white.rds"))
 }
-bp <- merge.bp.lists(list(bp.th, 
+bp <- merge.bp.lists(list(readRDS(paste0(fpath, "bad-px-thresholded-mean-values-incl-white.rds")), 
                           readRDS(paste0(fpath, "bad-px-constant.rds")),
                           readRDS(paste0(fpath, "bad-px-bright-lines.rds")),
                           readRDS(paste0(fpath, "bad-px-local-bright-dim-pixels.rds"))), cat.order = Cat)
@@ -151,8 +175,27 @@ tr <- tr[colSums(apply(tr, 1:2, sum)) * rowSums(apply(tr, 1:2, sum)) > 0,
 
 # check stability of classes
 {
-    # mean transition rates with 95% confidence intervals?
-}
+    tr.prop <- array(apply(tr, 3, function(x) 100 * x / rowSums(x)),
+                     dim = dim(tr), dimnames = dimnames(tr))
+    
+    prep.csv(apply(tr, 1:2, mean), dp = 0)          # mean transition rates (in pixels)
+    prep.csv(apply(tr, 1:2, sd), dp = 0)            # mean transition SDs (in pixels)
+    
+    write.csv(prep.csv(apply(tr.prop, 1:2, mean, na.rm = T)),
+              paste0(fpath, "mean-valued-tr-props-mean.csv"), quote = F)
+
+    write.csv(prep.csv(apply(tr.prop, 1:2, sd, na.rm = T)),
+              paste0(fpath, "mean-valued-tr-props-sd.csv"), quote = F)
+    
+    tr.mean <- apply(abind(prep.csv(apply(tr.prop, 1:2, mean), 2), 
+                           array(" \\textit{(", dim = dim(tr.prop)[1:2]),
+                           prep.csv(apply(tr.prop, 1:2, sd),2), 
+                           array(")}", dim = dim(tr.prop)[1:2]),
+                           along = 3), 1:2, paste, collapse = "")
+    tr.mean[tr.mean == "- \\textit{(-)}"] <- "-"
+    write.csv(tr.mean, paste0(fpath, "mean-valued-tr-props.csv"), quote = F)
+    diag(tr.mean) <- apply(cbind("\\textbf{", diag(tr.mean), "}"), 1, paste, collapse = "")
+    }
 
 # cluster pixels according to path taken?
 {
