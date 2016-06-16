@@ -115,7 +115,17 @@ subfolders <- function(folder.list) {
   write.csv(zz, "C:/Users/coe-admin/Documents/R/CT profiles/CT-profiles-1-2.csv")
 }
 
-# nothing found in T:/CT data exceptions
+# check subfolders
+subfolder.ctprofiles <- function(path.head, df) {
+    ff <- list.dirs(path.head, recursive = F)
+    
+    ct.list <- as.character(df$filenm)
+    ct.list <- paste(unlist(lapply(lapply(lapply(ct.list,
+                                                 strsplit, split = "]"), "[[", 1), "[[", 1)), "]", sep = "")
+    get.ctprofiles(ctprofile.list(subfolders(ff[!(ff %in% ct.list)])))
+}
+
+# nothing found in Y:/CT data exceptions
 {
   ff <- list.dirs("Y:/CT data exceptions", recursive = F)
   

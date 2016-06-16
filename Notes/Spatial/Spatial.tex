@@ -1,6 +1,10 @@
 \documentclass[10pt,fleqn]{article}
 \usepackage{/home/clair/Documents/mystyle}
 
+ \usepackage{pdflscape}
+ 
+ \newcolumntype{M}[1]{>{\centering\arraybackslash}m{#1}}
+ 
 %----------------------------------------------------------------------
 % reformat section headers to be smaller \& left-aligned
 \titleformat{\section}
@@ -11,37 +15,70 @@
 	{\normalfont\bfseries}
 	{\thesubsection}{1em}{}
 	
-%----------------------------------------------------------------------
-% SPECIFY BIBLIOGRAPHY FILE & FIELDS TO EXCLUDE
-%\addbibresource{bibfile.bib}
-%\AtEveryBibitem{\clearfield{url}}
-%\AtEveryBibitem{\clearfield{doi}}
-%\AtEveryBibitem{\clearfield{isbn}}
-%\AtEveryBibitem{\clearfield{issn}}
+%\addbibresource{refs.bib}
+%======================================================================
 
-%----------------------------------------------------------------------
-% define code format
-\lstnewenvironment{code}[1][R]{			% default language is R
-	\lstset{language = #1,
-        		columns=fixed,
-    			tabsize = 4,
-    			breakatwhitespace = true,
-			showspaces = false,
-    			xleftmargin = .75cm,
-    			lineskip = {0pt},
-			showstringspaces = false,
-			extendedchars = true
-    }}
-    {}
-    
+\newcommand{\plotrow}[2]{
+	\rotatebox{90}{\textbf{#2}} & 
+		\includegraphics[scale=0.32]{./fig/#1-plot} & 
+		\includegraphics[scale=0.32]{./fig/#1-Genv} & 
+		\includegraphics[scale=0.32]{./fig/#1-Fenv} & 
+		\includegraphics[scale=0.32]{./fig/#1-Kenv} \\
+}
+
 %======================================================================
 
 \begin{document}
 
-\code{blah}
+%------------------------------------------------------------------
+\begin{landscape} % spatial distribution plots
 
-Type some text...
+\begin{figure}[!ht]	% spatial distribution plots 16-04-30
+\centering
+\caption{Spatial distribution for images acquired on 14-10-09}
 
-%\newpage
-%\printbibliography
+\begin{footnotesize}
+	\begin{tabular}{M{1cm}M{5cm}M{5cm}M{5cm}M{5cm}}
+	 & \textbf{Point pattern} & \textbf{G-function} & \textbf{F-function} & \textbf{K-function} \\ 
+	 \plotrow{incl-l-141009}{All bad pixels} 
+	 \plotrow{excl-l-141009}{Excl. locally bright/dim} 
+	 \plotrow{only-l-141009}{Only locally bright/dim} 
+	\end{tabular}
+\end{footnotesize}
+
+\end{figure}
+
+\begin{figure}[!ht]	% spatial distribution plots 16-04-30
+\centering
+\caption{Spatial distribution for images acquired on 16-04-30}
+\begin{footnotesize}
+	\begin{tabular}{M{1cm}M{5cm}M{5cm}M{5cm}M{5cm}}
+	 & \textbf{Point pattern} & \textbf{G-function} & \textbf{F-function} & \textbf{K-function} \\
+	 \plotrow{incl-l-160430}{All bad pixels} 
+	 \plotrow{excl-l-160430}{Excl. locally bright/dim}
+	 \plotrow{only-l-160430}{Only locally bright/dim} 
+	\end{tabular}
+\end{footnotesize}
+
+
+\end{figure}
+
+\end{landscape}
+%------------------------------------------------------------------
+
+
+\cb{Quadrat tests were run over each data set shown above - in all cases, CSR was emphatically rejected, both with and without locally bright pixels, and when quadrats were based on subpanels or half-subpanels (quarter-subpanels weren't attempted because expected number of observations per quadrat was so small)}
+
+\cb{Spatial distribution is dominated by locally bright pixels because they are so much more numerous - splitting between locally and globally bright pixels, in particular the G-function of the globally bright pixels is quite different in shape. \nb{Will fit parametric model to inhomogeneous intensity with and without locally bright pixels and compare the resulting parameters - expect shape of distribution (not necessarily scale) to be same in both cases}}
+
+\cb{G-function plots show an interesting variation in shape at the left-hand end. Suspect that large vertical step indicates adjacent pixels (not the result of accidentally leaving the lines in - that takes the vertical line up to around 0.8!). When locally bright pixels are included as well, there is a short horizontal step before the vertical step; this part of the distribution is presumably dominated by the large numbers of randomly-distributed locally bright pixels, which don't tend to appear as part of `bleeds' or clusters of adjacent pixels. Interestingly, the vertical line is longer in the older images (both with and without locally bright pixels), because a higher proportion of the bad pixels are globally bright pixels that form clusters - the number of locally bright pixels is much higher in the later images.}
+
+\hrulefill
+
+\section*{Next steps}
+
+\todo{Model inhomogeneous intensity - parametrically or via kernel smoothing?}
+
+\todo{Now that the code is in place to produce all of these plots, we can easily carry out a sensitivity analysis to check effects of changes to thresholds \& classification methods}
+
 \end{document}

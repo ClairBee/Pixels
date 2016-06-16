@@ -7,6 +7,7 @@ library("IO.Pixels"); library("CB.Misc")
 fpath <- "./Notes/Final-classifications/fig/"
 
 load.pixel.means()
+load.pixel.sds()
 
 # median-differenced images to find local non-uniformity
 md.b <- readRDS("./Other-data/Median-diffs-black.rds")
@@ -30,11 +31,22 @@ md.g <- readRDS("./Other-data/Median-diffs-grey.rds")
                       function(acq) rbind(data.frame(edge.px(acq), type = "edge"),
                                           data.frame(no.response(bright.image = acq[,,"grey"], dark.image = acq[,,"black"]), type = "no.resp"),
                                           data.frame(which(acq[,,"black"] == 65535, arr.ind = T), type = "hot"),
-                                          data.frame(which(acq[,,"white"] == 0, arr.ind = T), type = "dead"),
-                                          data.frame(screen.spots(acq[,,"white"]), type = "screen.spot")))
+                                          data.frame(which(acq[,,"white"] == 0, arr.ind = T), type = "dead")))
     saveRDS(bp.const, paste0(fpath, "bad-px-constant.rds"))
-}
+    
+    bp.screen <- apply(pw.m, 4,
+                       function(acq) screen.spots(acq[,,"white"], enlarge = T))
 
+    bp.screen <- lapply(bp.screen, 
+                        function(df) if (is.null(df)) {
+                            NULL
+                        } else {
+                            data.frame(df, type = "screen.spot")
+                        })
+    saveRDS(bp.screen, paste0(fpath, "bad-px-screenspots.rds"))
+    }
+
+    
 # lines (may want to observe these pixels singly, so keep separate)
 {
     bp.lines <- apply(pw.m, 4,
@@ -125,6 +137,7 @@ Cat.cols <- c("purple", "black", "magenta3", "red", "orange", "gold", "yellow", 
 }
 bp <- merge.bp.lists(list(readRDS(paste0(fpath, "bad-px-thresholded-mean-values-incl-white.rds")), 
                           readRDS(paste0(fpath, "bad-px-constant.rds")),
+                          readRDS(paste0(fpath, "bad-px-screenspots.rds")),
                           readRDS(paste0(fpath, "bad-px-bright-lines.rds")),
                           readRDS(paste0(fpath, "bad-px-local-bright-dim-pixels.rds"))), cat.order = Cat)
 
@@ -265,3 +278,43 @@ tr <- tr[colSums(apply(tr, 1:2, sum)) * rowSums(apply(tr, 1:2, sum)) > 0,
 {
     
 }
+
+####################################################################################################
+
+# MEAN VS VARIANCE PER SUBPANEL                                                                 #### 
+
+panel.edges()
+
+plot(pw.m[1:126, 1:992, "grey", 1], pw.sd[1:126, 1:992, "grey", 1]^2, pch = 20, 
+     xlab = "mean", ylab = "variance", xlim = c(10000, 30000), ylim = c(0,250000))
+points(pw.m[1:126, 1:992, "grey", 2], pw.sd[1:126, 1:992, "grey", 2]^2, pch = 20,
+       col = adjustcolor("blue", alpha = 0.4))
+points(pw.m[1:126, 1:992, "grey", 3], pw.sd[1:126, 1:992, "grey", 3]^2, pch = 20,
+       col = adjustcolor("green3", alpha = 0.4))
+points(pw.m[1:126, 1:992, "grey", 4], pw.sd[1:126, 1:992, "grey", 4]^2, pch = 20,
+       col = adjustcolor("cyan3", alpha = 0.4))
+points(pw.m[1:126, 1:992, "grey", 5], pw.sd[1:126, 1:992, "grey", 5]^2, pch = 20,
+       col = adjustcolor("purple", alpha = 0.4))
+points(pw.m[1:126, 1:992, "grey", 6], pw.sd[1:126, 1:992, "grey", 6]^2, pch = 20,
+       col = adjustcolor("magenta3", alpha = 0.4))
+
+points(pw.m[1:126, 1:992, "grey", 12], pw.sd[1:126, 1:992, "grey", 12]^2, pch = 20,
+       col = "gold")
+points(pw.m[1:126, 1:992, "grey", 11], pw.sd[1:126, 1:992, "grey", 11]^2, pch = 20,
+       col = "orange")
+
+abline(line(pw.m[1:126, 1:992, "grey", 1], pw.sd[1:126, 1:992, "grey", 1]^2), col = "black")
+abline(line(pw.m[1:126, 1:992, "grey", 2], pw.sd[1:126, 1:992, "grey", 2]^2), col = adjustcolor("blue", alpha = 0.4))
+abline(line(pw.m[1:126, 1:992, "grey", 3], pw.sd[1:126, 1:992, "grey", 3]^2), col = adjustcolor("green3", alpha = 0.4))
+abline(line(pw.m[1:126, 1:992, "grey", 4], pw.sd[1:126, 1:992, "grey", 4]^2), col = adjustcolor("cyan3", alpha = 0.4))
+abline(line(pw.m[1:126, 1:992, "grey", 5], pw.sd[1:126, 1:992, "grey", 5]^2), col = adjustcolor("purple", alpha = 0.4))
+abline(line(pw.m[1:126, 1:992, "grey", 6], pw.sd[1:126, 1:992, "grey", 6]^2), col = adjustcolor("magenta3", alpha = 0.4))
+abline(line(pw.m[1:126, 1:992, "grey", 7], pw.sd[1:126, 1:992, "grey", 7]^2), col = adjustcolor("orange", alpha = 0.4))
+abline(line(pw.m[1:126, 1:992, "grey", 8], pw.sd[1:126, 1:992, "grey", 8]^2), col = adjustcolor("gold", alpha = 0.4))
+abline(line(pw.m[1:126, 1:992, "grey", 9], pw.sd[1:126, 1:992, "grey", 9]^2), col = adjustcolor("yellow", alpha = 0.4))
+abline(line(pw.m[1:126, 1:992, "grey", 10], pw.sd[1:126, 1:992, "grey", 10]^2), col = adjustcolor("magenta3", alpha = 0.4))
+abline(line(pw.m[1:126, 1:992, "grey", 11], pw.sd[1:126, 1:992, "grey", 11]^2), col = adjustcolor("magenta3", alpha = 0.4))
+abline(line(pw.m[1:126, 1:992, "grey", 12], pw.sd[1:126, 1:992, "grey", 12]^2), col = adjustcolor("magenta3", alpha = 0.4))
+
+zz <- lapply(dimnames(pw.m)[[4]], 
+             function (dt) coef(line(pw.m[511:638, 993:1996, "grey", dt], pw.sd[511:638, 993:1996, "grey", dt]^2))[2])

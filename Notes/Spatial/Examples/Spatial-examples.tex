@@ -1,0 +1,47 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\thesubsection}{1em}{}
+	
+\addbibresource{refs.bib}
+%======================================================================
+
+\begin{document}
+
+\begin{figure}[!ht]
+\centering
+
+\begin{tabular}{m{0.01\textwidth}m{0.24\textwidth}m{0.24\textwidth}m{0.24\textwidth}m{0.24\textwidth}}
+ & \textbf{Cells} & \textbf{Japanese pines} & \textbf{Redwoods} \\
+ %
+\rotatebox{90}{\textbf{Point process}} & \includegraphics[scale=0.2]{../fig/plot-cells} & \includegraphics[scale=0.2]{../fig/plot-jpines} &
+ \includegraphics[scale=0.2]{../fig/plot-redwoods} & \\
+%
+\rotatebox{90}{\textbf{G-function}} & \includegraphics[scale=0.2]{../fig/Gf-cells} & \includegraphics[scale=0.2]{../fig/Gf-jpines} & \includegraphics[scale=0.2]{../fig/Gf-redwoods}& \\
+%
+%
+\rotatebox{90}{\textbf{F-function}} & \includegraphics[scale=0.2]{../fig/Ff-cells} & \includegraphics[scale=0.2]{../fig/Ff-jpines} & \includegraphics[scale=0.2]{../fig/Ff-redwoods} &\\
+%
+\rotatebox{90}{\textbf{K-function}} & \includegraphics[scale=0.2]{../fig/Kf-cells-flat} & \includegraphics[scale=0.2]{../fig/Kf-jpines-flat} & \includegraphics[scale=0.2]{../fig/Kf-redwoods-flat} &
+\end{tabular}
+
+\end{figure}
+
+%======================================================================
+
+\FloatBarrier
+
+\hrulefill
+
+\nocite{bivand2008}
+
+\printbibliography
+\end{document}

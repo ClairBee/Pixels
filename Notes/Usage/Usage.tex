@@ -1,0 +1,78 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\thesubsection}{1em}{}
+	
+
+    
+%======================================================================
+
+\begin{document}
+
+\begin{figure}[!ht]
+\caption{Plots of estimated usage (in arbitrary units, obtained from CT profile data); each point represents a set of images obtained for computed tomography, with the $y$-axis denoting the product of current, voltage, exposure time, number of projections, and frames per projection. Red dotted lines indicate acquisition dates for the Inside-Out project. The omission of single-image acquisitions is considered unlikely to make a substantial difference to the estimated usage figures, with a typical acquisition of 60 calibration images adding 0.17 arbitrary units on this scale.\\
+\footnotesize{The gold line shows a fitted linear regression  model, the turquoise a linear model with quadratic time. The difference between the two is small, suggesting that average usage is fairly constant; however, there are clearly periods of heavier use, which may be related to higher rates of pixel damage.}}
+
+\centering
+
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{Detector usage}
+\includegraphics[scale=0.45]{./fig/usage-vs-time}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{Cumulative usage}
+\includegraphics[scale=0.45]{./fig/cum-usage-vs-time}
+\end{subfigure}
+%
+
+%
+%\begin{subfigure}[t]{0.49\textwidth}
+%\caption{Moving average usage over 10 preceding scans}
+%\includegraphics[scale=0.45]{./fig/ma-usage-vs-time}
+%\end{subfigure}
+
+\end{figure}
+
+
+\begin{figure}[!ht]
+\caption{Percentage of detector covered by defective pixels as a function of cumulative usage. The relationship appears to be largely linear, apart from a jump in the number of pixels identified as locally bright in the last-but-one image (acquired on 16-03-14). This jump coincides with a change in software, which led to the temporary loss of the gain setting (30dB) that we had been using - which was reinstated by March 23rd, well before the next set of images was acquired.\\
+\footnotesize{A look at plots of mean vs variance shows that the grey images from that date have a higher mean SD than might be expected, given their mean values, but not by much.}}
+
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{All defective pixels, including lines but not including edge pixels or screen spots}
+\includegraphics[scale=0.45]{./fig/cum-usage-vs-bp-prop}
+\end{subfigure}
+
+\vspace*{10pt}
+
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{All defective pixels by type, including lines but not including edge pixels or screen spots}
+\includegraphics[scale=0.45]{./fig/cum-usage-vs-bp-prop-by-type}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{All defective pixels by type, focusing on the smallest categories}
+\includegraphics[scale=0.45]{./fig/cum-usage-vs-bp-prop-by-type-zoom}
+\end{subfigure}
+
+\end{figure}
+
+\begin{figure}[!ht]
+\caption{Percentage of detector covered by spots on beryllium screen. \\
+No particular pattern can be discerned, even when splitting out different subsets (eg. high power, long exposure etc)}
+
+\includegraphics[scale=0.45]{./fig/usage-vs-screen-spot-prop}
+
+\end{figure}
+
+
+\end{document}
