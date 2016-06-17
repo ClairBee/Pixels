@@ -319,3 +319,33 @@ quadrat.test(bp.ppp(bp, 141009, excl = c("line.b", "line.d", "l.bright", "l.dim"
 
 
 # also test for homogeneity within subpanels?
+
+####################################################################################################
+
+# BAD PIXEL MAP WITH CLUSTERS & LINES REMOVED                                                   ####
+# (bpx object currently taken fro 16-06-17-feature-roots.R)
+
+px <- bpx[bpx$f.type %in% c("cl.root", "singleton"),]
+excl <- c("l.bright", "l.dim")
+
+plot(px[!(px$type %in% excl),1:2], 
+     col = adjustcolor(Cat.cols[px[!(px$type %in% excl),"type"]], alpha = 0.5), 
+     pch = 20, asp = T, xlab = "", ylab = "")
+
+plot(envelope(ppp(px[!(px$type %in% excl),"row"], 
+                  px[!(px$type %in% excl),"col"], 
+                  c(1,1996), c(1,1996)),
+              Kest, nsim = 99, nrank = 2), 
+     main = "")
+
+plot(envelope(ppp(px[!(px$type %in% excl),"row"], 
+                  px[!(px$type %in% excl),"col"], 
+                  c(1,1996), c(1,1996)),
+              Gest, nsim = 99, nrank = 2), 
+     main = "")
+
+plot(envelope(ppp(px[!(px$type %in% excl),"row"], 
+                  px[!(px$type %in% excl),"col"], 
+                  c(1,1996), c(1,1996)),
+              Fest, nsim = 99, nrank = 2), 
+     main = "")

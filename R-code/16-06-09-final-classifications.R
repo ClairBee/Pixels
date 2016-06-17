@@ -148,6 +148,7 @@ bp <- lapply(bp, function(bpx) bpx[bpx$type != "screen.spot",])
 # also not interested in edge pixels, so remove these as well
 bp <- lapply(bp, function(bpx) bpx[bpx$type != "edge",])
 
+saveRDS(bp, paste0(fpath, "bad-px.rds"))
 
 # get transition matrix
 tr <- abind(get.transitions(bp), along = 3)
@@ -318,3 +319,7 @@ abline(line(pw.m[1:126, 1:992, "grey", 12], pw.sd[1:126, 1:992, "grey", 12]^2), 
 
 zz <- lapply(dimnames(pw.m)[[4]], 
              function (dt) coef(line(pw.m[511:638, 993:1996, "grey", dt], pw.sd[511:638, 993:1996, "grey", dt]^2))[2])
+
+####################################################################################################
+
+# CONSIDER DEFINITIONS OF LINES                                                                 ####
