@@ -2,6 +2,7 @@
 \usepackage{/home/clair/Documents/mystyle}
 
  \usepackage{pdflscape}
+ \usepackage{datatool}
  
  \newcolumntype{M}[1]{>{\centering\arraybackslash}m{#1}}
  
@@ -19,7 +20,7 @@
 %======================================================================
 
 \newcommand{\plotrow}[2]{
-	\rotatebox{90}{\textbf{#2}} & 
+	\rotatebox{90}{\parbox{4cm}{\centering{\textbf{#2} \\ \input{./fig/#1.txt}}}} & 
 		\includegraphics[scale=0.32]{./fig/#1-plot} & 
 		\includegraphics[scale=0.32]{./fig/#1-Genv} & 
 		\includegraphics[scale=0.32]{./fig/#1-Fenv} & 
@@ -30,44 +31,49 @@
 
 \begin{document}
 
+\section{Spatial distribution of defective pixels \& features}
+
+\cb{Defective pixels were grouped into clusters by first removing the bright lines, to avoid merging adjacent bright pixels into these larger features (globally bright pixels are flagged independently of the lines, so a cluster of brighter pixels that touches a line will still be detected here). Edge pixels and dim patches resulting from spots on the screen are also removed from the bad pixel map before clustering. }
+
+\cb{Defective pixels that are horizontally or vertically adjacent are grouped into clusters and uniquely labelled. The cluster `root' is  identified as the brightest pixel in the cluster; ties are broken by finding the closest tied pixel to the midline running vertically through the cluster, then the closest pixel on that midline to the panel edge. Any clusters in which the most severe defect is a locally bright or locally dim pixel are relabelled as singletons - so clusters containing only locally bright pixels are assumed to be a less severe defect and reclassified as singletones - locally bright pixels that appear adjacent to bright, hot or dead pixels are treated as part of the cluster feature.}
+
+\cb{Quadrat tests were run over each subset of the pixels, with the 32 subpanels used to define quadrats - in all cases except for cluster roots alone, CSR was emphatically rejected. For 31df, at the 5\% significance level, the upper critical value of the test statistic is 48.232.}
+
+
 %------------------------------------------------------------------
 \begin{landscape} % spatial distribution plots
 
-\begin{figure}[!ht]	% spatial distribution plots 16-04-30
 \centering
-\caption{Spatial distribution for images acquired on 14-10-09}
+%\caption{Spatial distribution for images acquired on 14-10-09}
+%
+%\begin{footnotesize}
+%	\begin{tabular}{M{1cm}M{5cm}M{5cm}M{5cm}M{5cm}}
+%	 & \textbf{Point pattern} & \textbf{G-function} & \textbf{F-function} & \textbf{K-function}\\ 
+%	 \plotrow{incl-l-141009}{All bad pixels \\ $\chi^2 = 85.671, p \approx 0$}
+%	 \plotrow{excl-l-141009}{Excl. locally bright/dim \\ $\chi^2 = 3887.9, p \approx 0$}
+%	 \plotrow{only-l-141009}{Only locally bright/dim \\ $\chi^2 = 4273.1, p \approx 0$}
+%	\end{tabular}
+%\end{footnotesize}
+%\end{figure}
 
-\begin{footnotesize}
-	\begin{tabular}{M{1cm}M{5cm}M{5cm}M{5cm}M{5cm}}
-	 & \textbf{Point pattern} & \textbf{G-function} & \textbf{F-function} & \textbf{K-function} \\ 
-	 \plotrow{incl-l-141009}{All bad pixels} 
-	 \plotrow{excl-l-141009}{Excl. locally bright/dim} 
-	 \plotrow{only-l-141009}{Only locally bright/dim} 
-	\end{tabular}
-\end{footnotesize}
-
-\end{figure}
-
-\begin{figure}[!ht]	% spatial distribution plots 16-04-30
+\begin{figure}[t]	% spatial distribution plots 16-04-30
 \centering
-\caption{Spatial distribution for images acquired on 16-04-30}
+\caption{Spatial distribution for images acquired on 16-04-30 - all bad pixels included (not just cluster roots)}
 \begin{footnotesize}
 	\begin{tabular}{M{1cm}M{5cm}M{5cm}M{5cm}M{5cm}}
 	 & \textbf{Point pattern} & \textbf{G-function} & \textbf{F-function} & \textbf{K-function} \\
 	 \plotrow{incl-l-160430}{All bad pixels} 
-	 \plotrow{excl-l-160430}{Excl. locally bright/dim}
-	 \plotrow{only-l-160430}{Only locally bright/dim} 
+	 \plotrow{excl-l-160430}{Locally dim/bright removed} 
 	\end{tabular}
 \end{footnotesize}
-
-
 \end{figure}
+
+
+
+
 
 \end{landscape}
 %------------------------------------------------------------------
-
-
-\cb{Quadrat tests were run over each data set shown above - in all cases, CSR was emphatically rejected, both with and without locally bright pixels, and when quadrats were based on subpanels or half-subpanels (quarter-subpanels weren't attempted because expected number of observations per quadrat was so small)}
 
 \cb{Spatial distribution is dominated by locally bright pixels because they are so much more numerous - splitting between locally and globally bright pixels, in particular the G-function of the globally bright pixels is quite different in shape. \nb{Will fit parametric model to inhomogeneous intensity with and without locally bright pixels and compare the resulting parameters - expect shape of distribution (not necessarily scale) to be same in both cases}}
 
@@ -80,5 +86,7 @@
 \todo{Model inhomogeneous intensity - parametrically or via kernel smoothing?}
 
 \todo{Now that the code is in place to produce all of these plots, we can easily carry out a sensitivity analysis to check effects of changes to thresholds \& classification methods}
+
+\todo{Cluster root status is currently assigned to midpoint of cluster - ideally should be assigned to brightest pixel in cluster, then closest to midpoint if there are multiple brightest pixels.}
 
 \end{document}

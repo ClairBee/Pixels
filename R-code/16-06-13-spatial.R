@@ -1,7 +1,11 @@
 
 library("IO.Pixels"); library("CB.Misc")
+
+#bp <- readRDS("./Notes/Final-classifications/fig/bad-px-by-feature.rds")
+bp <- readRDS("./Notes/Final-classifications/fig/bad-px-by-feature-incl-local.rds")
+
 fpath <- "./Notes/Spatial/fig/"
-Cat.cols <- c("purple", "black", "magenta3", "red", "orange", "gold", NA, "yellow", "grey", NA, "blue", "blue", "green3")
+Cat.cols <- c("purple", "black", "magenta3", "red", "orange", "yellow", NA, "gold", "grey", NA, "blue", "blue", "green3")
 
 set.seed(24747)
 
@@ -164,7 +168,6 @@ quadrat.test(as(japanesepines, "ppp"), nx = 3, ny = 3, alternative = "clustered"
 
 # TESTS APPLIED TO BAD PIXEL MAP                                                                ####
 
-bp <- readRDS(paste0(fpath, "bad-px.rds"))
 
 # manual calculation & plotting
 {
@@ -197,15 +200,27 @@ bp <- readRDS(paste0(fpath, "bad-px.rds"))
 
 # ENVELOPE FUNCTIONS                                                                            ####
 
-# quick plotting function
-plot.dist.ests <- function(bpx, dt, excl = c("line.b", "line.d"), file.id, cc = Cat.cols) {
-    
+plot.dist.ests <- function(bpx, dt, excl = c("line.b", "line.d"), file.id, cc = Cat.cols, cl.excl = c("cl.body", "line.body")) {
+
     dt <- toString(dt)
+    
+    px <- bpx[[dt]]
+    
+    px <- px[!(px$f.type %in% cl.excl),]
+
+    qt <- quadrat.test(ppp(px$row[!(px$type %in% excl)], px$col[!(px$type %in% excl)], c(1,1996), c(1,1996)),
+                 xbreaks = panel.edges()$x - 0.5, ybreaks = panel.edges()$y - 0.5)
+    
+    if (qt$statistic < 999) {dp <- 2} else {dp <- 0}
+    if (round(qt$p.value, 5) == 0) {ss <- "\\approx"} else {ss <- "="}
+    
+    qt.out <- paste0("$\\chi^2 = ", round(qt$statistic, dp), ", p ", ss, " ", round(qt$p.value, 5), "$")
+    write(qt.out, paste0(fpath, file.id, "-", dt, ".txt"))
     
     # plot all bad pixels
     pdf(paste0(fpath, file.id, "-", dt, "-plot.pdf")); {
-        plot(bpx[[dt]][!(bpx[[dt]]$type %in% excl),1:2], 
-             col = adjustcolor(cc[bpx[[dt]][!(bpx[[dt]]$type %in% excl),"type"]], alpha = 0.5), 
+        plot(px[!(px$type %in% excl),1:2], 
+             col = adjustcolor(cc[px[!(px$type %in% excl),"type"]], alpha = 0.5), 
              pch = 20, asp = T, xlab = "", ylab = "")
         dev.off()
     }
@@ -213,8 +228,8 @@ plot.dist.ests <- function(bpx, dt, excl = c("line.b", "line.d"), file.id, cc = 
     
     # various intensity functions
     pdf(paste0(fpath, file.id, "-", dt, "-Kenv.pdf")); {
-        plot(envelope(ppp(bpx[[dt]][!(bpx[[dt]]$type %in% excl),"row"], 
-                          bpx[[dt]][!(bpx[[dt]]$type %in% excl),"col"], 
+        plot(envelope(ppp(px[!(px$type %in% excl),"row"], 
+                          px[!(px$type %in% excl),"col"], 
                           c(1,1996), c(1,1996)),
                       Kest, nsim = 99, nrank = 2), 
              main = "")
@@ -223,8 +238,8 @@ plot.dist.ests <- function(bpx, dt, excl = c("line.b", "line.d"), file.id, cc = 
     cat("K-function plot created.")
     
     pdf(paste0(fpath, file.id, "-", dt, "-Fenv.pdf")); {
-        plot(envelope(ppp(bpx[[dt]][!(bpx[[dt]]$type %in% excl),"row"], 
-                          bpx[[dt]][!(bpx[[dt]]$type %in% excl),"col"], 
+        plot(envelope(ppp(px[!(px$type %in% excl),"row"], 
+                          px[!(px$type %in% excl),"col"], 
                           c(1,1996), c(1,1996)),
                       Fest, nsim = 99, nrank = 2), 
              main = "")
@@ -233,8 +248,8 @@ plot.dist.ests <- function(bpx, dt, excl = c("line.b", "line.d"), file.id, cc = 
     cat("F-function plot created.")
     
     pdf(paste0(fpath, file.id, "-", dt, "-Genv.pdf")); {
-        plot(envelope(ppp(bpx[[dt]][!(bpx[[dt]]$type %in% excl),"row"], 
-                          bpx[[dt]][!(bpx[[dt]]$type %in% excl),"col"], 
+        plot(envelope(ppp(px[!(px$type %in% excl),"row"], 
+                          px[!(px$type %in% excl),"col"], 
                           c(1,1996), c(1,1996)),
                       Gest, nsim = 99, nrank = 2), 
              main = "")
@@ -243,87 +258,128 @@ plot.dist.ests <- function(bpx, dt, excl = c("line.b", "line.d"), file.id, cc = 
     cat("G-function plot created.")
     
     pdf(paste0(fpath, file.id, "-", dt, "-Henv.pdf")); {
-        plot(envelope(ppp(bpx[[dt]][!(bpx[[dt]]$type %in% excl),"row"], 
-                          bpx[[dt]][!(bpx[[dt]]$type %in% excl),"col"], 
+        plot(envelope(ppp(px[!(px$type %in% excl),"row"], 
+                          px[!(px$type %in% excl),"col"], 
                           c(1,1996), c(1,1996)),
                       Hest, nsim = 99, nrank = 2), 
              main = "")
         dev.off()
     }
     cat("H-function plot created.")
+    
+  }
+
+bp.ppp <- function(bpx, dt, excl, cl.excl, im.dim = c(1996, 1996)) {
+    
+    dt <- toString(dt)
+    px <- bpx[[dt]][!(bpx[[dt]]$type %in% excl),]
+    px <- px[!px$f.type %in% cl.excl,]
+    
+    ppp(px$"row", px$"col", c(1,im.dim[1]), c(1,im.dim[2]))
 }
-
-# plots of first image, excluding 'locally bright'/'locally dim' pixels
-plot.dist.ests(bp, 141009, excl = c("line.b", "line.d", "l.bright", "l.dim"), file.id = "excl-l")
-
-# plots of first image, including 'locally bright'/'locally dim' pixels
-plot.dist.ests(bp, 141009, excl = c("line.b", "line.d"), file.id = "incl-l")
-
-# plots of first image, including ONLY 'locally bright'/'locally dim' pixels
-plot.dist.ests(bp, 141009, excl = c("no.resp", "dead", "hot", "v.bright", "bright", "line.b", "v.dim", "dim"), file.id = "only-l")
-
-# plots of latest image, including 'locally bright'/'locally dim' pixels
-plot.dist.ests(bp, 160430, excl = c("line.b", "line.d"), file.id = "incl-l")
-
-# plots of latest image, excluding 'locally bright'/'locally dim' pixels
-plot.dist.ests(bp, 160430, excl = c("line.b", "line.d", "l.bright", "l.dim"), file.id = "excl-l")
-
-# plots of latest image, including ONLY 'locally bright'/'locally dim' pixels
-plot.dist.ests(bp, 160430, excl = c("no.resp", "dead", "hot", "v.bright", "bright", "line.b", "v.dim", "dim"), file.id = "only-l")
-
-# plots of latest image, including 'locally bright'/'locally dim' pixels
-plot.dist.ests(bp, 160430, excl = c("banananana"), file.id = "even-lines")
 
 ####################################################################################################
 
-# QUADRAT TESTS                                                                                 ####
+# ENVELOPES & QUADRAT TESTS                                                                     ####
 
-bp.ppp <- function(bpx, dt, excl, im.dim = c(1996, 1996)) {
+# plots of latest image
+{
+    # including 'locally bright'/'locally dim' pixels, all cluster types
+    plot.dist.ests(bp, 160430, excl = c("line.b", "line.d"), file.id = "incl-l", cl.excl = "")
     
-    dt <- toString(dt)
+    # excluding 'locally bright'/'locally dim' pixels
+    plot.dist.ests(bp, 160430, excl = c("line.b", "line.d", "l.bright", "l.dim"), file.id = "excl-l", cl.excl = "")
     
-    ppp(bpx[[dt]][!(bpx[[dt]]$type %in% excl),"row"], 
-        bpx[[dt]][!(bpx[[dt]]$type %in% excl),"col"], 
-        c(1,im.dim[1]), c(1,im.dim[2])) 
+    # plots of latest image, including ONLY 'locally bright'/'locally dim' pixels
+    plot.dist.ests(bp, 160430, excl = c("no.resp", "dead", "hot", "v.bright", "bright", "line.b", "v.dim", "dim"), file.id = "only-l", cl.excl = "")
+
+    # plots of latest image, including 'locally bright'/'locally dim' pixels
+    plot.dist.ests(bp, 160430, excl = c(""), file.id = "even-lines", cl.excl = "")
 }
 
-# split by subpanels - df 31
-quadrat.test(bp.ppp(bp, 160430, excl = c("line.b", "line.d")),
-             xbreaks = panel.edges()$x - 0.5, ybreaks = panel.edges()$y - 0.5)      # x2 = 22171, p = 0
+# plots of cluster roots in latest image
+{
+    plot.dist.ests(bp, 160430, excl = c("line.b", "line.d"), file.id = "cl-incl-l")
+    plot.dist.ests(bp, 160430, excl = c("line.b", "line.d", "l.bright", "l.dim"), file.id = "cl-excl-l")
+    plot.dist.ests(bp, 160430, excl = c("no.resp", "dead", "hot", "v.bright", "bright", "line.b", "v.dim", "dim"), file.id = "cl-only-l")
 
-quadrat.test(bp.ppp(bp, 160430, excl = c("line.b", "line.d", "l.bright", "l.dim")), 
-             xbreaks = panel.edges()$x - 0.5, ybreaks = panel.edges()$y - 0.5)      # x2 = 201.58, p = 0
+    quadrat.test(bp.ppp(bp, 160430, excl = c("line.b", "line.d"), cl.excl = c("cl.body", "line.body")),
+                 xbreaks = panel.edges()$x - 0.5, ybreaks = panel.edges()$y - 0.5)      # x2 = 20866, p = 0
+    quadrat.test(bp.ppp(bp, 160430, excl = c("line.b", "line.d", "l.bright", "l.dim"), cl.excl = c("cl.body", "line.body")),
+                 xbreaks = panel.edges()$x - 0.5, ybreaks = panel.edges()$y - 0.5)      # x2 = 178.69, p = 0
+    quadrat.test(bp.ppp(bp, 160430, excl = c("no.resp", "dead", "hot", "v.bright", "bright", "line.b", "v.dim", "dim"), cl.excl = c("cl.body", "line.body")),
+                 xbreaks = panel.edges()$x - 0.5, ybreaks = panel.edges()$y - 0.5)      # x2 = 20908, p = 0
+    }
 
-quadrat.test(bp.ppp(bp, 141009, excl = c("line.b", "line.d")), 
-             xbreaks = panel.edges()$x - 0.5, ybreaks = panel.edges()$y - 0.5)      # x2 = 3887.9, p = 0
+# cluster roots vs singletons
+{
+    plot.dist.ests(bp, 160430, excl = c("line.b", "line.d", "l.bright", "l.dim"), file.id = "cl-roots", cl.excl = c("singleton", "cl.body", "line.body"))
+    plot.dist.ests(bp, 160430, excl = c("line.b", "line.d", "l.bright", "l.dim"), file.id = "cl-singles", cl.excl = c("cl.root", "cl.body", "line.body"))
 
-quadrat.test(bp.ppp(bp, 141009, excl = c("line.b", "line.d", "l.bright", "l.dim")), 
-             xbreaks = panel.edges()$x - 0.5, ybreaks = panel.edges()$y - 0.5)      # x2 = 85.671, p = 0.000001015
+    quadrat.test(bp.ppp(bp, 160430, excl = c("line.b", "line.d", "l.bright", "l.dim"), cl.excl = c("singleton", "cl.body", "line.body")),
+                 xbreaks = panel.edges()$x - 0.5, ybreaks = panel.edges()$y - 0.5)      # x2 = 57.458, p = 0.005317
+    quadrat.test(bp.ppp(bp, 160430, excl = c("line.b", "line.d", "l.bright", "l.dim"), cl.excl = c("cl.root", "cl.body", "line.body")),
+                 xbreaks = panel.edges()$x - 0.5, ybreaks = panel.edges()$y - 0.5)      # x2 = 181.74, p = 2.2e-16
+}
 
+# plot per bad pixel type
+{
+    Cat <- c("no.resp" , "dead" , "hot" , "v.bright" , "bright" , "line.b" , "edge" , "l.bright" , "line.d" , "screen.spot" , "v.dim" , "dim" , "l.dim")
+    
+    plot.dist.ests(bp, 160430, excl = Cat[Cat != "hot"], file.id = "cl-hot", cl.excl = c("cl.body", "line.body"))
+    quadrat.test(bp.ppp(bp, 160430, excl = Cat[Cat != "hot"], cl.excl = c("cl.body", "line.body")),
+                 xbreaks = panel.edges()$x - 0.5, ybreaks = panel.edges()$y - 0.5)      # x2 = 65.247, p = 0.0006216
+    
+    plot.dist.ests(bp, 160430, excl = Cat[Cat != "v.bright"], file.id = "cl-vbright", cl.excl = c("cl.body", "line.body"))
+    quadrat.test(bp.ppp(bp, 160430, excl = Cat[Cat != "v.bright"], cl.excl = c("cl.body", "line.body")),
+                 xbreaks = panel.edges()$x - 0.5, ybreaks = panel.edges()$y - 0.5)      # x2 = 65.247, p = 0.0006216
+    
+    plot.dist.ests(bp, 160430, excl = Cat[Cat != "bright"], file.id = "cl-bright", cl.excl = c("cl.body", "line.body"))
+    quadrat.test(bp.ppp(bp, 160430, excl = Cat[Cat != "bright"], cl.excl = c("cl.body", "line.body")),
+                 xbreaks = panel.edges()$x - 0.5, ybreaks = panel.edges()$y - 0.5)      # x2 = 65.247, p = 0.0006216
+    
+    plot.dist.ests(bp, 160430, excl = Cat[Cat != "no.resp"], file.id = "cl-no-resp", cl.excl = c("cl.body", "line.body"))
+    quadrat.test(bp.ppp(bp, 160430, excl = Cat[Cat != "no.resp"], cl.excl = c("cl.body", "line.body")),
+                 xbreaks = panel.edges()$x - 0.5, ybreaks = panel.edges()$y - 0.5)      # x2 = 65.247, p = 0.0006216
+    plot.dist.ests(bp, 160430, excl = Cat[Cat != "l.dim"], file.id = "cl-ldim", cl.excl = c("cl.body", "line.body"))
+    quadrat.test(bp.ppp(bp, 160430, excl = Cat[Cat != "l.dim"], cl.excl = c("cl.body", "line.body")),
+                 xbreaks = panel.edges()$x - 0.5, ybreaks = panel.edges()$y - 0.5)      # x2 = 65.247, p = 0.0006216
+}
 
 # try subpanels + minipanels (each subpanel divided vertically into 2) - df 63
-mp <- c(1, 993 + c(-512, 0, 512), 1997)
-
-quadrat.test(bp.ppp(bp, 160430, excl = c("line.b", "line.d")),
-             xbreaks = panel.edges()$x - 0.5, ybreaks = mp - 0.5)       # x2 = 25938, p = 0
-
-quadrat.test(bp.ppp(bp, 160430, excl = c("line.b", "line.d", "l.bright", "l.dim")),
-             xbreaks = panel.edges()$x - 0.5, ybreaks = mp - 0.5)       # x2 = 281.21, p = 0
-
-quadrat.test(bp.ppp(bp, 141009, excl = c("line.b", "line.d")),
-             xbreaks = panel.edges()$x - 0.5, ybreaks = mp - 0.5)       # x2 = 4443.8, p = 0
-
-# expected counts are only 7 - chi^2 approximation likely to be inaccurate
-quadrat.test(bp.ppp(bp, 141009, excl = c("line.b", "line.d", "l.bright", "l.dim")),
-             xbreaks = panel.edges()$x - 0.5, ybreaks = mp - 0.5)       # x2 = 177.39, p = 0
-
-
+{
+    mp <- c(1, 993 + c(-512, 0, 512), 1997)
+    
+    quadrat.test(bp.ppp(bp, 160430, excl = c("line.b", "line.d")),
+                 xbreaks = panel.edges()$x - 0.5, ybreaks = mp - 0.5)       # x2 = 25938, p = 0
+    
+    quadrat.test(bp.ppp(bp, 160430, excl = c("line.b", "line.d", "l.bright", "l.dim")),
+                 xbreaks = panel.edges()$x - 0.5, ybreaks = mp - 0.5)       # x2 = 281.21, p = 0
+    
+    quadrat.test(bp.ppp(bp, 141009, excl = c("line.b", "line.d")),
+                 xbreaks = panel.edges()$x - 0.5, ybreaks = mp - 0.5)       # x2 = 4443.8, p = 0
+    
+    # expected counts are only 7 - chi^2 approximation likely to be inaccurate
+    quadrat.test(bp.ppp(bp, 141009, excl = c("line.b", "line.d", "l.bright", "l.dim")),
+                 xbreaks = panel.edges()$x - 0.5, ybreaks = mp - 0.5)       # x2 = 177.39, p = 0
+    
+}
 # also test for homogeneity within subpanels?
+
+# focal plots of interesting pixels - particularly the triangular shapes around column 1000/900
+{
+    bp$"160430"[bp$"160430"$type == "hot" & bp$"160430"$f.type == "singleton",]
+    plot(bpx[,1:2], pch = c(20, 15, 0, 20)[bpx$f.type], col = Cat.cols[bpx$type], 
+         xlim = c(950, 1050), ylim = c(900, 1000))
+    focal.plot(pw.m[ , , "black", "160430"], centre = c(1000, 943), surround = 20, bad.px = bp$"160430", pt.cex = 0.5, cex.main = 0.8)
+    
+}
 
 ####################################################################################################
 
 # BAD PIXEL MAP WITH CLUSTERS & LINES REMOVED                                                   ####
-# (bpx object currently taken fro 16-06-17-feature-roots.R)
+# (bpx object currently taken from 16-06-17-feature-roots.R)
+bpx <- readRDS("./Notes/Final-classifications/fig/bad-px-by-feature-incl-local-160430.rds")
 
 px <- bpx[bpx$f.type %in% c("cl.root", "singleton"),]
 excl <- c("l.bright", "l.dim")
