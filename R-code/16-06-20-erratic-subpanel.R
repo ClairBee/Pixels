@@ -75,6 +75,21 @@ length(32768 + (-2:12) * 1024)
 length(sd.colours())
 length(sd.levels(zz))
 
+o.plot(zz[384,1:992])
+points(zz[384,1:992], col = c())
+
+bpx <- bp$"160430"
+
+# plot vs latest acquisition before defect (compare bad pixels)
+cc <- 500
+{
+    o.plot(pw.m[cc,,"grey", "160430"], xlim = c(1,992), col = "purple",
+           ylim = range(pretty(range(pw.m[cc,1:992,"black", "160430"] + 7000, zz[cc,1:992] - 14000))))
+    o.plot(pw.m[cc,,"black", "160430"] + 7000, add = T, col = "blue")
+    o.plot(zz[cc,] - 14000, add = T)
+    abline(v = bpx[bpx$row == cc,"col"], col = "red", lty = 3)
+}
+
 #============================================================================
 
 qq <- hist(sp[,,"L4"], breaks = c(0:65535), xlim = c(30000, 42000),

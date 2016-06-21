@@ -33,28 +33,23 @@
 
 \section{Spatial distribution of defective pixels \& features}
 
-\cb{Defective pixels were grouped into clusters by first removing the bright lines, to avoid merging adjacent bright pixels into these larger features (globally bright pixels are flagged independently of the lines, so a cluster of brighter pixels that touches a line will still be detected here). Edge pixels and dim patches resulting from spots on the screen are also removed from the bad pixel map before clustering. }
+\cb{Defective pixels were grouped into clusters by first removing the bright lines, to avoid merging adjacent bright pixels into these larger features (globally bright pixels are flagged independently of the lines, so a cluster of brighter pixels that touches a line will still be detected here). Edge pixels and dim patches resulting from spots on the screen are also removed from the bad pixel map before clustering.}
 
-\cb{Defective pixels that are horizontally or vertically adjacent are grouped into clusters and uniquely labelled. The cluster `root' is  identified as the brightest pixel in the cluster; ties are broken by finding the closest tied pixel to the midline running vertically through the cluster, then the closest pixel on that midline to the panel edge. Any clusters in which the most severe defect is a locally bright or locally dim pixel are relabelled as singletons - so clusters containing only locally bright pixels are assumed to be a less severe defect and reclassified as singletones - locally bright pixels that appear adjacent to bright, hot or dead pixels are treated as part of the cluster feature.}
+\cb{Defective pixels that are horizontally or vertically adjacent are grouped into clusters and uniquely labelled. The cluster `root' is  identified as the brightest pixel in the cluster; ties are broken by finding the closest tied pixel to the midline running vertically through the cluster, then the closest pixel on that midline to the panel edge. Any clusters in which the most severe defect is a locally bright or locally dim pixel are relabelled as singletons - so clusters containing only locally bright or dim pixels are assumed to be a less severe defect and reclassified as singletons - only locally bright pixels that appear adjacent to bright, hot or dead pixels are treated as part of the cluster feature.}
 
 \cb{Quadrat tests were run over each subset of the pixels, with the 32 subpanels used to define quadrats - in all cases except for cluster roots alone, CSR was emphatically rejected. For 31df, at the 5\% significance level, the upper critical value of the test statistic is 48.232.}
 
+\subsection{Exploration of data vs CSR}
+
+\cb{Spatial distribution is dominated by locally bright pixels because they are so much more numerous - splitting between locally and globally bright pixels, in particular the G-function of the globally bright pixels is quite different in shape. \nb{Will fit parametric model to inhomogeneous intensity with and without locally bright pixels and compare the resulting parameters - expect shape of distribution (not necessarily scale) to be same in both cases}}
+
+\cb{G-function plots show an interesting variation in shape at the left-hand end. Suspect that large vertical step indicates adjacent pixels (not the result of accidentally leaving the lines in - that takes the vertical line up to around 0.8!). When locally bright pixels are included as well, there is a short horizontal step before the vertical step; this part of the distribution is presumably dominated by the large numbers of randomly-distributed locally bright pixels, which don't tend to appear as part of `bleeds' or clusters of adjacent pixels. Interestingly, the vertical line is longer in the older images (both with and without locally bright pixels), because a higher proportion of the bad pixels are globally bright pixels that form clusters - the number of locally bright pixels is much higher in the later images.}
 
 %------------------------------------------------------------------
 \begin{landscape} % spatial distribution plots
 
 \centering
-%\caption{Spatial distribution for images acquired on 14-10-09}
-%
-%\begin{footnotesize}
-%	\begin{tabular}{M{1cm}M{5cm}M{5cm}M{5cm}M{5cm}}
-%	 & \textbf{Point pattern} & \textbf{G-function} & \textbf{F-function} & \textbf{K-function}\\ 
-%	 \plotrow{incl-l-141009}{All bad pixels \\ $\chi^2 = 85.671, p \approx 0$}
-%	 \plotrow{excl-l-141009}{Excl. locally bright/dim \\ $\chi^2 = 3887.9, p \approx 0$}
-%	 \plotrow{only-l-141009}{Only locally bright/dim \\ $\chi^2 = 4273.1, p \approx 0$}
-%	\end{tabular}
-%\end{footnotesize}
-%\end{figure}
+
 
 \begin{figure}[t]	% spatial distribution plots 16-04-30
 \centering
@@ -64,29 +59,123 @@
 	 & \textbf{Point pattern} & \textbf{G-function} & \textbf{F-function} & \textbf{K-function} \\
 	 \plotrow{incl-l-160430}{All bad pixels} 
 	 \plotrow{excl-l-160430}{Locally dim/bright removed} 
+	 \plotrow{only-l-160430}{Only locally dim/bright pixels} 
 	\end{tabular}
 \end{footnotesize}
 \end{figure}
 
 
+\begin{figure}[t]	% spatial distribution plots 16-04-30
+\centering
+\caption{Spatial distribution for images acquired on 16-04-30 - globally extreme pixels only}
+\begin{footnotesize}
+	\begin{tabular}{M{1cm}M{5cm}M{5cm}M{5cm}M{5cm}}
+	 & \textbf{Point pattern} & \textbf{G-function} & \textbf{F-function} & \textbf{K-function} \\
+	 \plotrow{cl-roots-160430}{Cluster roots} 
+	 \plotrow{cl-singles-160430}{Singletons} 
+	\end{tabular}
+\end{footnotesize}
+\end{figure}
 
+\begin{figure}[t]	% spatial distribution plots 16-04-30
+\centering
+\caption{Spatial distribution of individual bad pixel types for images acquired on 16-04-30}
+\begin{footnotesize}
+	\begin{tabular}{M{1cm}M{5cm}M{5cm}M{5cm}M{5cm}}
+	 & \textbf{Point pattern} & \textbf{G-function} & \textbf{F-function} & \textbf{K-function} \\
+	 \plotrow{cl-hot-160430}{Hot pixels} 
+	 \plotrow{cl-vbright-160430}{Very bright pixels} 
+	 \plotrow{cl-bright-160430}{Bright pixels} 
+	\end{tabular}
+\end{footnotesize}
+\end{figure}
 
+\begin{figure}[t]	% spatial distribution plots 16-04-30
+\centering
+\caption{Spatial distribution of individual bad pixel types for images acquired on 16-04-30}
+\begin{footnotesize}
+	\begin{tabular}{M{1cm}M{5cm}M{5cm}M{5cm}M{5cm}}
+	 & \textbf{Point pattern} & \textbf{G-function} & \textbf{F-function} & \textbf{K-function} \\
+	 \plotrow{cl-no-resp-160430}{Non-responsive pixels} 
+	 \plotrow{cl-lbright-160430}{Locally bright pixels} 
+	 \plotrow{cl-ldim-160430}{Locally dim pixels} 
+	\end{tabular}
+\end{footnotesize}
+\end{figure}
 
 \end{landscape}
 %------------------------------------------------------------------
 
-\cb{Spatial distribution is dominated by locally bright pixels because they are so much more numerous - splitting between locally and globally bright pixels, in particular the G-function of the globally bright pixels is quite different in shape. \nb{Will fit parametric model to inhomogeneous intensity with and without locally bright pixels and compare the resulting parameters - expect shape of distribution (not necessarily scale) to be same in both cases}}
 
-\cb{G-function plots show an interesting variation in shape at the left-hand end. Suspect that large vertical step indicates adjacent pixels (not the result of accidentally leaving the lines in - that takes the vertical line up to around 0.8!). When locally bright pixels are included as well, there is a short horizontal step before the vertical step; this part of the distribution is presumably dominated by the large numbers of randomly-distributed locally bright pixels, which don't tend to appear as part of `bleeds' or clusters of adjacent pixels. Interestingly, the vertical line is longer in the older images (both with and without locally bright pixels), because a higher proportion of the bad pixels are globally bright pixels that form clusters - the number of locally bright pixels is much higher in the later images.}
+\section{Fitting an inhomogenous intensity $\lambda(x)$}
 
+\subsection{Parametric model: log-linear}
+
+Following Diggle (2003) \nb{cite}, a log-linear Poisson PPM was fitted, with
+\[\log \lambda(x) = \alpha + \beta_1x + \beta_2y + \beta_3x^2 + \beta_4y^2 + \beta_5xy\]
+
+%------------------------------------------------------------------
+\begin{figure}[!ht]
+\centering
+\caption{Log-linear Poisson processes fitted to cluster roots and singleton pixels, excluding locally bright pixels \emph{(Contours are labelled with $\lambda(x)$)}}
+
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{Cluster roots (148 points)}
+\includegraphics[scale=0.4]{./fig/lambda-contour-clusters}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{Singleton pixels (378 points)}
+\includegraphics[scale=0.4]{./fig/lambda-contour-singletons}
+\end{subfigure}
+
+\vspace*{10pt}
+
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{Cluster roots and singletons (526 points)}
+\includegraphics[scale=0.4]{./fig/lambda-contour-clusters-and-singles}
+\end{subfigure}
+
+\end{figure}
+%------------------------------------------------------------------
+
+The intensity varies less from the top to bottom of the panel than it does from side to side, with higher intensities observed at the outer edges than in the centre, and a slightly higher intensity observed on the lower edge of the panel than the upper. It could be argued that this is because some subpanels are more susceptible to developing defective pixels than others, rather than because the intensity increases smoothly toward the panel edges (particularly under these model constraints). Several ways to investigate this: try to fit a flexible, smooth model to each subpanel and compare gradients; fit a parametric model using the panel as a categorical explanatory variable; or fit a nonparametric model (Gaussian/quartic kernel); and compare the results.
+
+%------------------------------------------------------------------
+\begin{figure}[!ht]
+\centering
+\caption{Log-linear Poisson processes fitted to each bad pixel type \emph{(Contours are labelled with $\lambda(x)$)}}
+
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{Hot pixels (131 points)}
+\includegraphics[scale=0.4]{./fig/lambda-contour-hot}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{Very bright pixels (193 points)}
+\includegraphics[scale=0.4]{./fig/lambda-contour-vbright}
+\end{subfigure}
+
+\vspace*{10pt}
+
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{Bright pixels (266 points)}
+\includegraphics[scale=0.4]{./fig/lambda-contour-bright}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{Locally bright pixels (15527 points)}
+\includegraphics[scale=0.4]{./fig/lambda-contour-lbright}
+\end{subfigure}
+
+\end{figure}
+%------------------------------------------------------------------
+
+\FloatBarrier
 \hrulefill
 
 \section*{Next steps}
 
-\todo{Model inhomogeneous intensity - parametrically or via kernel smoothing?}
-
 \todo{Now that the code is in place to produce all of these plots, we can easily carry out a sensitivity analysis to check effects of changes to thresholds \& classification methods}
-
-\todo{Cluster root status is currently assigned to midpoint of cluster - ideally should be assigned to brightest pixel in cluster, then closest to midpoint if there are multiple brightest pixels.}
 
 \end{document}

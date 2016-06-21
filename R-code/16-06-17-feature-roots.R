@@ -9,6 +9,7 @@ bp <- readRDS("./Notes/Final-classifications/fig/bad-px.rds")
 
 # get all roots (lines & clusters) together -> single root for 'cluster with line'
 # will need to distinguish between line & adjacent bright pixels
+# bpx <- bp$"160430"
 
 # should change this to assign root status to brightest pixel!
 bpx.features <- function(bpx) {
@@ -34,40 +35,45 @@ bpx.features <- function(bpx) {
     # get size of each clump, discard 1-pixel clumps
     xy <- merge(xy, count(xy, "id"), all = T)[,c("x", "y", "id", "freq")]
     xy <- xy[xy$freq > 1,]
+    xy$f.type <- "cl.body"
     
     # ---------------------------------------------------------------------------
     # FIND CLUSTER CENTRES
     
-    # iterate over all clusters
-    xy$f.type <- "cl.body"
-    xy$bval <- pw.m[,,"black", "160430"][as.matrix(xy[,1:2])]
-    for (i in unique(xy$id)) {
-        tmp <- xy[xy$id == i,]
+    bpx <- merge(bpx, xy[,c("x", "y", "f.type", "id")], by.x = c("row", "col"), by.y = c("x", "y"), all = T)
+    
+    for (i in unique(bpx$id[!is.na(bpx$id)])) {
+        tmp <- bpx[which(bpx$id == i),]
         
-        # find brightest pixel in cluster
-        cand <- tmp[tmp$bval == max(tmp$bval),]
-        if (nrow(cand) > 1) {
+        # if most severe defect is local brightness/dimness, set cluster as singletons
+        if (min(tmp$type) %in% c("l.bright", "l.dim")) {
+            bpx$f.type[bpx$id == i] <- "singleton"
+        } else {
             
-            # if multiple brightest pixels in cluster, get horizontal midpoint
-            cand <- cand[cand$x - floor(mean(tmp$x)) == min(cand$x - floor(mean(tmp$x))),]
+            # find brightest pixel in cluster
+            cand <- tmp[tmp$type == min(tmp$type),]
             
             if (nrow(cand) > 1) {
                 
-                # if multiple brightest pixels in midline, get closest to panel edge
-                if (min(cand$y) > 992.5) {
-                    cand <- cand[which.max(cand$y),]
-                } else {
-                    cand <- cand[which.min(cand$y),]
+                # if multiple brightest pixels in cluster, get horizontal midpoint
+                cand <- cand[cand$row - floor(mean(tmp$row)) == min(cand$row - floor(mean(tmp$row))),]
+                
+                if (nrow(cand) > 1) {
+                    
+                    # if multiple brightest pixels in midline, get closest to panel edge
+                    if (min(cand$col) > 992.5) {
+                        cand <- cand[which.max(cand$col),]
+                    } else {
+                        cand <- cand[which.min(cand$col),]
+                    }
                 }
             }
+            bpx$f.type[bpx$row == cand$row & bpx$col == cand$col] <- "cl.root"
         }
-        xy$f.type[xy$x == cand$x & xy$y == cand$y] <- "cl.root"
     }
     
     # ---------------------------------------------------------------------------
-    # LABEL INDIVIDUAL PIXELS ACCORDING TO FEATURE TYPE
-    
-    bpx <- merge(bpx, xy[,c("x", "y", "f.type", "id")], by.x = c("row", "col"), by.y = c("x", "y"), all = T)
+    # LABEL REMAINING FEATURE TYPES
     
     bpx$f.type[bpx$type == "line.b" & is.na(bpx$f.type)] <- "line.body"
     bpx$f.type[is.na(bpx$f.type)] <- "singleton"
@@ -76,39 +82,30 @@ bpx.features <- function(bpx) {
     
     
     # ---------------------------------------------------------------------------
-    # REMOVE CLUSTERS CONTAINING *ONLY* LOCALLY BRIGHT/DIM PIXELS
-    # these are treated as higher density of singleton pixels, not as single 'bleeding' cluster
-    
-    lc <- ddply(bpx, .(id), summarise, worst = min(type))
-
-    bpx$f.type[bpx$id %in% lc$id[lc$worst %in% c("l.bright", "l.dim")]] <- "singleton"
-    
-    
-    # ---------------------------------------------------------------------------
     # MANUALLY LABEL BRIGHT LINES TO ASSOCIATE WITH CLUSTERS
     # WILL NEED TO AUTOMATE THIS AT SOME POINT!
     
     # label bright column 427 as part of same cluster as the one at its end
-    bpx$id[bpx$f.type == "cl.root" & bpx$row == 427]
     bpx$id[bpx$type == "line.b" & bpx$row == 427 & bpx$col >= bpx$col[bpx$f.type == "cl.root" & bpx$row == 427]] <- bpx$id[bpx$f.type == "cl.root" & bpx$row == 427]
     
     # mark line at middle of column 427 (no line root - assume one per column)
     bpx$id[is.na(bpx$id) & bpx$type == "line.b" & bpx$row == "427"] <- max(bpx$id, na.rm = T) + 1
-
-    # bright column 809 has no cluster at end <- assign ID to each part and set cluster root as end point
-    bpx$f.type[bpx$row == 809 & bpx$col == 178] <- "cl.root"
-    bpx$id[bpx$row == 809 & bpx$col <= 178] <- max(bpx$id, na.rm = T) + 1
     
-    bpx$id[bpx$row == 809 & bpx$col > 190 & bpx$type == "line.b"] <- max(bpx$id, na.rm = T) + 1
+    # bright column 809 has no cluster at end <- assign ID to each part and set cluster root as end point
+    bpx$id[bpx$type == "line.b" & bpx$row == 809 & bpx$col >= bpx$col[bpx$f.type == "cl.root" & bpx$row == 809]] <- bpx$id[bpx$f.type == "cl.root" & bpx$row == 809]
+    
+    bpx$id[is.na(bpx$id) & bpx$type == "line.b" & bpx$row == "809"] <- max(bpx$id, na.rm = T) + 1
+    
+    # ---------------------------------------------------------------------------
     
     return(bpx)
 }
 
-load.pixel.means()
 bp.f <- lapply(bp, bpx.features)
     
 #saveRDS(bp.f, "./Notes/Final-classifications/fig/bad-px-by-feature.rds")
 saveRDS(bp.f, "./Notes/Final-classifications/fig/bad-px-by-feature-incl-local.rds")
+
 
 ####################################################################################################
 
