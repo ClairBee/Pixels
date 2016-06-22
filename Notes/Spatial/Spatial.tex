@@ -37,13 +37,21 @@
 
 \cb{Defective pixels that are horizontally or vertically adjacent are grouped into clusters and uniquely labelled. The cluster `root' is  identified as the brightest pixel in the cluster; ties are broken by finding the closest tied pixel to the midline running vertically through the cluster, then the closest pixel on that midline to the panel edge. Any clusters in which the most severe defect is a locally bright or locally dim pixel are relabelled as singletons - so clusters containing only locally bright or dim pixels are assumed to be a less severe defect and reclassified as singletons - only locally bright pixels that appear adjacent to bright, hot or dead pixels are treated as part of the cluster feature.}
 
-\cb{Quadrat tests were run over each subset of the pixels, with the 32 subpanels used to define quadrats - in all cases except for cluster roots alone, CSR was emphatically rejected. For 31df, at the 5\% significance level, the upper critical value of the test statistic is 48.232.}
-
 \subsection{Exploration of data vs CSR}
 
-\cb{Spatial distribution is dominated by locally bright pixels because they are so much more numerous - splitting between locally and globally bright pixels, in particular the G-function of the globally bright pixels is quite different in shape. \nb{Will fit parametric model to inhomogeneous intensity with and without locally bright pixels and compare the resulting parameters - expect shape of distribution (not necessarily scale) to be same in both cases}}
+\cb{Quadrat tests were run over every category of pixels that contained more than 100 pixels, with the 32 subpanels used to define quadrats - in almost all cases, CSR was emphatically rejected. CSR was rejected less emphatically for the cluster roots alone, and for hot pixels alone. For 31df, at the 5\% significance level, the upper critical value of the test statistic is 48.232.}
 
-\cb{G-function plots show an interesting variation in shape at the left-hand end. Suspect that large vertical step indicates adjacent pixels (not the result of accidentally leaving the lines in - that takes the vertical line up to around 0.8!). When locally bright pixels are included as well, there is a short horizontal step before the vertical step; this part of the distribution is presumably dominated by the large numbers of randomly-distributed locally bright pixels, which don't tend to appear as part of `bleeds' or clusters of adjacent pixels. Interestingly, the vertical line is longer in the older images (both with and without locally bright pixels), because a higher proportion of the bad pixels are globally bright pixels that form clusters - the number of locally bright pixels is much higher in the later images.}
+\cb{Spatial distribution is dominated by locally bright pixels because they are so much more numerous - when the pixels are divided into locally vs globally extreme pixels, the plots of the locally-extreme pixels are extremely similar to those generated from the whole data set.}
+
+\cb{When all pixels (including clustered pixels) are included as individuals, the G-function shows a significant vertical step at the left-hand end, indicating a high level of aggregation. In contrast, when only the `root' of each cluster is included, the distribution is much closer to CSR, particularly in terms of the G-function. However, the F- and K-functions still indicate a degree of aggregation in the data, with the observed values lying below the envelopes in each case.}
+
+\cb{The G-function for locally-bright pixels begins with a long horizontal step, indicating a degree of regularity in the data at very short range. This reflects the selection method used; locally bright pixels are brighter than their neighbours by some degree, so it is unlikely (although not impossible) that a locally-bright pixel will be adjacent to other bright pixels. In a sense, locally-bright pixels repel each other (or, more accurately, are repelled by other bright pixels).}
+
+\cb{Once defective pixels are divided according to brightness, the brighter pixels tend to be closer to CSR. However, this may be an effect of the much smaller sample size, rather than increased homogeneity.}
+
+\cb{Departure from the envelope tends to increase with increasing $r$, suggesting that the departure from CSR has more to do with inhomogeneity of the intensity, rather than any clustering between points}
+
+%\cb{G-function plots show an interesting variation in shape at the left-hand end. Suspect that large vertical step indicates adjacent pixels (not the result of accidentally leaving the lines in - that takes the vertical line up to around 0.8!). When locally bright pixels are included as well, there is a short horizontal step before the vertical step; this part of the distribution is presumably dominated by the large numbers of randomly-distributed locally bright pixels, which don't tend to appear as part of `bleeds' or clusters of adjacent pixels. Interestingly, the vertical line is longer in the older images (both with and without locally bright pixels), because a higher proportion of the bad pixels are globally bright pixels that form clusters - the number of locally bright pixels is much higher in the later images.}
 
 %------------------------------------------------------------------
 \begin{landscape} % spatial distribution plots
@@ -58,8 +66,9 @@
 	\begin{tabular}{M{1cm}M{5cm}M{5cm}M{5cm}M{5cm}}
 	 & \textbf{Point pattern} & \textbf{G-function} & \textbf{F-function} & \textbf{K-function} \\
 	 \plotrow{incl-l-160430}{All bad pixels} 
+	 \plotrow{only-l-160430}{Only locally dim/bright pixels}
 	 \plotrow{excl-l-160430}{Locally dim/bright removed} 
-	 \plotrow{only-l-160430}{Only locally dim/bright pixels} 
+
 	\end{tabular}
 \end{footnotesize}
 \end{figure}
@@ -67,10 +76,11 @@
 
 \begin{figure}[t]	% spatial distribution plots 16-04-30
 \centering
-\caption{Spatial distribution for images acquired on 16-04-30 - globally extreme pixels only}
+\caption{Spatial distribution for images acquired on 16-04-30 - globally extreme pixels only, clusters represented as single point}
 \begin{footnotesize}
 	\begin{tabular}{M{1cm}M{5cm}M{5cm}M{5cm}M{5cm}}
 	 & \textbf{Point pattern} & \textbf{G-function} & \textbf{F-function} & \textbf{K-function} \\
+	 \plotrow{cl-roots-and-singles-160430}{Cluster roots \& singletons} 
 	 \plotrow{cl-roots-160430}{Cluster roots} 
 	 \plotrow{cl-singles-160430}{Singletons} 
 	\end{tabular}
@@ -79,7 +89,7 @@
 
 \begin{figure}[t]	% spatial distribution plots 16-04-30
 \centering
-\caption{Spatial distribution of individual bad pixel types for images acquired on 16-04-30}
+\caption{Spatial distribution of individual bad pixel types for images acquired on 16-04-30 - globally extreme pixel types}
 \begin{footnotesize}
 	\begin{tabular}{M{1cm}M{5cm}M{5cm}M{5cm}M{5cm}}
 	 & \textbf{Point pattern} & \textbf{G-function} & \textbf{F-function} & \textbf{K-function} \\
@@ -92,11 +102,11 @@
 
 \begin{figure}[t]	% spatial distribution plots 16-04-30
 \centering
-\caption{Spatial distribution of individual bad pixel types for images acquired on 16-04-30}
+\caption{Spatial distribution of individual bad pixel types for images acquired on 16-04-30 - locally extreme pixel types}
 \begin{footnotesize}
 	\begin{tabular}{M{1cm}M{5cm}M{5cm}M{5cm}M{5cm}}
 	 & \textbf{Point pattern} & \textbf{G-function} & \textbf{F-function} & \textbf{K-function} \\
-	 \plotrow{cl-no-resp-160430}{Non-responsive pixels} 
+%	 \plotrow{cl-no-resp-160430}{Non-responsive pixels} 
 	 \plotrow{cl-lbright-160430}{Locally bright pixels} 
 	 \plotrow{cl-ldim-160430}{Locally dim pixels} 
 	\end{tabular}
@@ -111,7 +121,7 @@
 
 \subsection{Parametric model: log-linear}
 
-Following Diggle (2003) \nb{cite}, a log-linear Poisson PPM was fitted, with
+Following Diggle (2003), a log-linear Poisson PPM was fitted, with
 \[\log \lambda(x) = \alpha + \beta_1x + \beta_2y + \beta_3x^2 + \beta_4y^2 + \beta_5xy\]
 
 %------------------------------------------------------------------
@@ -171,11 +181,11 @@ The intensity varies less from the top to bottom of the panel than it does from 
 \end{figure}
 %------------------------------------------------------------------
 
-\FloatBarrier
-\hrulefill
+%\FloatBarrier
+%\hrulefill
 
-\section*{Next steps}
-
-\todo{Now that the code is in place to produce all of these plots, we can easily carry out a sensitivity analysis to check effects of changes to thresholds \& classification methods}
+%\section*{Next steps}
+%
+%\todo{Now that the code is in place to produce all of these plots, we can easily carry out a sensitivity analysis to check effects of changes to thresholds \& classification methods}
 
 \end{document}

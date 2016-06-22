@@ -203,9 +203,45 @@ pdf(paste0(fpath, "cum-usage-vs-bp-prop.pdf"), height = 4, width = 7); {
          bg = c(rep("black", 10), "red", "black"))
 }
 
+
 df <- xt[xt$acq.date %in% acq.datetimes(),]
 df$n.pix <- unlist(lapply(bp, nrow))
 df$pix.pc <- df$n.pix / 1996^2 * 100
+
+pdf(paste0(fpath, "usage-vs-defect-prop.pdf"), height = 4, width = 7); {
+    par(mar = c(2,4,1,4))
+    plot(xt$acq.date, xt$usage, type = "o", pch = 20, ylim = c(0,1600),
+         xlab = "", ylab = "Usage (arbitrary units)")
+    
+    abline(v = acq.datetimes(), col = "red", lty = 3)
+    points(df$acq.date, df$pix.pc * 3000,
+           pch = 21, bg = "skyblue", col = "blue")
+    
+    axis(4, at = c(0:5)*300, labels = c(0:5)*300 / 3000, col = "blue")
+    mtext(side = 4, line = 3, "Percentage of detector covered", col = "blue")
+    dev.off()
+}
+
+pdf(paste0(fpath, "defects-vs-usage.pdf"), height = 4, width = 7); {
+    par(mar = c(2,4,1,4))
+    plot(df$cum.usage, df$pix.pc, type = "o", pch = 20,
+         xlab = "", ylab = "Percentage of pxiels defective")
+    abline(coef(lm(pix.pc ~ cum.usage, df)), col = "gold")
+    lines(df$cum.usage, lm(pix.pc ~ poly(cum.usage, 2), df)$fitted.values, col = "cyan3")
+    dev.off()
+}
+
+pdf(paste0(fpath, "defects-vs-time.pdf"), height = 4, width = 7); {
+    par(mar = c(2,4,1,4))
+    plot(df$acq.date, df$pix.pc, type = "o", pch = 20,
+         xlab = "", ylab = "Percentage of pxiels defective")
+    abline(coef(lm(pix.pc ~ acq.date, df)), col = "gold")
+    lines(df$acq.date, lm(pix.pc ~ poly(acq.date, 2), df)$fitted.values, col = "cyan3")
+    dev.off()
+}
+
+usage.qm <- lm(pix.pc ~ poly(cum.usage, 2), df)
+
 
 # what about fitting line to first 10 images only?
 {
@@ -223,6 +259,10 @@ df$pix.pc <- df$n.pix / 1996^2 * 100
 # also repeat for fitting of screen spots
 
 sp <- readRDS("./Notes/Final-classifications/fig/bad-px-screenspots.rds")
+pc <- unlist(c(summarise.bpx(sp)))
+pc[is.na(pc)] <- 0
+pc <- pc / 1996^2 * 100
+
 
 pdf(paste0(fpath, "usage-vs-screen-spot-prop.pdf"), height = 4, width = 7); {
     par(mar = c(2,4,1,4))
@@ -230,8 +270,7 @@ pdf(paste0(fpath, "usage-vs-screen-spot-prop.pdf"), height = 4, width = 7); {
          xlab = "", ylab = "Usage (arbitrary units)")
     
     abline(v = acq.datetimes(), col = "red", lty = 3)
-    points(xt[xt$acq.date %in% acq.datetimes(), "acq.date"],
-           (unlist(lapply(sp, nrow)) / 1996^2 * 100) * 3000,
+    points(xt[xt$acq.date %in% acq.datetimes(), "acq.date"], pc * 3000,
            pch = 21, bg = "skyblue", col = "blue")
     
     axis(4, at = c(0:5)*300, labels = c(0:5)*300 / 3000, col = "blue")

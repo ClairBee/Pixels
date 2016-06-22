@@ -35,6 +35,10 @@ pdf("./Notes/Damaged-subpanel/fig/Panel-transect.pdf"); {
     o.plot(zz[512,], add = T, col = adjustcolor("orange", alpha = 0.4))
     o.plot(zz[384,], add = T)
     legend("topleft", pch = 20, col = c("red", "black", "orange"), legend = c("column 256", "column 384", "column 512"))
+    
+    points(zz[384,], pch = 21, bg = c(NA, "gold")[c(1:992) %in% bpx[bpx$row == 384, "col"] + 1],
+           col = c(NA, "black")[c(1:992) %in% bpx[bpx$row == 384, "col"] + 1])
+    
     dev.off()
 }
 
@@ -55,6 +59,40 @@ pdf("./Notes/Damaged-subpanel/fig/Panel-hist.pdf")
     dev.off()
 }
 
+# check for common multiples
+{
+    ep <- count(c(sp[,,"L4"][!is.na(sp[,,"L4"])]))
+    ep$diff <- ep$x - min(ep$x)
+    ep$l2 <- log2(ep$diff)
+    
+    plot(ep$diff %% 64, ep$freq, pch = 20, col = c("black", "red")[(ep$freq == 1) + 1])
+    plot(ep$diff %% 16, ep$freq, pch = 20, col = c("black", "red")[(ep$freq == 1) + 1])
+    plot(ep$l2, ep$freq, pch = 20, col = c("black", "red")[(ep$freq == 1) + 1])
+    
+} # all values are divisible by 16
+
+# any pattern in those pixels that aren't multiples of 16?
+# they don't coincide with bad pixels already identified...
+odd <- melt(sp[,,"L4"])
+odd <- odd[odd$value %in% ep$x[ep$x %% 16 > 0],]
+
+cc <- 75
+{
+    o.plot(pw.m[382+cc,,"grey", "160430"] + 14000, xlim = c(1,992), col = "purple",
+           ylim = range(pretty(range(pw.m[382+cc,1:992,"black", "160430"] + 21000, zz[382+cc,1:992]))))
+    o.plot(pw.m[382+cc,,"black", "160430"] + 21000, add = T, col = "blue")
+    o.plot(zz[382 + cc,], add = T)
+    
+    abline(h = odd$value[odd$X1 == cc], col = "red", lty = 3)
+    abline(v = bp$"160430"$col[bp$"160430"$row == 382+cc], 
+           col = Cat.cols[bp$"160430"$type[bp$"160430"$row == 382+cc]], lty = 2)
+    points(odd[odd$X1 == cc,c("X2", "value")], pch = 21, col = "red", bg = "gold")
+}
+
+bpx <- bp$"160430"
+bpx.odd <- merge(odd, bpx, by.x = c("X1", "X2"), by.y = c("row", "col"), all.x = T)
+bpx.odd[!is.na(bpx.odd$type),]
+
 range(sp[,,"L4"], na.rm = T)
 
 pdf("./Notes/Damaged-subpanel/fig/Panel-image.pdf"); {
@@ -67,9 +105,6 @@ pdf("./Notes/Damaged-subpanel/fig/Panel-image.pdf"); {
 pixel.image()
 
 range(zz[255:638, 1:992])
-638-255
-31597-32768
-    49622
 
 length(32768 + (-2:12) * 1024)
 length(sd.colours())
@@ -81,20 +116,29 @@ points(zz[384,1:992], col = c())
 bpx <- bp$"160430"
 
 # plot vs latest acquisition before defect (compare bad pixels)
-cc <- 500
-{
+cc <- 384
+pdf(paste0("./Notes/Damaged-subpanel/fig/col-", cc, "-vs-previous.pdf")); {
     o.plot(pw.m[cc,,"grey", "160430"], xlim = c(1,992), col = "purple",
            ylim = range(pretty(range(pw.m[cc,1:992,"black", "160430"] + 7000, zz[cc,1:992] - 14000))))
     o.plot(pw.m[cc,,"black", "160430"] + 7000, add = T, col = "blue")
     o.plot(zz[cc,] - 14000, add = T)
-    abline(v = bpx[bpx$row == cc,"col"], col = "red", lty = 3)
+    
+    points(zz[cc,] - 14000, pch = 21, bg = c(NA, "gold")[c(1:992) %in% bpx[bpx$row == cc, "col"] + 1],
+           col = c(NA, "black")[c(1:992) %in% bpx[bpx$row == cc, "col"] + 1], cex = 0.6)
+    
+    points(pw.m[cc,,"black", "160430"] + 7000, pch = 21, bg = c(NA, "gold")[c(1:992) %in% bpx[bpx$row == cc, "col"] + 1],
+           col = c(NA, "black")[c(1:992) %in% bpx[bpx$row == cc, "col"] + 1], cex = 0.6)
+    
+    points(pw.m[cc,,"grey", "160430"], pch = 21, bg = c(NA, "gold")[c(1:992) %in% bpx[bpx$row == cc, "col"] + 1],
+           col = c(NA, "black")[c(1:992) %in% bpx[bpx$row == cc, "col"] + 1], cex = 0.6)
+    dev.off()
 }
 
 #============================================================================
 
 qq <- hist(sp[,,"L4"], breaks = c(0:65535), xlim = c(30000, 42000),
            main = "Histogram of damaged subpanel")
-
+s
 qq <- data.frame(mids = qq$mids, count = qq$counts)
 qq <- qq[rev(order(qq$count)),]
 

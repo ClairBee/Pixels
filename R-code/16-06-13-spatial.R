@@ -14,7 +14,7 @@ set.seed(24747)
 # ENVELOPE FUNCTIONS                                                                            ####
 
 plot.dist.ests <- function(bpx, dt, excl = c("line.b", "line.d"), file.id, cc = Cat.cols,
-                           cl.excl = c("cl.body", "line.body")) {
+                           cl.excl = c("cl.body", "line.body"), r = NULL, ...) {
 
     dt <- toString(dt)
     
@@ -45,7 +45,7 @@ plot.dist.ests <- function(bpx, dt, excl = c("line.b", "line.d"), file.id, cc = 
         plot(envelope(ppp(px[!(px$type %in% excl),"row"], 
                           px[!(px$type %in% excl),"col"], 
                           c(1,1996), c(1,1996)),
-                      Kest, nsim = 99, nrank = 2), 
+                      Kest, nsim = 99, nrank = 2, r = r), 
              main = "")
         dev.off()
     }
@@ -55,8 +55,8 @@ plot.dist.ests <- function(bpx, dt, excl = c("line.b", "line.d"), file.id, cc = 
         plot(envelope(ppp(px[!(px$type %in% excl),"row"], 
                           px[!(px$type %in% excl),"col"], 
                           c(1,1996), c(1,1996)),
-                      Fest, nsim = 99, nrank = 2), 
-             main = "")
+                      Fest, nsim = 99, nrank = 2, r = r), 
+             main = "", ...)
         dev.off()
     }
     cat("F-function plot created.")
@@ -65,8 +65,8 @@ plot.dist.ests <- function(bpx, dt, excl = c("line.b", "line.d"), file.id, cc = 
         plot(envelope(ppp(px[!(px$type %in% excl),"row"], 
                           px[!(px$type %in% excl),"col"], 
                           c(1,1996), c(1,1996)),
-                      Gest, nsim = 99, nrank = 2), 
-             main = "")
+                      Gest, nsim = 99, nrank = 2, r = r), 
+             main = "", ...)
         dev.off()
     }
     cat("G-function plot created.")
@@ -75,8 +75,8 @@ plot.dist.ests <- function(bpx, dt, excl = c("line.b", "line.d"), file.id, cc = 
         plot(envelope(ppp(px[!(px$type %in% excl),"row"], 
                           px[!(px$type %in% excl),"col"], 
                           c(1,1996), c(1,1996)),
-                      Hest, nsim = 99, nrank = 2), 
-             main = "")
+                      Hest, nsim = 99, nrank = 2, r = r), 
+             main = "", ...)
         dev.off()
     }
     cat("H-function plot created.")
@@ -88,10 +88,11 @@ plot.dist.ests <- function(bpx, dt, excl = c("line.b", "line.d"), file.id, cc = 
 
 # ENVELOPES & QUADRAT TESTS                                                                     ####
 
+r <- c(0:500)
 # plots of latest image
 {
     # including 'locally bright'/'locally dim' pixels, all cluster types
-    plot.dist.ests(bp, 160430, excl = c("line.b", "line.d"), file.id = "incl-l", cl.excl = "")
+    plot.dist.ests(bp, 160430, excl = c("line.b", "line.d"), file.id = "incl-l", cl.excl = "", r = r, xlim = c(0,500))
     
     # excluding 'locally bright'/'locally dim' pixels
     plot.dist.ests(bp, 160430, excl = c("line.b", "line.d", "l.bright", "l.dim"), file.id = "excl-l", cl.excl = "")
@@ -107,6 +108,7 @@ plot.dist.ests <- function(bpx, dt, excl = c("line.b", "line.d"), file.id, cc = 
 {
     plot.dist.ests(bp, 160430, excl = c("line.b", "line.d", "l.bright", "l.dim"), file.id = "cl-roots", cl.excl = c("singleton", "cl.body", "line.body"))
     plot.dist.ests(bp, 160430, excl = c("line.b", "line.d", "l.bright", "l.dim"), file.id = "cl-singles", cl.excl = c("cl.root", "cl.body", "line.body"))
+    plot.dist.ests(bp, 160430, excl = c("line.b", "line.d", "l.bright", "l.dim"), file.id = "cl-roots-and-singles", cl.excl = c("cl.body", "line.body"))
 }
 
 # plot per bad pixel type
@@ -249,7 +251,7 @@ nl <- 20
         dev.off()
     }
     
-    pdf(paste0(fpath, "lambda-contour-.pdf")); {
+    pdf(paste0(fpath, "lambda-contour-clusters-and-singles.pdf")); {
         par(mar = c(2,2,1,1))
         contour(1:1996, 1:1996, 
                 1996^2 * exp(ppmfit.matrix(ppm(bp.ppp(bp$"160430"[bp$"160430"$f.type %in% c("singleton", "cl.root") & !(bp$"160430"$type %in% c("l.bright", "l.dim")),]) ~ 
@@ -352,7 +354,10 @@ bpx <- bp$"160430"[bp$"160430"$f.type %in% c("cl.root", "singleton") &
     image(kernel2d(as.points(list(x = bpx$row, y = bpx$col)),
                    as.points(list(x = c(0,0,1996,1996), y = c(0,1996,1996,0))),
                    h0 = 120, nx = 100, ny = 100))
-    
+    # overlay parametric contour plot
+    contour(1:1996, 1:1996, 
+            1996^2 * exp(ppmfit.matrix(ppm(bp.ppp(bpx) ~ x + y + I(x^2) + I(y^2) + I(x *y)))),
+            nlevels = 20, col = "blue", add = T)
 }
 
 # OLD CODE #################################################################################### ####

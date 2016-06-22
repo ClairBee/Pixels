@@ -44,33 +44,58 @@
 
 
 \begin{figure}[!ht]
-\caption{Percentage of detector covered by defective pixels as a function of cumulative usage. The relationship appears to be largely linear, apart from a jump in the number of pixels identified as locally bright in the last-but-one image (acquired on 16-03-14). This jump coincides with a change in software, which led to the temporary loss of the gain setting (30dB) that we had been using - which was reinstated by March 23rd, well before the next set of images was acquired.\\
-\footnotesize{A look at plots of mean vs variance shows that the grey images from that date have a higher mean SD than might be expected, given their mean values, but not by much.}}
+\caption{Percentage of detector covered by defective pixels: plotted against time and cumulative usage. Again, a linear model is shown in gold, quadratic model in turquoise. The rate of increase seems to more closely reflect the age of the detector than the recorded amount of usage.}
+\centering
 
 \begin{subfigure}[t]{0.49\textwidth}
-\caption{All defective pixels, including lines but not including edge pixels or screen spots}
-\includegraphics[scale=0.45]{./fig/cum-usage-vs-bp-prop}
-\end{subfigure}
-
-\vspace*{10pt}
-
-\begin{subfigure}[t]{0.49\textwidth}
-\caption{All defective pixels by type, including lines but not including edge pixels or screen spots}
-\includegraphics[scale=0.45]{./fig/cum-usage-vs-bp-prop-by-type}
+\caption{Vs time}
+\includegraphics[scale=.45]{./fig/defects-vs-time}
 \end{subfigure}
 %
 \begin{subfigure}[t]{0.49\textwidth}
-\caption{All defective pixels by type, focusing on the smallest categories}
-\includegraphics[scale=0.45]{./fig/cum-usage-vs-bp-prop-by-type-zoom}
+\caption{Vs cumulative usage}
+\includegraphics[scale=.45]{./fig/defects-vs-usage}
 \end{subfigure}
 
 \end{figure}
 
-\begin{figure}[!ht]
-\caption{Percentage of detector covered by spots on beryllium screen. \\
-No particular pattern can be discerned, even when splitting out different subsets (eg. high power, long exposure etc)}
 
+%\begin{figure}[!ht]
+%\caption{Percentage of detector covered by defective pixels as a function of cumulative usage. The relationship appears to be largely linear, apart from a jump in the number of pixels identified as locally bright in the last-but-one image (acquired on 16-03-14). This jump coincides with a change in software, which led to the temporary loss of the gain setting (30dB) that we had been using - which was reinstated by March 23rd, well before the next set of images was acquired.\\
+%\footnotesize{A look at plots of mean vs variance shows that the grey images from that date have a higher mean SD than might be expected, given their mean values, but not by much.}}
+%
+%%\begin{subfigure}[t]{0.49\textwidth}
+%%\caption{All defective pixels, including lines but not including edge pixels or screen spots}
+%%\includegraphics[scale=0.45]{./fig/cum-usage-vs-bp-prop}
+%%\end{subfigure}
+%%
+%%\vspace*{10pt}
+%
+%\begin{subfigure}[t]{0.49\textwidth}
+%\caption{All defective pixels by type, including lines but not including edge pixels or screen spots}
+%\includegraphics[scale=0.45]{./fig/cum-usage-vs-bp-prop-by-type}
+%\end{subfigure}
+%%
+%\begin{subfigure}[t]{0.49\textwidth}
+%\caption{All defective pixels by type, focusing on the smallest categories}
+%\includegraphics[scale=0.45]{./fig/cum-usage-vs-bp-prop-by-type-zoom}
+%\end{subfigure}
+%
+%\end{figure}
+
+\begin{figure}[!ht]
+\caption{Percentage of detector covered by defects over time. \\
+There is no obvious link between high usage and increased detector damage, even when splitting out different subsets (eg. high power, long exposure etc)}
+
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{Damaged pixels}
+\includegraphics[scale=0.45]{./fig/usage-vs-defect-prop}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.49\textwidth}
+\caption{Spots on beryllium screen}
 \includegraphics[scale=0.45]{./fig/usage-vs-screen-spot-prop}
+\end{subfigure}
 
 \end{figure}
 
