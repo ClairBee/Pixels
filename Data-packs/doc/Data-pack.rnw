@@ -1,0 +1,243 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+% add document-specific packages here
+
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+    
+\addtolength{\topmargin}{-0.5cm}
+\addtolength{\textheight}{1cm}
+    
+\begin{document}
+\renewenvironment{knitrout}{\vspace{1em}}{\vspace{1em}}
+<<setup, include=FALSE>>=
+opts_chunk$set(size = 'footnotesize',   # smaller font size for chunks
+               out.width = '\\textwidth',   # default figure size = quarter of text width
+               fig.show = 'hold',   # display all figures at end of chunk
+               fig.align='center',
+               echo = F)
+options(width = 80, digits = 4)
+set.seed(24747)
+library(xtable); library("IO.Pixels"); library("CB.Misc")
+org.par <- par()        # save default parameters in case needed later
+
+
+##############################################################################################
+
+bp <- readRDS("../../Notes/Final-classifications/fig/bad-px-by-feature-incl-local.rds")
+
+Cat.cols <- c("purple", "black", "magenta3", "red", "orange", "yellow", NA, "gold", "grey", NA, "blue", "blue", "green3")
+
+latest <- bp[[length(bp)]]
+
+# pdf("./defect-legend.pdf")
+# plot.new()
+# legend("center", col = Cat.cols, pch = 15, legend = levels(bp$"160430"$type))
+# dev.off()
+# crop.pdf("./defect-legend.pdf")
+
+##############################################################################################
+@
+
+\section{Thresholds applied \& points identified}
+
+%-------------------------------------------------------------------------------------------
+\begin{footnotesize}
+Basic thresholding over grey and black images, retaining most extreme defect observed for each pixel.\\
+Globally extreme pixels thresholded at 25\% of distance between median and min/max. \\
+Locally bright/dim pixels thresholded at $2\times$ image MAD.\\
+Bright/dim lines found via convolution with 5-kernel and thresholding at 5500.
+\end{footnotesize}
+%-------------------------------------------------------------------------------------------
+
+\begin{figure}[!ht]
+\caption{Bad pixels identified}
+\centering
+
+\begin{subfigure}[c]{0.45\textwidth}
+\caption{All defective pixels}
+<<sf-all-bad-px>>=
+par(mar = c(2, 2, 0, 1))
+plot(latest[,1:2], pch = 20, col = Cat.cols[latest$type], asp = T, xlab = "", ylab = "")
+draw.panels(col = "grey")
+@
+\end{subfigure}
+%
+\begin{subfigure}[c]{0.45\textwidth}
+\caption{Locally dim/bright pixels removed}
+<<sf-extreme-bad-px>>=
+par(mar = c(2, 2, 0, 1))
+plot(latest[!(latest$type %in% c("l.bright", "l.dim")),1:2], pch = 20, 
+     col = Cat.cols[latest$type[!(latest$type %in% c("l.bright", "l.dim"))]], asp = T, xlab = "", ylab = "")
+draw.panels(col = "grey")
+@
+\end{subfigure}
+%
+\begin{subfigure}[c]{0.08\textwidth}
+\includegraphics[scale=0.45]{./defect-legend.pdf}
+\end{subfigure}
+\end{figure}
+
+\begin{table}
+\caption{Defective pixel types observed in each acquisition}
+
+\resizebox{\textwidth}{!}{
+<<xt-bpx-summary, results = 'asis'>>=
+px.summ <- summarise.bpx(bp)
+rownames(px.summ) <- sapply(rownames(px.summ), fancy.date)
+
+print(xtable(px.summ, row.names = rownames(px.summ), 
+             align = paste(c("l|", rep("c", ncol(px.summ))), collapse = "")
+             ),
+#          hline.after = c(0, c(1:3)*n),
+        size = "footnotesize", 
+        table.placement = "!h", floating = F)
+@
+}
+\end{table}
+
+\begin{table}
+\caption{Features observed in each acquisition}
+<<xt-feat-summary, results = 'asis'>>=
+px.summ <- summarise.bpx(bp, by = "f.type")
+rownames(px.summ) <- sapply(rownames(px.summ), fancy.date)
+
+print(xtable(px.summ, row.names = rownames(px.summ), 
+             align = paste(c("l|", rep("c", ncol(px.summ))), collapse = "")
+             ),
+#          hline.after = c(0, c(1:3)*n),
+        size = "scriptsize", 
+        table.placement = "!h", floating = F)
+@
+
+\end{table}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\FloatBarrier
+
+
+\section{Transitions between states}
+
+<<get-transitions>>=
+# filter out screen spots and edge pixels
+bp <- lapply(bp, function(bpx) bpx[!bpx$type %in% c("screen.spot", "edge"),])
+
+# get transition matrix
+tr <- abind(get.transitions(bp), along = 3)
+
+# filter out categories that don't occur at all
+tr <- tr[colSums(apply(tr, 1:2, sum)) * rowSums(apply(tr, 1:2, sum)) > 0,
+         colSums(apply(tr, 1:2, sum)) * rowSums(apply(tr, 1:2, sum)) > 0,]
+
+# get transition proportions
+tr.prop <- array(apply(tr, 3, function(x) sweep(x, 1, rowSums(x), "/")), dim = dim(tr), dimnames = dimnames(tr)) * 100
+
+@
+
+\begin{table}[!ht]
+\caption{Mean transition rates observed across all acquisitions}
+<<xt-transition-prop-mean, results = 'asis'>>=
+    trs <- data.frame(prep.csv(apply(tr, 1:2, mean), dp = 0))
+    
+    print(xtable(trs, row.names = rownames(trs), 
+          align = paste(c("l|", rep("r", ncol(trs))), collapse = "")),
+          #          hline.after = c(0, c(1:3)*n),
+          size = "footnotesize", 
+          table.placement = "!h", floating = F)
+    @
+\end{table}
+
+\begin{table}[!ht]
+\caption{Standard deviations of transition rates observed across all acquisitions}
+<<xt-transition-prop-sd, results = 'asis'>>=
+    trs <- data.frame(prep.csv(apply(tr, 1:2, sd), dp = 0))
+    
+    print(xtable(trs, row.names = rownames(trs), 
+          align = paste(c("l|", rep("r", ncol(trs))), collapse = "")),
+          #          hline.after = c(0, c(1:3)*n),
+          size = "footnotesize", 
+          table.placement = "!h", floating = F)
+    @
+\end{table}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\FloatBarrier
+
+
+\section{Spatial distribution of defect roots (cluster roots/singletons)}
+
+<<get-spatial-dists>>=
+    
+px <- latest[latest$f.type %in% c("cl.root", "singleton"),]
+px.xt <- px[!(px$type %in% c("l.bright", "l.dim")),]
+    
+qt <- quadrat.test(ppp(px$row, px$col, c(1,1996), c(1,1996)),
+                       xbreaks = panel.edges()$x - 0.5, ybreaks = panel.edges()$y - 0.5)
+
+if (qt$statistic < 999) {qt$statistic <- round(qt$statistic, 2)} else {qt$statistic <- round(qt$statistic, 0)}
+
+xt.ppp <- ppp(px.xt$row, px.xt$col, c(1,1996), c(1,1996))
+qt.xt <-  quadrat.test(xt.ppp, xbreaks = panel.edges()$x - 0.5, ybreaks = panel.edges()$y - 0.5) 
+@
+
+
+Quadrat test for all defects: $\chi^2$ = \Sexpr{format(qt$statistic, scientific = F)}, $p =$ \Sexpr{format(round(qt$p.value, 5), scientific = F)}. \\
+Globally extreme defects: $\chi^2$ = \Sexpr{format(qt.xt$statistic, scientific = F)}, $p = $ \Sexpr{format(round(qt.xt$p.value,5), scientific = F)}. 
+
+\begin{figure}[!ht]
+\caption{Distance functions}
+
+\centering
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{F function}
+<<sf-F-est, echo = F>>=
+par(mar = c(2,2,0,1))
+    plot(envelope(xt.ppp, Fest, nsim = 99, nrank = 2, verbose = F), main = "")
+@
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{G function}
+<<sf-G-est, echo = F>>=
+par(mar = c(2,2,0,1))
+    plot(envelope(xt.ppp, Gest, nsim = 99, nrank = 2, verbose = F), main = "")
+@
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{K function}
+<<sf-K-est, echo = F>>=
+par(mar = c(2,2,0,1))
+    plot(envelope(xt.ppp, Kest, nsim = 99, nrank = 2, verbose = F), main = "")
+@
+\end{subfigure}
+\end{figure}
+
+\begin{figure}[!ht]
+\caption{Inhomogeneous intensity models for defect roots}
+
+\begin{subfigure}[t]{0.45\textwidth}
+\caption{$\log \lambda(x) = \alpha + \beta_1x + \beta_2y + \beta_3x^2 + \beta_4y^2 + \beta_5xy$}
+<<sf-contour>>=
+    par(mar = c(2,2,0,1))
+    contour(1:1996, 1:1996, 
+            1996^2 * exp(ppmfit.matrix(ppm(xt.ppp ~ x + y + I(x^2) + I(y^2) + I(x *y)))),
+            nlevels = 20, col = "cyan3")
+    points(xt.ppp, pch = 20, cex = 0.8)
+    draw.panels(col = "grey")
+@
+\end{subfigure}
+
+
+
+\end{figure}
+
+\nb{Need to update \texttt{ppmfit.matrix} to recognise correct formula to apply}
+\nb{Check that model is set up correctly - is this definitely a log-linear model by default?}
+\nb{Can generate envelope for ppm as well as ppp; could use to compare model with actual distribution?}
+\end{document}

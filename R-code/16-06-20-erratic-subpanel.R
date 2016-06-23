@@ -89,9 +89,22 @@ cc <- 75
     points(odd[odd$X1 == cc,c("X2", "value")], pch = 21, col = "red", bg = "gold")
 }
 
-bpx <- bp$"160430"
+bp <- readRDS("./Notes/Final-classifications/fig/bad-px-by-feature-incl-local.rds")
+Cat.cols <- c("purple", "black", "magenta3", "red", "orange", "yellow", NA, "gold", "grey", NA, "blue", "blue", "green3")
+bpx <- bp$"160430"[bp$"160430"$col < 992.5 & bp$"160430"$row > 382.5 & bp$"160430"$row < 510.5,]
+
 bpx.odd <- merge(odd, bpx, by.x = c("X1", "X2"), by.y = c("row", "col"), all.x = T)
 bpx.odd[!is.na(bpx.odd$type),]
+
+plot(odd[,1] + 382, odd[,2], pch = 15, asp = T, ylim = c(0,992), cex = 0.7)
+rect(382.5,0.5,510.5,992.5)
+bpx <- bpx[bpx$type != "l.bright",]
+points(bpx[,1:2], col = Cat.cols[bpx$type], pch = 15, cex = 0.7)
+# no particular spatial pattern either. Hoever, definitely not CSR (see F-function) - evidence of aggregation.
+
+plot(envelope(ppp(odd$"X1", odd$"X2", c(1,128), c(1,992)),
+              Fest, nsim = 99, nrank = 2), main = "")
+
 
 range(sp[,,"L4"], na.rm = T)
 

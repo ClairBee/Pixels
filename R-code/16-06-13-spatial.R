@@ -111,6 +111,7 @@ r <- c(0:500)
     plot.dist.ests(bp, 160430, excl = c("line.b", "line.d", "l.bright", "l.dim"), file.id = "cl-roots-and-singles", cl.excl = c("cl.body", "line.body"))
 }
 
+
 # plot per bad pixel type
 {
     Cat <- c("no.resp" , "dead" , "hot" , "v.bright" , "bright" , "line.b" , "edge" , "l.bright" , "line.d" , "screen.spot" , "v.dim" , "dim" , "l.dim")
@@ -121,6 +122,13 @@ r <- c(0:500)
     plot.dist.ests(bp, 160430, excl = Cat[Cat != "no.resp"], file.id = "cl-no-resp", cl.excl = c("cl.body", "line.body"))
     plot.dist.ests(bp, 160430, excl = Cat[Cat != "l.dim"], file.id = "cl-ldim", cl.excl = c("cl.body", "line.body"))
     plot.dist.ests(bp, 160430, excl = Cat[Cat != "l.bright"], file.id = "cl-lbright", cl.excl = c("cl.body", "line.body"))
+}
+
+# compare F, G, J
+{
+    plot(envelope(bp.ppp, Jest, nsim = 99, nrank = 2), main = "")    
+    plot(envelope(bp.ppp, Gest, nsim = 99, nrank = 2), main = "") 
+    plot(envelope(bp.ppp, Fest, nsim = 99, nrank = 2), main = "") 
 }
 
 # try subpanels + minipanels (each subpanel divided vertically into 2) - df 63
@@ -171,17 +179,7 @@ df <- rbind(data.frame(type = "hot",
             data.frame(type = "v.bright", 
                        t(coef(ppm(bp.ppp(bp$"160430"[bp$"160430"$type == "v.bright",]) ~ x + y + I(x^2) + I(y^2) + I(x *y))))))
 
-# convert coefficients to matrix
-ppmfit.matrix <- function(ppm) {
-    
-    zz <- setNames(melt(array(dim = c(ppm$Q$data$window$xrange[2], ppm$Q$data$window$yrange[2]))), nm = c("x", "y", "z"))
-    cc <- coef(ppm)
-    
-    zz$z <- cc[1] + (zz$x * cc["x"]) + (zz$y * cc["y"]) + 
-        (zz$x^2 * cc["I(x^2)"]) + (zz$y^2 * cc["I(y^2)"]) + (zz$x * zz$y * cc["I(x * y)"]) 
-    
-    array(zz$z, dim = c(ppm$Q$data$window$xrange[2], ppm$Q$data$window$yrange[2]))
-}
+
 
 
 nl <- 20
@@ -289,6 +287,20 @@ tt <- ppm(bp.ppp(bp$"160430"[bp$"160430"$type == "hot",]),
            ~ x + y + I(x^2) + I(y^2) + I(x *y), DiggleGatesStibbard(10))
 plot(tt, trend = T, cif = F, se = F, main = "DiggleGatesStibbard(10)")
 
+
+bp.ppm <- ppm(bp.ppp ~ x + y + I(x^2) + I(y^2) + I(x *y))
+Kmodel(bp.ppm)
+pcfmodel(bp.ppm)
+
+# from examples
+{
+    fit <- ppm(swedishpines, ~1, Strauss(8))
+    p <- pcfmodel(fit)
+    K <- Kmodel(fit)
+    p(6)
+    K(8)
+    curve(p(x), from=0, to=15, add = F, col = "red")
+}
 ####################################################################################################
 
 # NONPARAMETRIC MODELLING                                                                       ####
@@ -341,6 +353,8 @@ bpx <- bp$"160430"[bp$"160430"$f.type %in% c("cl.root", "singleton"),]
 # remove locally bright/dim pixels
 bpx <- bp$"160430"[bp$"160430"$f.type %in% c("cl.root", "singleton") & 
                        !(bp$"160430"$type %in% c("l.bright", "l.dim")),]
+
+bp.ppp <- ppp(bpx$row, bpx$col, c(1,1996), c(1,1996))
 {
     bp.mse <- mse2d(as.points(list(x = bpx$row, y = bpx$col)),
                     as.points(list(x = c(0,0,1996,1996), y = c(0,1996,1996,0))),
@@ -351,13 +365,21 @@ bpx <- bp$"160430"[bp$"160430"$f.type %in% c("cl.root", "singleton") &
     points(bp.mse$h[which.min(bp.mse$mse)], bp.mse$mse[which.min(bp.mse$mse)], col = "red")
     title(paste0("Minimised at ", bp.mse$h[which.min(bp.mse$mse)]))
     
-    image(kernel2d(as.points(list(x = bpx$row, y = bpx$col)),
+    qq <- kernel2d(as.points(list(x = bpx$row, y = bpx$col)),
                    as.points(list(x = c(0,0,1996,1996), y = c(0,1996,1996,0))),
-                   h0 = 120, nx = 100, ny = 100))
+                   h0 = 120, nx = 100, ny = 100, quiet = T)
+    qq$z <- qq$z * 1996^2
+    
+    image(qq)
+    contour(qq)
+    contour(qq, add = T, col = heat.colors(11))
+    points(bp.ppp, pch = 20, cex = 0.6)
+    persp(qq, theta = 30, phi = 30)
+    
     # overlay parametric contour plot
     contour(1:1996, 1:1996, 
-            1996^2 * exp(ppmfit.matrix(ppm(bp.ppp(bpx) ~ x + y + I(x^2) + I(y^2) + I(x *y)))),
-            nlevels = 20, col = "blue", add = T)
+            1996^2 * exp(ppmfit.matrix(ppm(bp.ppp ~ x + y + I(x^2) + I(y^2) + I(x *y)))),
+            nlevels = 20, col = "cyan3", add = T)
 }
 
 # OLD CODE #################################################################################### ####
