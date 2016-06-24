@@ -1,5 +1,7 @@
 
+
 library("IO.Pixels"); library("CB.Misc")
+
 
 #bp <- readRDS("./Notes/Final-classifications/fig/bad-px-by-feature.rds")
 bp <- readRDS("./Notes/Final-classifications/fig/bad-px-by-feature-incl-local.rds")
@@ -166,8 +168,8 @@ r <- c(0:500)
 
 bp.ppp <- function(px, im.dim = c(1996, 1996)) {
     
-    # can't cope with ordered factor as input
-    ppp(px$row, px$col, c(1,im.dim[1]), c(1,im.dim[2]), marks = factor(as.character(px$type)))
+    # can't cope with ordered factor as marks
+    ppp(px$row, px$col, c(1,im.dim[1]), c(1,im.dim[2]))
 }
 
 bpx.pp <- bp.ppp(bp$"160430"[bp$"160430"$type == "hot",])
@@ -287,8 +289,31 @@ tt <- ppm(bp.ppp(bp$"160430"[bp$"160430"$type == "hot",]),
            ~ x + y + I(x^2) + I(y^2) + I(x *y), DiggleGatesStibbard(10))
 plot(tt, trend = T, cif = F, se = F, main = "DiggleGatesStibbard(10)")
 
+#------------------------------------------------------------------------------------------
 
+bp.ppp <- bp.ppp(bp$"160430"[bp$"160430"$f.type %in% c("cl.root", "singleton"),])
 bp.ppm <- ppm(bp.ppp ~ x + y + I(x^2) + I(y^2) + I(x *y))
+
+lans.ppm <- ppm(lansing[lansing$marks == "hickory"] ~ x + y + I(x^2) + I(y^2) + I(x *y))
+plot(plot.ppm(lans.ppm, contour = T, se = F, cif = F)
+
+qq <- simulate(bp.ppm, nsim = 99, seed = 24747)
+ff <- lapply(qq, Fest)
+
+# how to plot individual simulations, rather than just the envelopes?
+par(mfrow = c(1,2))
+plot(envelope(bp.ppp, Gest, nsim = 99, nrank = 2), main = "Data")
+plot(envelope(bp.ppm, Gest, nsim = 99, nrank = 2), add = T, main = "Model")
+par(mfrow = c(1,1))
+
+# formal tests seem rather slow.
+# Stick with graphical methods? Or compute manually based on Diggle?
+
+dg.test(bp.ppm)
+
+qq <- envelope(bp.ppm, Fest, nsim = 99, nrank = 2)
+allstats(bp.ppp)
+
 Kmodel(bp.ppm)
 pcfmodel(bp.ppm)
 
@@ -301,6 +326,15 @@ pcfmodel(bp.ppm)
     K(8)
     curve(p(x), from=0, to=15, add = F, col = "red")
 }
+
+# without coefficients, what does quadratic trend look like?
+zz <- setNames(melt(array(dim = c(1996, 1996))), nm = c("x", "y", "z"))
+image(array(zz$x + zz$y + zz$x^2 + zz$y^2 + (zz$x * zz$y), dim = c(1996, 1996)))
+image(array((-2 * zz$x) + (-2 * zz$y) + zz$x^2 + zz$y^2 - (zz$x * zz$y), dim = c(1996, 1996)))
+
+
+image(array(abs(992 - zz$x) + abs(992 - zz$y) + abs(zz$x-992)^2 + abs(zz$y-992)^2 + (abs(zz$x-992) * abs(zz$y-992)), dim = c(1996, 1996)))
+
 ####################################################################################################
 
 # NONPARAMETRIC MODELLING                                                                       ####
