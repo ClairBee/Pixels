@@ -1,0 +1,72 @@
+Pixel paper structure
+
+1. Introduction
+
+Motivation in general terms: detector decay
+Specific application: Detectors for QC in 3D printing 
+Relevance of this work also for other applications: astronomy, medical imaging,...
+
+Focus of this paper: malfunctioning pixels
+
+Questions (from an applied perspective):
+- Where do bad (malfunctioning) pixels occur? Are some areas of the detector more likely to have damage?
+- Are there patterns? Is a bad pixels more or less likely to occur near another bad pixel?
+- Are there different types of bad pixels such as dead, noisy, dim, not etc? How can this be classified into states?
+- What are typical transitions between states? (From regular to one of the malperforming states? the other direction? from one malperforming to another?)
+- What are potential causes triggering the transitions? 
+- How can we detect what caused transitions?
+
+2. Tech background & data 
+
+Detector and X-ray technology
+Details on data collections: 
+- pilot data: bad pixel maps, mean and SD files)
+  Perkin Elmer definitions of underperforming pixels and discussion
+- experimental data: protocol for white image test data, usage data
+
+3. Initial analysis of pilot data
+
+Notation as lattice
+Dead pixel map based analysis as point patterns
+Emerging spatial patterns
+Spatial distribution of means and SDs
+Fluctutations within rows/columns
+
+4. Exploratory analysis of experimental data
+
+Means: overall and spatial distribution
+SDs: overall and spatial distribution
+Subpanels
+Refined definition of states in the experimental data
+
+5. Temporal analysis
+
+Transition frequencies/probabilities
+Evolution of different types of malfunctioning pixels separately
+Usage data analysis
+Intermediate discussion
+
+6. Spatial analysis
+
+Spatial statistics 101 (point patterns, F-, G-, K-functions etc)
+Parametric model basics
+Parametric model to adjust for spatial inhomogeneity
+CSR testing using K-functions etc
+Patterns: singletons, pairs, clusters, lines, bright lines etc
+Above 
+- for all malfunctioning pixels and 
+- for subsets (dead, hot, dim etc)
+Modeling: e.g. Neyman-Scott type, Matern, Thomas... models
+Intermediate discussion
+
+7. Spatio-temporal
+...
+
+8. Discussion
+
+9. References
+
+Spatial statistics
+Technology
+Other papers on dead pixels
+

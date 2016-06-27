@@ -9,12 +9,19 @@ bpx <- bp$"160430"
 bpx <- bpx[bpx$f.type %in% c("cl.root", "singleton") & !bpx$type %in% c("l.bright", "l.dim"),]
 bp.ppp <- ppp(bpx$row, bpx$col, c(1,1996), c(1,1996))
 
-fpath <- "./Notes/Spatial/fig/"
+fpath <- "./Notes/IPP-fitting/fig/"
 Cat.cols <- c("purple", "black", "magenta3", "red", "orange", "yellow", NA, "gold", "grey", NA, "blue", "blue", "green3")
 
 ####################################################################################################
 
 # FUNCTIONS                                                                                     ####
+
+scale.ppm <- function(px.ppm, scale.by = 128 * 1024) {
+    
+    fv <- predict(px.ppm)
+    fv$v <- fv$v * scale.by
+    fv
+}
 
 env.plot <- function(px.ppp, px.ppm, dist.fun, normalise = F, ...) {
     
@@ -24,13 +31,13 @@ env.plot <- function(px.ppp, px.ppm, dist.fun, normalise = F, ...) {
         trans <- NULL
     }
     
-    plot(envelope(px.ppm, dist.fun, nsim = 99, nrank = 2, transform = trans, verbose = F), 
+    plot(envelope(px.ppm, dist.fun, nsim = 99, nrank = 2, transform = trans, verbose = F, fix.n = T), 
          col = "blue", legend = F, shadecol = adjustcolor("cyan3", alpha = 0.2), ...)
-    plot(envelope(px.ppp, dist.fun, nsim = 99, nrank = 2, transform = trans, verbose = F), 
-         add = T, legend = F, shadecol = adjustcolor("orange", alpha = 0.2))
+    plot(envelope(px.ppp, dist.fun, nsim = 99, nrank = 2, transform = trans, verbose = F, fix.n = T), 
+         add = T, legend = F, shadecol = adjustcolor("gold", alpha = 0.2))
 
     legend("topleft", bty = "n",
-           pt.bg = adjustcolor(c("orange", "cyan3", NA, NA, NA), alpha = 0.2), 
+           pt.bg = adjustcolor(c("gold", "cyan3", NA, NA, NA), alpha = 0.2), 
            col = c(NA, NA, "red", "blue", "black"),
            pch = c(22, 22, NA, NA, NA), 
            lty = c(NA, NA, 2, 2, 1),
@@ -43,22 +50,257 @@ env.plot <- function(px.ppp, px.ppm, dist.fun, normalise = F, ...) {
 # NONPARAMETRIC - QUARTIC SMOOTHING                                                             ####
 
 nonpara <- density(bp.ppp, sigma = bw.diggle(bp.ppp))    # bandwidth est using MSE approach
-nonpara$v <- nonpara$v * 1996^2       # rescale intensity for easier interpretation
+nonpara$v <- nonpara$v * 128*1024       # rescale intensity for easier interpretation
 plot(nonpara)
-contour(nonpara)
+
+pdf(paste0(fpath, "nonparametric-bw120.pdf")); {
+    par(mar = c(0,0,0,0))
+    contour(nonpara, main = "")
+    draw.panels(col = "grey", lty = 2)
+    points(bpx, pch = 20, cex = 0.8, col = Cat.cols[bpx$type])
+    dev.off()
+}
+
+pdf(paste0(fpath, "nonparametric-bw120-image.pdf")); {
+    par(mar = c(0,0,0,1))
+    image(nonpara, main = "")
+    draw.panels(lty = 2)
+    points(bpx, pch = 20, cex = 0.8)
+    dev.off()
+    crop.pdf(paste0(fpath, "nonparametric-bw120-image.pdf"))
+}
+
+plot(envelope(bp.ppp, Kinhom, sigma = bw.diggle, simulate = expression(rpoispp(nonpara))))
 
 ####################################################################################################
 
-#  PARAMETRIC - QUADRATIC TREND                                                                ####
+# QUADRATIC TREND                                                                               ####
 
 qt.ppm <- ppm(bp.ppp ~ x + y + I(x^2) + I(y^2) + I(x *y))
 
-contour(predict(qt.ppm))
-points(bp.ppp, pch = 20, cex = 0.8)
-draw.panels(col = "grey", lty = 2)
+pdf(paste0(fpath, "quadratic-trend.pdf")); {
+    par(mar = c(0,0,0,0))
+    contour(scale.ppm(qt.ppm), main = "")
+    draw.panels(col = "grey", lty = 2)
+    points(bpx, pch = 20, cex = 0.8, col = Cat.cols[bpx$type])
+    dev.off()
+    crop.pdf(paste0(fpath, "quadratic-trend.pdf"))
+}
+
+pdf(paste0(fpath, "quadratic-image.pdf")); {
+    par(mar = c(0,0,0,1))
+    image(scale.ppm(qt.ppm), main = "")
+    draw.panels(lty = 2)
+    points(bpx, pch = 20, cex = 0.8)
+    dev.off()
+    crop.pdf(paste0(fpath, "quadratic-image.pdf"))
+}
+
+pdf(paste0(fpath, "quadratic-trend-K.pdf"), width = 7, height = 4); {
+    par(mar = c(4, 4, 1, 1))
+    env.plot(bp.ppp, qt.ppm, Kest, normalise = T, main = "")
+    dev.off()
+}
+
 
 env.plot(bp.ppp, qt.ppm, Fest, normalise = F, main = "")
 env.plot(bp.ppp, qt.ppm, Gest, normalise = F, main = "")
+env.plot(bp.ppp, qt.ppm, Jest, normalise = F, main = "")
 env.plot(bp.ppp, qt.ppm, Kest, normalise = T, main = "")
 
 
+####################################################################################################
+
+# SUBPANELS                                                                                     ####
+
+# plot using only subpanels as covariates
+sp.ppm <- ppm(bp.ppp ~ tt, covariates = list(tt = tess(xgrid = panel.edges()$x-0.5, ygrid = panel.edges()$y-0.5)))
+
+pdf(paste0(fpath, "subpanel-flat-trend.pdf")); {
+    par(mar = c(0,0,0,0))
+    contour(scale.ppm(sp.ppm), main = "")
+    draw.panels(col = "grey", lty = 2)
+    points(bpx, pch = 20, cex = 0.8, col = Cat.cols[bpx$type])
+    dev.off()
+    crop.pdf(paste0(fpath, "subpanel-flat-trend.pdf"))
+}
+
+pdf(paste0(fpath, "subpanel-flat-image.pdf")); {
+    par(mar = c(0,0,0,1))
+    image(scale.ppm(sp.ppm), main = "")
+    points(bpx, pch = 20, cex = 0.8)
+    dev.off()
+    crop.pdf(paste0(fpath, "subpanel-flat-image.pdf"))
+}
+
+pdf(paste0(fpath, "subpanel-flat-trend-K.pdf"), width = 7, height = 4); {
+    par(mar = c(4, 4, 1, 1))
+    env.plot(bp.ppp, sp.ppm, Kest, normalise = T, main = "")
+    dev.off()
+}
+
+
+####################################################################################################
+
+# SUBPANELS WITH GRADIENT                                                                       ####
+
+spg.ppm <- ppm(bp.ppp ~ (x + y) * tt, 
+               covariates = list(tt = tess(xgrid = panel.edges()$x-0.5, ygrid = panel.edges()$y-0.5)))
+
+pdf(paste0(fpath, "subpanel-gradient-trend.pdf")); {
+    par(mar = c(0,0,0,0))
+    contour(scale.ppm(spg.ppm), main = "")
+    draw.panels(col = "grey", lty = 2)
+    points(bpx, pch = 20, cex = 0.8, col = Cat.cols[bpx$type])
+    dev.off()
+    crop.pdf(paste0(fpath, "subpanel-gradient-trend.pdf"))
+}
+
+pdf(paste0(fpath, "subpanel-gradient-image.pdf")); {
+    par(mar = c(0,0,0,1))
+    image(scale.ppm(spg.ppm), main = "")
+    points(bpx, pch = 20, cex = 0.8)
+    dev.off()
+    crop.pdf(paste0(fpath, "subpanel-gradient-image.pdf"))
+}
+
+
+####################################################################################################
+
+# CSR PER SUBPANEL?                                                                             ####
+
+sp.ppm.u1 <- ppm(bp.ppp ~ tt, 
+                 covariates = list(tt = tess(xgrid = panel.edges()$x-0.5, ygrid = panel.edges()$y-0.5)))
+
+
+####################################################################################################
+
+# VARIOUS REJECTED MODELS                                                                      ####
+
+# linear x + y
+{
+    lin.ppm <- ppm(bp.ppp ~ x + y)
+    
+    contour(scale.ppm(lin.ppm), main = "")
+    image(scale.ppm(lin.ppm), main = "")
+    env.plot(bp.ppp, lin.ppm, Kest, normalise = T, main = "")
+}
+
+# point source at 1024, 1024: linear/quadratic/cubic gradient
+{
+    centre.spot <- function(x, y) {(1024 - x)^2 + (1024 - y)^2}
+    circ.ppm.1 <- ppm(bp.ppp ~ centre.spot)
+    circ.ppm.2 <- ppm(bp.ppp ~ poly(centre.spot, 2))
+    circ.ppm.3 <- ppm(bp.ppp ~ poly(centre.spot, 3))
+    
+    par(mfrow = c(2, 3))
+    contour(scale.ppm(circ.ppm.1), main = "")
+    contour(scale.ppm(circ.ppm.2), main = "")
+    contour(scale.ppm(circ.ppm.3), main = "")
+    
+    image(scale.ppm(circ.ppm.1), main = "")
+    image(scale.ppm(circ.ppm.2), main = "")
+    image(scale.ppm(circ.ppm.3), main = "")
+    
+    par(mfrow = c(1,1))
+    plot(envelope(circ.ppm.1, Kest, nsim = 99, nrank = 2, transform = trans, verbose = F, fix.n = T), 
+         main = "", col = "magenta3", shadecol = adjustcolor("pink", alpha = 0.2), legend = F)
+    plot(envelope(circ.ppm.2, Kest, nsim = 99, nrank = 2, transform = trans, verbose = F, fix.n = T), 
+         add = T, col = "darkgreen", shadecol = adjustcolor("chartreuse3", alpha = 0.2))
+    plot(envelope(circ.ppm.3, Kest, nsim = 99, nrank = 2, transform = trans, verbose = F, fix.n = T), 
+         add = T, shadecol = adjustcolor("gold", alpha = 0.2))
+    plot(envelope(bp.ppp, Kest, nsim = 99, nrank = 2, transform = trans, verbose = F, fix.n = T), 
+         add = T, shadecol = adjustcolor("cyan3", alpha = 0.2), main = "")
+}
+
+
+####################################################################################################
+
+
+####################################################################################################
+
+# COMPARE ALL K-FUNCTIONS                                                                       ####
+
+# transects (mainly for reference)
+{
+    cc <- 120
+    
+    o.plot(nonpara$v[cc,], col = "blue")
+    o.plot(scale.ppm(qt.ppm)$v[cc,], add = T, col = "darkgreen")
+    o.plot(scale.ppm(sp.ppm)$v[cc,], add = T, col = "red")
+    o.plot(scale.ppm(tmp.ppm)$v[cc,], add = T, col = "gold")
+    
+}
+
+# normalised K-function
+pdf(paste0(fpath, "normed-K.pdf")); {
+    trans <- expression((. - pi * r ** 2))
+    
+    par(mar = c(4, 4, 1, 1))
+    
+    plot(envelope(bp.ppp, Kest, nsim = 99, nrank = 2, transform = trans, verbose = F, fix.n = T), 
+         col = "blue", legend = F, shadecol = adjustcolor("cyan3", alpha = 0.2), main = "")
+    plot(envelope(qt.ppm, Kest, nsim = 99, nrank = 2, transform = trans, verbose = F, fix.n = T), 
+         add = T, col = "darkgreen", shadecol = adjustcolor("chartreuse3", alpha = 0.2))
+    plot(envelope(sp.ppm, Kest, nsim = 99, nrank = 2, transform = trans, verbose = F, fix.n = T), 
+         add = T, shadecol = adjustcolor("gold", alpha = 0.2))
+    plot(envelope(spg.ppm, Kest, nsim = 99, nrank = 2, transform = trans, verbose = F, fix.n = T), 
+         add = T, col = "magenta3", shadecol = adjustcolor("pink", alpha = 0.2))
+    
+    legend("topleft", bty = "n",
+           col = c("blue", "darkgreen", "red", "magenta3", "black"),
+           lty = c(2, 2, 2, 2, 1), 
+           fill = adjustcolor(c("cyan3", "chartreuse3", "gold", "pink", NA), alpha = 0.4), border = NA,
+           legend = c("CSR", "Quadratic trend", "Subpanels (flat)", "Subpanels (linear)", "Observed"))
+ 
+    dev.off()
+}
+
+# focus on small scales (0-100)
+pdf(paste0(fpath, "normed-K-small-scale.pdf")); {
+    trans <- expression((. - pi * r ** 2))
+    
+    par(mar = c(4, 4, 1, 1))
+    
+    plot(envelope(bp.ppp, Kest, nsim = 99, nrank = 2, transform = trans, verbose = F, fix.n = T), 
+         xlim = c(0,100), col = "blue", legend = F, shadecol = adjustcolor("cyan3", alpha = 0.2), main = "")
+    plot(envelope(qt.ppm, Kest, nsim = 99, nrank = 2, transform = trans, verbose = F, fix.n = T), 
+         add = T, col = "darkgreen", shadecol = adjustcolor("chartreuse3", alpha = 0.2))
+    plot(envelope(sp.ppm, Kest, nsim = 99, nrank = 2, transform = trans, verbose = F, fix.n = T), 
+         add = T, shadecol = adjustcolor("gold", alpha = 0.2))
+    plot(envelope(spg.ppm, Kest, nsim = 99, nrank = 2, transform = trans, verbose = F, fix.n = T), 
+         add = T, col = "magenta3", shadecol = adjustcolor("pink", alpha = 0.2))
+    
+    legend("topleft", bty = "n",
+           col = c("blue", "darkgreen", "red", "magenta3", "black"),
+           lty = c(2, 2, 2, 2, 1), 
+           fill = adjustcolor(c("cyan3", "chartreuse3", "gold", "pink", NA), alpha = 0.4), border = NA,
+           legend = c("CSR", "Quadratic trend", "Subpanels (flat)", "Subpanels (linear)", "Observed"))
+    
+    
+    dev.off()
+}
+
+# G-function
+pdf(paste0(fpath, "G.pdf")); {
+    trans <- expression((. - pi * r ** 2))
+    
+    par(mar = c(4, 4, 1, 1))
+    
+    plot(envelope(bp.ppp, Gest, nsim = 99, nrank = 2, verbose = F, fix.n = T), xlim = c(0,20), 
+         col = "blue", legend = F, shadecol = adjustcolor("cyan3", alpha = 0.2), main = "")
+    plot(envelope(qt.ppm, Gest, nsim = 99, nrank = 2, verbose = F, fix.n = T), 
+         add = T, col = "darkgreen", shadecol = adjustcolor("chartreuse3", alpha = 0.2))
+    plot(envelope(sp.ppm, Gest, nsim = 99, nrank = 2, verbose = F, fix.n = T), 
+         add = T, shadecol = adjustcolor("gold", alpha = 0.2))
+    plot(envelope(spg.ppm, Gest, nsim = 99, nrank = 2, verbose = F, fix.n = T), 
+         add = T, col = "magenta3", shadecol = adjustcolor("pink", alpha = 0.2))
+    
+    legend("topleft", bty = "n",
+           col = c("blue", "darkgreen", "red", "magenta3", "black"),
+           lty = c(2, 2, 2, 2, 1), 
+           fill = adjustcolor(c("cyan3", "chartreuse3", "gold", "pink", NA), alpha = 0.4), border = NA,
+           legend = c("CSR", "Quadratic trend", "Subpanels (flat)", "Subpanels (linear)", "Observed"))
+    
+    dev.off()
+}

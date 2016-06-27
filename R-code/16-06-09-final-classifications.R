@@ -14,8 +14,6 @@ md.b <- readRDS("./Other-data/Median-diffs-black.rds")
 md.g <- readRDS("./Other-data/Median-diffs-grey.rds")
 
 
-
-
 ####################################################################################################
 
 # INCLUDE A NOTE ON LOOKING FOR DIM & HORIZONTAL LINES, THEN FILTERING MANUALLY
