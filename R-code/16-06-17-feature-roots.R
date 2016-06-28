@@ -12,7 +12,7 @@ bp <- readRDS("./Notes/Final-classifications/fig/bad-px.rds")
 # bpx <- bp$"160430"
 
 # should change this to assign root status to brightest pixel!
-bpx.features <- function(bpx) {
+bpx.features <- function(bpx, im.dim = c(1996, 1996)) {
     
     # by default, remove edge pixels & screen spots (if still included) - redundant to cluster these
     px <- bpx[!(bpx$type %in% c("edge", "screen.spot")),]
@@ -26,7 +26,7 @@ bpx.features <- function(bpx) {
     # IDENTIFY CLUSTERS OF DEFECTIVE PIXELS
     
     # convert to raster & get clumps EXCLUDING LINES
-    cc <- clump(m2r(bpx2im(px)), dir = 4)
+    cc <- clump(m2r(bpx2im(px, im.dim = im.dim)), dir = 4)
     
     # coordinates of all clumped cells, including unique ID per clump
     xy <- data.frame(xyFromCell(cc, which(!is.na(getValues(cc)))),
@@ -41,6 +41,7 @@ bpx.features <- function(bpx) {
     # FIND CLUSTER CENTRES
     
     bpx <- merge(bpx, xy[,c("x", "y", "f.type", "id")], by.x = c("row", "col"), by.y = c("x", "y"), all = T)
+    bpx$type <- ordered(bpx$type, levels = levels(bpx$type))
     
     for (i in unique(bpx$id[!is.na(bpx$id)])) {
         tmp <- bpx[which(bpx$id == i),]
@@ -101,11 +102,110 @@ bpx.features <- function(bpx) {
     return(bpx)
 }
 
-bp.f <- lapply(bp, bpx.features)
+bp.f <- lapply(bp, bpx.features, im.dim = c(2000,2000))
     
 #saveRDS(bp.f, "./Notes/Final-classifications/fig/bad-px-by-feature.rds")
-saveRDS(bp.f, "./Notes/Final-classifications/fig/bad-px-by-feature-incl-local.rds")
+saveRDS(bp.f, "./Other-data/Old-data/bad-px-feature-maps.rds")
 
+####################################################################################################
+
+# APPLIED TO OLD DATA                                                                           ####
+
+# single image for now
+bp <- readRDS("./Other-data/Old-data/bad-px-maps.rds")
+bpx <- bp$"131122"
+
+# by default, remove edge pixels & screen spots (if still included) - redundant to cluster these
+px <- bpx[!(bpx$type %in% c("edge", "screen.spot", "s.bright", "s.dim", "l.bright", "l.dim")),]
+
+#--------------------------------------------------------
+# correct line classifications
+ll <- clump(m2r(bpx2im(px, im.dim = c(2000,2000))), dir = 4)
+
+xy <- data.frame(xyFromCell(cc, which(!is.na(getValues(cc)))),
+                 id = getValues(cc)[!is.na(getValues(cc))])
+xy$f.type <- "cl.body"
+
+ss <- ddply(xy, .(id, col = x), summarise,
+            ymin = min(y), ymax = max(y), length = length(y))
+xy$f.type[xy$id %in% ss$id[ss$length > 20]] <- "line.body"
+
+bpx <- merge(bpx, xy, by.x = c("row", "col"), by.y = c("x", "y"), all = T)
+bpx$type[bpx$f.type == "line.body" & bpx$type %in% c("v.dim", "no response")] <- "line.d"
+bpx <- bpx[,1:3]
+
+#--------------------------------------------------------
+# Now, on with the feature classification
+
+# by default, remove edge pixels & screen spots (if still included) - redundant to cluster these
+px <- bpx[!(bpx$type %in% c("edge", "screen.spot", "s.bright", "s.dim", "l.bright", "l.dim")),]
+
+# get clusters without lines to avoid clustering with incidental adjacent pixels
+# (globally bright pixels that lie on lines will be retained)
+px <- px[!(px$type %in% c("line.b", "line.d")),]
+
+#--------------------------------------------------------
+# IDENTIFY CLUSTERS OF DEFECTIVE PIXELS
+
+# convert to raster & get clumps EXCLUDING LINES
+cc <- clump(m2r(bpx2im(px, im.dim = c(2000,2000))), dir = 4)
+
+# coordinates of all clumped cells, including unique ID per clump
+xy <- data.frame(xyFromCell(cc, which(!is.na(getValues(cc)))),
+                 id = getValues(cc)[!is.na(getValues(cc))])
+
+# get size of each clump, discard 1-pixel clumps
+xy <- merge(xy, count(xy, "id"), all = T)[,c("x", "y", "id", "freq")]
+xy <- xy[xy$freq > 1,]
+xy$f.type <- "cl.body"
+
+#---------------------------------------------------------------------------
+# FIND CLUSTER CENTRES
+
+bpx <- merge(bpx, xy[,c("x", "y", "f.type", "id")], by.x = c("row", "col"), by.y = c("x", "y"), all = T)
+bpx$type <- ordered(bpx$type, levels = levels(bpx$type))
+
+for (i in unique(bpx$id[!is.na(bpx$id)])) {
+    tmp <- bpx[which(bpx$id == i),]
+    
+    # if most severe defect is local brightness/dimness, set cluster as singletons
+    if (min(tmp$type) %in% c("l.bright", "l.dim")) {
+        bpx$f.type[bpx$id == i] <- "singleton"
+    } else {
+        
+        # find brightest pixel in cluster
+        cand <- tmp[tmp$type == min(tmp$type),]
+        
+        if (nrow(cand) > 1) {
+            
+            # if multiple brightest pixels in cluster, get horizontal midpoint
+            cand <- cand[cand$row - floor(mean(tmp$row)) == min(cand$row - floor(mean(tmp$row))),]
+            
+            if (nrow(cand) > 1) {
+                
+                # if multiple brightest pixels in midline, get closest to panel edge
+                if (min(cand$col) > 992.5) {
+                    cand <- cand[which.max(cand$col),]
+                } else {
+                    cand <- cand[which.min(cand$col),]
+                }
+            }
+        }
+        bpx$f.type[bpx$row == cand$row & bpx$col == cand$col] <- "cl.root"
+    }
+}
+
+#---------------------------------------------------------------------------
+# LABEL REMAINING FEATURE TYPES
+
+bpx$f.type[bpx$type %in% c("line.b", "line.d") & is.na(bpx$f.type)] <- "line.body"
+bpx$f.type[is.na(bpx$f.type)] <- "singleton"
+
+bpx$f.type <- as.factor(bpx$f.type)
+
+#---------------------------------------------------------------------------
+
+saveRDS(bpx, "./Other-data/Old-data/bad-px-features-131122.rds")
 
 ####################################################################################################
 

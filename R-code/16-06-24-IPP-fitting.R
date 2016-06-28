@@ -108,6 +108,10 @@ env.plot(bp.ppp, qt.ppm, Gest, normalise = F, main = "")
 env.plot(bp.ppp, qt.ppm, Jest, normalise = F, main = "")
 env.plot(bp.ppp, qt.ppm, Kest, normalise = T, main = "")
 
+# difference between model & kernel density
+vv <- nonpara
+vv$v <- (predict(qt.ppm)$v - vv$v) * 128 * 1024
+plot(vv, col = topo.colors(21))
 
 ####################################################################################################
 
@@ -139,6 +143,10 @@ pdf(paste0(fpath, "subpanel-flat-trend-K.pdf"), width = 7, height = 4); {
     dev.off()
 }
 
+# difference between model & kernel density
+vv <- nonpara
+vv$v <- (predict(sp.ppm)$v - vv$v) * 128 * 1024
+plot(vv, col = topo.colors(21))
 
 ####################################################################################################
 
@@ -304,3 +312,18 @@ pdf(paste0(fpath, "G.pdf")); {
     
     dev.off()
 }
+
+####################################################################################################
+
+# OLD DATA                                                                                      ####
+
+# convert latest bad pixel map to point process
+bpx <- readRDS("./Other-data/Old-data/bad-px-features-131122.rds")
+
+bpx <- bpx[bpx$f.type %in% c("cl.root", "singleton") & !bpx$type %in% c("edge", "l.bright", "l.dim", "s.dim", "s.bright"),]
+bp.ppp <- ppp(bpx$row, bpx$col, c(1,2000), c(200,1800))
+
+# nonparametric
+nonpara <- density(bp.ppp, sigma = bw.diggle(bp.ppp))    # bandwidth est using MSE approach
+nonpara$v <- nonpara$v * 128*1024       # rescale intensity for easier interpretation
+plot(nonpara)
