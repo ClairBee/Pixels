@@ -383,3 +383,62 @@ points(bp.new[bp.new$type == "hot", 1:2], col = "red")
 # PIXEL SHADING CORRECTION                                                                      ####
 
 ####################################################################################################
+
+# BEHAVIOUR OF DEAD LINES IN EACH COLOUR                                                        ####
+
+bpx <- readRDS("./Other-data/Old-data/bad-px-features-131122.rds")
+pw.m <- readRDS("./Other-data/Old-data/Pixelwise-means.rds")
+
+####################################################################################################
+
+unique(bpx$row[bpx$type == "line.d"])
+
+ll <- ddply(bpx[bpx$type %in% c("line.d", "line.b"),], .(row, type), summarise,
+            min.y = min(col), max.y = max(col), length = length(row))
+ll <- ll[ll$length > 20,]
+
+cc <- 135
+pdf("./Other-data/Old-data/Misc/Dead-line-transects.pdf")
+par(mar = c(2, 2, 3, 1), mfrow = c(4, 3))
+for (cc in unique(ll$row)) {
+
+        rng <- range(bpx$col[bpx$row == cc & bpx$type == "line.d"])
+        if(rng[2] <= 1000) {rng[1] <- rng[1] + 2} else {rng[2] <- rng[2] - 2} 
+        # correction for kernel 'smearing'
+        xl <- range(pretty(rng))
+        
+        yl <- range(pretty(range(pw.m[cc, rng[1]:rng[2],,"131122"])))
+        
+        o.plot(pw.m[cc,,"black", "131122"], xlim = xl, ylim = yl)
+        o.plot(pw.m[cc,,"grey", "131122"], add = T, col = adjustcolor("cyan3", alpha = 0.3))
+        o.plot(pw.m[cc,,"white", "131122"], add = T, col = adjustcolor("orange", alpha = 0.3))
+        
+        title(paste0("Col ", cc, " diffs: white ", 
+                     round(mean((pw.m[cc,,"white", "131122"] - pw.m[cc,,"black", "131122"])[rng[1]:rng[2]]),0),
+                     " (",
+                     round(sd((pw.m[cc,,"white", "131122"] - pw.m[cc,,"black", "131122"])[rng[1]:rng[2]]), 0),
+                     "); grey ",
+                     round(mean((pw.m[cc,,"grey", "131122"] - pw.m[cc,,"black", "131122"])[rng[1]:rng[2]]),0),
+                     " (",
+                     round(sd((pw.m[cc,,"grey", "131122"] - pw.m[cc,,"black", "131122"])[rng[1]:rng[2]]), 0),
+                     ")"), cex.main = 0.7)
+}
+dev.off()
+
+# column 208 is mixture: bright and dim
+o.plot(pw.m[208,,"black", "131122"], xlim = c(1000,2000))
+lines(pw.m[209,,"black", "131122"], col = "green3")
+
+o.plot(pw.m[208,,"grey", "131122"], xlim = c(1000,2000))
+lines(pw.m[209,,"grey", "131122"], col = "green3")
+
+o.plot(pw.m[208,,"white", "131122"], xlim = c(1000,2000))
+lines(pw.m[209,,"white", "131122"], col = "green3")
+
+bpx[bpx$type == "l.bright" & bpx$row == 208 & bpx$col > 1000, "type"] <- "line.b"
+bpx[bpx$type == "l.bright" & bpx$row == 208 & bpx$col > 1000, "f.type"] <- "line.body"
+
+o.plot(pw.m[208,,"black", "131122"] - pw.m[209,,"black", "131122"], xlim = c(1200, 1800))
+o.plot(pw.m[208,,"black", "131122"] - pw.m[210,,"black", "131122"], add = T, col = adjustcolor("cyan3", alpha = 0.3))
+
+o.plot(pw.m[208,,"grey", "131122"] - pw.m[209,,"grey", "131122"], xlim = c(1200, 1800))

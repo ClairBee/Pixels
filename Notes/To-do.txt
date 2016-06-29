@@ -1,9 +1,12 @@
 
 TO DO
 
-3-Jun-16
 ===================================================================================================
-   
+
+IN OLD DATA ESPECIALLY, need to distinguish between a dim line (slightly low) and a non-responsive line (charge blocked). Essentially three types of lines observed: bright, dim and dead. (Try to link to three types of pixel?)
+
+===================================================================================================
+
 WRITE UP SINGLE-ACQUISITION STOCHASTIC PROCESS
 
     |_| simplify state space as far as possible

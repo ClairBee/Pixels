@@ -26,7 +26,7 @@ scale.ppm <- function(px.ppm, scale.by = 128 * 1024) {
 env.plot <- function(px.ppp, px.ppm, dist.fun, normalise = F, ...) {
     
     if (normalise) {
-        trans <- expression((. - pi * r ** 2))
+        trans <- expression(. - pi * r ** 2)
     } else {
         trans <- NULL
     }
@@ -177,13 +177,32 @@ pdf(paste0(fpath, "subpanel-gradient-image.pdf")); {
 
 # CSR PER SUBPANEL?                                                                             ####
 
-sp.ppm.u1 <- ppm(bp.ppp ~ tt, 
-                 covariates = list(tt = tess(xgrid = panel.edges()$x-0.5, ygrid = panel.edges()$y-0.5)))
+# plot K-function per subpanel
+pdf(paste0(fpath, "K-per-subpanel.pdf")); {
+    par(mar = c(4, 4, 3, 1), mfrow = c(4, 4))
+    for (ul in 1:2) {
+        for (p in 1:16) {
+            p.ref <- paste0(c("L","U")[ul], formatC(p, width = 2, flag = "0"))
+            sp <- bpx[bpx$sp == p.ref,]
+            plot(envelope(ppp(sp$row, sp$col, panel.edges()$x[c(p, p+1)]-0.5, panel.edges()$y[c(ul, ul+1)]-0.5), 
+                          nsim = 99, nrank = 2, transform = expression(. - pi * r ** 2), fix.n = T),
+                 main = p.ref)
+        }
+    }
+    dev.off()
+}
 
+# mostly CSR: panels L8, U13, U16 not
 
+plot(bpx[,1:2], pch = 20)
+draw.panels(col = "grey")
+rect(895, 1, 1022, 992, col = adjustcolor("cyan3", alpha = 0.1), border = NA)
+rect(1919, 993, 1997, 1996, col = adjustcolor("cyan3", alpha = 0.1), border = NA)
+rect(1535, 993, 1663, 1996, col = adjustcolor("cyan3", alpha = 0.1), border = NA)
+                 
 ####################################################################################################
 
-# VARIOUS REJECTED MODELS                                                                      ####
+# VARIOUS REJECTED MODELS                                                                       ####
 
 # linear x + y
 {
@@ -315,6 +334,80 @@ pdf(paste0(fpath, "G.pdf")); {
 
 ####################################################################################################
 
+####################################################################################################
+
+# CLUSTER MODEL - MATERN                                                                        ####
+
+bpx <- bp$"160430"
+bpx <- bpx[!bpx$type %in% c("l.bright", "l.dim", "line.b", "line.d"),]
+# rescale ppp for easier interpretation of parameters
+bp.ppp <- ppp(bpx$row / 1996, bpx$col / 1996, c(0,1), c(0,1))
+
+kppm.mat <- kppm(bp.ppp ~ x + y + I(x^2) + I(y^2) + I(x *y),
+                 clusters = c("MatClust"))
+plot(kppm.mat)
+summary(kppm.mat)
+
+# envelope plots
+{
+    plot(envelope(kppm.mat, Fest, nsim = 99, nrank = 2, verbose = F, fix.n = T), 
+         legend = F, shadecol = adjustcolor("cyan3", alpha = 0.2))
+    
+    plot(envelope(kppm.mat, Gest, nsim = 99, nrank = 2, verbose = F, fix.n = T), 
+         legend = F, shadecol = adjustcolor("cyan3", alpha = 0.2))
+    
+    plot(envelope(kppm.mat, Kest, nsim = 99, nrank = 2, verbose = F, fix.n = T), 
+         legend = F, shadecol = adjustcolor("cyan3", alpha = 0.2))
+    plot(envelope(kppm.mat, Kest, nsim = 99, nrank = 2, verbose = F, fix.n = T), 
+         legend = F, shadecol = adjustcolor("cyan3", alpha = 0.2), xlim = c(0,100))
+}
+
+ipp <- function(x, y, fitted.ppm = qt.ppm) {
+    eval(parse(text = paste(coef(fitted.ppm)[1],
+          apply(cbind("+", coef(fitted.ppm)[-1], "*", 
+                names(coef(fitted.ppm))[-1]),
+          1, paste, collapse = ""), collapse = "")))
+}
+
+plot(envelope(bp.ppp, Fest, nrank = 2, verbose = F, 
+              simulate = expression(rMatClust(kappa = ipp, scale = 1/1996, mu = 99)), nsim = 99))
+
+ppm.mat <- as.ppm(kppm.mat)
+clusterkernel(kppm.mat)     # sqrt(x^2 + y^2)
+clusterradius(kppm.mat)     # 4.567697
+
+parameters(kppm.mat.2)
+
+####################################################################################################
+
+# CLUSTER MODEL - THOMAS                                                                        ####
+
+kppm.thom <- kppm(bp.ppp ~ x + y + I(x^2) + I(y^2) + I(x *y),
+                 clusters = "Thomas")
+plot(kppm.thom)
+
+# envelope plots
+{
+    plot(envelope(kppm.thom, Fest, nsim = 99, nrank = 2, verbose = F, fix.n = T), 
+         legend = F, shadecol = adjustcolor("cyan3", alpha = 0.2))
+    
+    plot(envelope(kppm.thom, Gest, nsim = 99, nrank = 2, verbose = F, fix.n = T), 
+         legend = F, shadecol = adjustcolor("cyan3", alpha = 0.2))
+    
+    plot(envelope(kppm.thom, Kest, nsim = 99, transform = expression(. - pi * r ** 2), 
+                  nrank = 2, verbose = F, fix.n = T), 
+         legend = F, shadecol = adjustcolor("cyan3", alpha = 0.2))
+    plot(envelope(kppm.thom, Kest, nsim = 99, transform = expression(. - pi * r ** 2), 
+                  nrank = 2, verbose = F, fix.n = T), 
+         legend = F, shadecol = adjustcolor("cyan3", alpha = 0.2), xlim = c(0,100))
+}
+
+####################################################################################################
+
+# PAIRWISE CLUSTERING                                                                           ####
+
+####################################################################################################
+
 # OLD DATA                                                                                      ####
 
 # convert latest bad pixel map to point process
@@ -327,3 +420,28 @@ bp.ppp <- ppp(bpx$row, bpx$col, c(1,2000), c(200,1800))
 nonpara <- density(bp.ppp, sigma = bw.diggle(bp.ppp))    # bandwidth est using MSE approach
 nonpara$v <- nonpara$v * 128*1024       # rescale intensity for easier interpretation
 plot(nonpara)
+
+####################################################################################################
+
+# MODEL FITTING WITH PADDED ARRAY                                                               ####
+
+qq <- apply(which(!is.na(pwm[,,"black", "160430"]), arr.ind = T), 2, range)
+attr(bp$"160430", "crop.region") <- list(x = qq[,1], y = qq[,2])
+attr(bp$"160430", "array.dim") <- c(2048, 2048)
+
+bpx <- bp$"160430"
+bpx <- bpx[!bpx$type %in% c("line.b", "line.d", "l.bright", "l.dim"),]
+bpx <- bpx[!bpx$f.type %in% c("line.body", "cl.body"),]
+
+crop.ppp <- ppp(bpx$row + 2, bpx$col + 32, 
+                attr(bpx, "crop.region")$x, attr(bpx, "crop.region")$y)
+
+nonpara <- density(crop.ppp, sigma = bw.diggle(crop.ppp))    # bandwidth est using MSE approach
+nonpara$v <- nonpara$v * 128*1024       # rescale intensity for easier interpretation
+plot(nonpara)
+rect(0.5, 0.5, 2047.5, 2047.5)          # add border showing true panel edge
+draw.panels(p = panel.edges(left.crop = 0, upper.crop = 0, x.dim = 2048, y.dim = 2048))
+
+# can use this approach to assign attribute to each bad pixel map & track original image dimensions
+
+####################################################################################################
