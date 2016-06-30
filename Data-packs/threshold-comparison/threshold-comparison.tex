@@ -1,0 +1,318 @@
+\documentclass[10pt,fleqn]{article}\usepackage[]{graphicx}\usepackage[]{color}
+%% maxwidth is the original width if it is less than linewidth
+%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
+\usepackage{/home/clair/Documents/mystyle}
+% add document-specific packages here
+
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+    
+\addtolength{\topmargin}{-0.5cm}
+\addtolength{\textheight}{1cm}
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\begin{document}
+\renewenvironment{knitrout}{\vspace{1em}}{\vspace{1em}}
+
+
+\section{Thresholds applied \& points identified}
+
+%-------------------------------------------------------------------------------------------
+\begin{footnotesize}
+Basic thresholding over grey and black images, retaining most extreme defect observed for each pixel.\\
+Globally extreme pixels thresholded at 25\% of distance between median and min/max. \\
+Locally bright/dim pixels thresholded at $2\times$ image MAD.\\
+Bright/dim lines found via convolution with 5-kernel and thresholding at 5500.
+\end{footnotesize}
+%-------------------------------------------------------------------------------------------
+
+\begin{figure}[!ht]
+\caption{Bad pixels identified}
+\centering
+
+\begin{subfigure}[c]{0.45\textwidth}
+\caption{All defective pixels}
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\textwidth]{figure/sf-all-bad-px-1} 
+
+}
+
+
+
+\end{knitrout}
+\end{subfigure}
+%
+\begin{subfigure}[c]{0.45\textwidth}
+\caption{Locally dim/bright pixels removed}
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\textwidth]{figure/sf-extreme-bad-px-1} 
+
+}
+
+
+
+\end{knitrout}
+\end{subfigure}
+%
+\begin{subfigure}[c]{0.08\textwidth}
+\includegraphics[scale=0.45]{./defect-legend.pdf}
+\end{subfigure}
+\end{figure}
+
+\begin{table}
+\caption{Defective pixel types observed in each acquisition}
+
+\resizebox{\textwidth}{!}{
+% latex table generated in R 3.3.0 by xtable 1.8-2 package
+% Thu Jun 23 12:40:19 2016
+\begingroup\footnotesize
+\begin{tabular}{l|ccccccccccccc}
+  \hline
+ & no.resp & dead & hot & v.bright & bright & line.b & edge & l.bright & line.d & screen.spot & v.dim & dim & l.dim \\ 
+  \hline
+14-10-09 &  30 &   3 & 131 & 151 & 143 & 750 &   0 & 3412 &   0 &   0 &   2 &   2 &  41 \\ 
+  14-11-18 &  30 &   3 & 138 & 140 & 155 & 754 &   0 & 3856 &   0 &   0 &   2 &   2 &  32 \\ 
+  14-12-17 &  30 &   3 & 133 & 141 & 135 & 731 &   0 & 4802 &   0 &   0 &   2 &   2 &  42 \\ 
+  15-01-08 &  30 &   3 & 131 & 136 & 155 & 718 &   0 & 4954 &   0 &   0 &   2 &   2 &  34 \\ 
+  15-01-13 &  31 &   3 & 129 & 146 & 144 & 766 &   0 & 4701 &   0 &   0 &   1 &   2 &  42 \\ 
+  15-01-26 &  29 &   3 & 132 & 157 & 147 & 799 &   0 & 4331 &   0 &   0 &   3 &   2 &  50 \\ 
+  15-05-29 &  30 &   3 & 125 & 145 & 153 & 761 &   0 & 6420 &   0 &   0 &   2 &   2 &  39 \\ 
+  15-07-30 &  30 &   3 & 129 & 151 & 145 & 767 &   0 & 7921 &   0 &   0 &   2 &   2 &  42 \\ 
+  15-08-28 &  30 &   3 & 125 & 159 & 146 & 753 &   0 & 8462 &   0 &   0 &   2 &   2 &  59 \\ 
+  15-10-15 &  30 &   3 & 126 & 167 & 200 & 768 &   0 & 10373 &   0 &   0 &   2 &   0 &  48 \\ 
+  16-03-14 &  30 &   3 & 129 & 174 & 231 & 1536 &   0 & 14061 &   0 &   0 &   2 &   1 & 146 \\ 
+  16-04-30 &  30 &   3 & 131 & 193 & 266 & 1598 &   0 & 15527 &   0 &   0 &   2 &   2 & 236 \\ 
+   \hline
+\end{tabular}
+\endgroup
+
+}
+\end{table}
+
+\begin{table}
+\caption{Features observed in each acquisition}
+% latex table generated in R 3.3.0 by xtable 1.8-2 package
+% Thu Jun 23 12:40:19 2016
+\begingroup\scriptsize
+\begin{tabular}{l|cccc}
+  \hline
+ & cl.body & cl.root & line.body & singleton \\ 
+  \hline
+14-10-09 & 339 & 143 & 750 & 3433 \\ 
+  14-11-18 & 339 & 145 & 754 & 3874 \\ 
+  14-12-17 & 345 & 146 & 731 & 4799 \\ 
+  15-01-08 & 346 & 143 & 718 & 4958 \\ 
+  15-01-13 & 340 & 142 & 766 & 4717 \\ 
+  15-01-26 & 324 & 141 & 799 & 4389 \\ 
+  15-05-29 & 331 & 145 & 761 & 6443 \\ 
+  15-07-30 & 330 & 150 & 767 & 7945 \\ 
+  15-08-28 & 319 & 142 & 753 & 8527 \\ 
+  15-10-15 & 318 & 145 & 768 & 10486 \\ 
+  16-03-14 & 312 & 149 & 1536 & 14316 \\ 
+  16-04-30 & 306 & 148 & 1598 & 15936 \\ 
+   \hline
+\end{tabular}
+\endgroup
+
+
+\end{table}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\FloatBarrier
+
+
+\section{Transitions between states}
+
+
+
+\begin{table}[!ht]
+\caption{Mean transition rates observed across all acquisitions}
+% latex table generated in R 3.3.0 by xtable 1.8-2 package
+% Thu Jun 23 12:40:32 2016
+\begingroup\footnotesize
+\begin{tabular}{l|rrrrrrrrrrr}
+  \hline
+ & normal & no.resp & dead & hot & v.bright & bright & line.b & l.bright & v.dim & dim & l.dim \\ 
+  \hline
+normal & 3973660 & - & - & - & 1 & 5 & 85 & 2217 & - & - & 28 \\ 
+  no.resp & - & 30 & - & - & - & - & - & - & 0 & - & - \\ 
+  dead & - & - & 3 & - & - & - & - & - & - & - & - \\ 
+  hot & - & - & - & 126 & 4 & - & - & - & - & - & - \\ 
+  v.bright & 0 & - & - & 4 & 134 & 12 & - & 1 & - & - & - \\ 
+  bright & 7 & - & - & - & 14 & 115 & 0 & 23 & - & - & - \\ 
+  line.b & 8 & - & - & - & - & - & 819 & - & - & - & - \\ 
+  l.bright & 1099 & - & - & 0 & 2 & 39 & 0 & 5523 & - & - & - \\ 
+  v.dim & - & 0 & - & - & - & - & - & - & 2 & - & - \\ 
+  dim & - & - & - & - & - & - & - & - & - & 2 & 0 \\ 
+  l.dim & 10 & - & - & - & - & - & - & - & - & 0 & 42 \\ 
+   \hline
+\end{tabular}
+\endgroup
+
+\end{table}
+
+\begin{table}[!ht]
+\caption{Standard deviations of transition rates observed across all acquisitions}
+% latex table generated in R 3.3.0 by xtable 1.8-2 package
+% Thu Jun 23 12:40:32 2016
+\begingroup\footnotesize
+\begin{tabular}{l|rrrrrrrrrrr}
+  \hline
+ & normal & no.resp & dead & hot & v.bright & bright & line.b & l.bright & v.dim & dim & l.dim \\ 
+  \hline
+normal & 5025 & - & - & - & 1 & 3 & 226 & 1612 & - & - & 43 \\ 
+  no.resp & - & 0 & - & - & - & - & - & - & 1 & - & - \\ 
+  dead & - & - & - & - & - & - & - & - & - & - & - \\ 
+  hot & - & - & - & 4 & 2 & - & - & - & - & - & - \\ 
+  v.bright & 1 & - & - & 3 & 8 & 7 & - & 1 & - & - & - \\ 
+  bright & 7 & - & - & - & 9 & 21 & 0 & 15 & - & - & - \\ 
+  line.b & 13 & - & - & - & - & - & 238 & - & - & - & - \\ 
+  l.bright & 625 & - & - & 0 & 3 & 33 & 2 & 2636 & - & - & - \\ 
+  v.dim & - & 0 & - & - & - & - & - & - & 0 & - & - \\ 
+  dim & - & - & - & - & - & - & - & - & - & 1 & 1 \\ 
+  l.dim & 10 & - & - & - & - & - & - & - & - & 0 & 26 \\ 
+   \hline
+\end{tabular}
+\endgroup
+
+\end{table}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\FloatBarrier
+
+
+\section{Spatial distribution of defect roots (cluster roots/singletons)}
+
+
+
+
+Quadrat test for all defects: $\chi^2$ = 22323, $p =$ 0. \\
+Globally extreme defects: $\chi^2$ = 187.9, $p = $ 0. 
+
+\begin{figure}[!ht]
+\caption{Distance functions}
+
+\centering
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{F function}
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\textwidth]{figure/sf-F-est-1} 
+
+}
+
+
+
+\end{knitrout}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{G function}
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\textwidth]{figure/sf-G-est-1} 
+
+}
+
+
+
+\end{knitrout}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{K function}
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\textwidth]{figure/sf-K-est-1} 
+
+}
+
+
+
+\end{knitrout}
+\end{subfigure}
+\end{figure}
+
+\begin{figure}[!ht]
+\caption{Inhomogeneous intensity models for defect roots}
+
+\begin{subfigure}[t]{0.45\textwidth}
+\caption{$\log \lambda(x) = \alpha + \beta_1x + \beta_2y + \beta_3x^2 + \beta_4y^2 + \beta_5xy$}
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\textwidth]{figure/sf-contour-1} 
+
+}
+
+
+
+\end{knitrout}
+\end{subfigure}
+
+
+
+\end{figure}
+
+\nb{Need to update \texttt{ppmfit.matrix} to recognise correct formula to apply}
+\nb{Check that model is set up correctly - is this definitely a log-linear model by default?}
+\nb{Can generate envelope for ppm as well as ppp; could use to compare model with actual distribution?}
+\end{document}

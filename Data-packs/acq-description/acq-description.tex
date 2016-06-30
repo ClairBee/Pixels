@@ -1,0 +1,121 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\thesubsection}{1em}{}
+	
+%======================================================================
+
+\begin{document}
+
+\textbf{\input{./fig/title.txt}}
+
+%----------------------------------------------------
+\begin{figure}[!ht] % pixelwise mean values
+\caption{Pixelwise mean values in each image set}
+
+\centering
+
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Black}
+\includegraphics[scale=0.3]{./fig/img-plot-black}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Grey}
+\includegraphics[scale=0.3]{./fig/img-plot-grey}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{White}
+\includegraphics[scale=0.3]{./fig/img-plot-white}
+\end{subfigure}
+
+\end{figure}
+%----------------------------------------------------
+\begin{figure}[!ht] % quadratic trend fitted
+\caption{Parametric modelling: quadratic trend, $z = \alpha + \beta_1x + \beta_2y + \beta_3x^2 + \beta_4 y^2 + \beta_5xy$}
+
+\centering
+
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Black \\ \tiny{\input{./fig/quad-coef-black.txt}}}
+\includegraphics[scale=0.3]{./fig/quad-trend-fitted-black}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Grey \\ \tiny{\input{./fig/quad-coef-grey.txt}}}
+\includegraphics[scale=0.3]{./fig/quad-trend-fitted-grey}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{White \\ \tiny{\input{./fig/quad-coef-white.txt}}}
+\includegraphics[scale=0.3]{./fig/quad-trend-fitted-white}
+\end{subfigure}
+
+\end{figure}
+%----------------------------------------------------
+\begin{figure}[!ht] % histograms & thresholds of raw images
+\caption{Histograms of pixelwise mean values, with thresholds}
+
+\centering
+
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Black}
+\includegraphics[scale=0.3]{./fig/hist-full-black}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Grey}
+\includegraphics[scale=0.3]{./fig/hist-full-grey}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{White}
+\includegraphics[scale=0.3]{./fig/hist-full-white}
+\end{subfigure}
+
+\vspace*{10pt}
+
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Black (cropped)}
+\includegraphics[scale=0.3]{./fig/hist-cropped-black}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Grey (cropped)}
+\includegraphics[scale=0.3]{./fig/hist-cropped-grey}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{White (cropped)}
+\includegraphics[scale=0.3]{./fig/hist-cropped-white}
+\end{subfigure}
+
+\end{figure}
+%----------------------------------------------------
+\begin{figure}[!ht] % shading correction
+\caption{Shading correction: $60000 \times (G-B) / (W - B)$}
+
+\centering
+
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Grey values after shading correction}
+\includegraphics[scale=0.3]{./fig/shading-correction}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Histogram of grey values after shading correction}
+\includegraphics[scale=0.3]{./fig/shading-correction-histogram}
+\end{subfigure}
+
+\end{figure}
+%----------------------------------------------------
+\end{document}
