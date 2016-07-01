@@ -2,7 +2,9 @@
 library("IO.Pixels"); library("CB.Misc")
 
 fpath <- "./Data-packs/acq-description/fig/"
-acq <- import.acq("./Image-data/160430")
+acq <- readRDS("./02_Objects/images/pwm-160430.rds")
+md <- readRDS("./02_Objects/med-diffs/md-160430.rds")
+
 Cat.cols <- c("purple", "black", "magenta3", "red", "orange", "yellow", NA, "gold", "grey", NA, "blue", "skyblue", "green3")
 
 write("Images acquired on 16-04-30, main detector", paste0(fpath, "title.txt"))
@@ -163,4 +165,20 @@ jpeg(paste0(fpath, "shading-correction-histogram.jpg")); {
                                    c("", "x", "y", "x^2", "y^2", "xy")),
                              1, paste, collapse = ""), "$"), collapse = ""),
           paste0(fpath, "quad-coef-white.txt"))
+}
+
+####################################################################################################
+
+# LOCAL BRIGHTNESS                                                                              ####
+
+# consistency of locally bright pixels between black & grey images
+{
+    hh <- lapply(c(1:20) * 100, 
+                 function(lim) length(which(md[,,"black"] > lim & md[,,"grey"] > lim)) / 
+                     length(which(md[,,"black"] > lim | md[,,"grey"] > lim)))
+    
+    plot(c(1:20) * 100, unlist(hh) * 100, pch = 20, ylab = "% points marked in both images", xlab = "threshold")
+    abline(h = c(1:10)*10, col = adjustcolor("cyan3", alpha = 0.6))
+    abline(h = c(1:10)*10 + 5, col = adjustcolor("cyan3", alpha = 0.2))
+    
 }

@@ -1,5 +1,6 @@
 
 library("IO.Pixels"); library("CB.Misc")
+acq <- import.acq("./Image-data/160430")
 
 load.pixel.means.2048()
 
@@ -150,3 +151,67 @@ sd(pw.m[,,"black", "160430"], na.rm = T)
 # UNDERSTANDING PARAMETERS OF QUADRATIC TREND MODEL                                             ####
 
 # do parameters have natural interpretation?
+
+# mini DF for speed
+zz <- melt(acq[,,1], varnames = c("x", "y"))[,1:2]
+zz <- zz[zz$x %% 4 == 1 & zz$y %% 4 == 1,]
+attach(zz)
+
+
+qt.plot <- function(terms) {
+    res <- array(eval(parse(text = terms)), dim = c(sqrt(nrow(zz)), sqrt(nrow(zz))))
+    suppressWarnings(pixel.image(res, title = parse(text = terms), xaxt = "none", yaxt = "none"))
+}
+
+pdf("./Plots/Quadratic-trend-models.pdf"); {
+    par(mfrow = c(4, 4), mar = c(2, 2, 3, 1))
+    
+    # combinations of x, y, x^2, y^2, xy
+    {
+        qt.plot("x")
+        qt.plot("x^2")
+        qt.plot("x*y")
+        qt.plot("-x*y")
+        
+        qt.plot("x+y")
+        qt.plot("x+x^2")
+        qt.plot("x+y^2")
+        qt.plot("x+y+x^2")
+        
+        qt.plot("x+y+x^2+y^2")
+        qt.plot("x+y-x^2+y^2")
+        qt.plot("x+y+x^2-y^2")
+        qt.plot("x+y-x^2-y^2")
+        
+        qt.plot("x+y+x^2+y^2 + x*y")
+        qt.plot("x+y-x^2+y^2 + x*y")
+        qt.plot("x+y-x^2+y^2 - x*y")
+        qt.plot("x+y-x^2-y^2 - x*y")
+    }
+    
+    # change coefficient magnitudes, not just signs
+    {
+        qt.plot("x + y + 2*x^2 + y^2")
+        qt.plot("x + y + 20*x^2 + y^2")
+        qt.plot("x + y + 2*x^2 - y^2")
+        qt.plot("x + y + 20*x^2 - y^2")
+        
+        qt.plot("-x - y + x^2/100 + y^2/100 + x * y/100")
+        qt.plot("-x - y + x^2/1000 + y^2/1000 + x * y/1000")
+        qt.plot("-x - y + x^2/1000 + y^2/1000 + x * y/10000")
+        qt.plot("-x - y + x^2/1000 + y^2/1000 + x * y/100000")
+        
+        qt.plot("-x - y + x^2/500 + y^2/1000 + x * y/10000")
+        qt.plot("-x - y + x^2/1000 + y^2/1000 + x * y/10000")
+        qt.plot("-x - y + x^2/2000 + y^2/1000 + x * y/10000")
+        qt.plot("-x - y + x^2/4000 + y^2/4000 + x * y/10000")
+        
+        qt.plot("-2*x - y + x^2/1000 + y^2/1000 + x * y/10000")
+        qt.plot("-2*x + y + x^2/2000 + y^2/1000 + x * y/10000")
+        qt.plot("2*x + y - x^2/2000 - y^2/1000 + x * y/10000")
+        qt.plot("2*x + y - x^2/2000 - y^2/1000 + x * y/10000")
+    }
+    
+    dev.off()
+}
+

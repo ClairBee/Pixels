@@ -79,3 +79,22 @@ load.pixel.means.2 <- function(fpath = "./02_Objects/images") {
 }
 
 system.time(load.pixel.means.2())
+
+####################################################################################################
+
+# ALSO WITH MEDIAN-DIFFERENCED IMAGES                                                           ####
+
+md.b <- readRDS("./Other-data/Median-diffs-black.rds")
+md.g <- readRDS("./Other-data/Median-diffs-grey.rds")
+
+md <- array(dim = c(2048, 2048, 2), dimnames = list(NULL, NULL, c("black", "grey")))
+md[3: 1998, 33 : 2028,"black"] <- md.b$"160430"
+md[3: 1998, 33 : 2028,"grey"] <- md.g$"160430"
+
+saveRDS(md, "./02_Objects/med-diffs/md-160430.rds")
+
+lapply(names(md.b), function(dt) {
+    md[3: 1998, 33 : 2028,"black"] <- md.b[[dt]]
+    md[3: 1998, 33 : 2028,"grey"] <- md.g[[dt]]
+    saveRDS(md, paste0("./02_Objects/med-diffs/md-", dt, ".rds"))
+})
