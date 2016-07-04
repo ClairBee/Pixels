@@ -101,6 +101,28 @@
 
 \end{figure}
 %----------------------------------------------------
+\begin{figure}[!ht] % pixelwise mean values
+\caption{Scatterplot of pixelwise mean values in each image set, showing thresholds and trends \\ \nb{Can we fit a translation to image b \& c, demonstrating similarity of relationship between b/g and g/w data?}}
+
+\centering
+
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Black vs grey}
+\includegraphics[scale=0.3]{./fig/th-splot-black-v-grey}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Black vs white}
+\includegraphics[scale=0.3]{./fig/th-splot-black-v-white}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Grey vs white}
+\includegraphics[scale=0.3]{./fig/th-splot-grey-v-white}
+\end{subfigure}
+
+\end{figure}
+%----------------------------------------------------
 \begin{figure}[!ht] % shading correction
 \caption{Shading correction: $60000 \times (G-B) / (W - B)$}
 
@@ -115,7 +137,35 @@
 \caption{Histogram of grey values after shading correction}
 \includegraphics[scale=0.3]{./fig/shading-correction-histogram}
 \end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Quadratic trend of values after correction}
+\includegraphics[scale=0.3]{./fig/quad-trend-fitted-sc}
+\end{subfigure}
 
 \end{figure}
 %----------------------------------------------------
+\begin{figure}[!ht] % shading correction vs pixelwise mean values
+\caption{Scatterplot of shading-corrected values vs pixelwise means in each raw image}
+
+\centering
+
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Black}
+\includegraphics[scale=0.3]{./fig/th-splot-sc-vs-black}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Grey}
+\includegraphics[scale=0.3]{./fig/th-splot-sc-vs-grey}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{White}
+\includegraphics[scale=0.3]{./fig/th-splot-sc-vs-white}
+\end{subfigure}
+
+\end{figure}
+%----------------------------------------------------
+
 \end{document}

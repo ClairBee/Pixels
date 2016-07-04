@@ -5,6 +5,8 @@ fpath <- "./Data-packs/acq-description/fig/"
 acq <- readRDS("./02_Objects/images/pwm-160430.rds")
 md <- readRDS("./02_Objects/med-diffs/md-160430.rds")
 
+.median <- hijack(median, na.rm = TRUE)
+
 Cat.cols <- c("purple", "black", "magenta3", "red", "orange", "yellow", NA, "gold", "grey", NA, "blue", "skyblue", "green3")
 
 write("Images acquired on 16-04-30, main detector", paste0(fpath, "title.txt"))
@@ -72,6 +74,110 @@ lapply(dimnames(acq)[[3]], function(cc) {
     
     dev.off()
 })
+
+####################################################################################################
+
+# SCATTERPLOTS WITH THRESHOLDS                                                                  ####    
+
+# get thresholds
+th <- apply(acq, 3, function(im) {
+    med <- median(im, na.rm = T)
+    c(v.dim = med * 0.5, dim = med * 0.75,
+      bright = med + (65535 - med) / 4, v.bright = med + (65535 - med) / 2)
+})
+nr.lim <- sort(rep(qJohnson(c(5e-04, 1 - 5e-04), JohnsonFit(acq[,,"black"][!is.na(acq[,,"black"])])), 2))
+
+# smoothed scatterplot of each pair of power levels, showing thresholds
+scatterplot.with.thresholds <- function(im, cols = c("black", "grey"), ...) {
+    smoothScatter(im[,,cols[1]], im[,,cols[2]], nrpoints = Inf, 
+                  xlab = paste0("Value in ", cols[1], " images"),
+                  ylab = paste0("Value in ", cols[2], " images"), ...)
+    
+    # mark bright/hot pixels
+    rect(th["v.bright", cols[1]], th["v.bright", cols[2]], 65534, 65534, 
+         col = adjustcolor("red", alpha = 0.2), border = NA)
+    rect(th["bright", cols[1]], th["bright", cols[2]], 65534, 65534, 
+         col = adjustcolor("orange", alpha = 0.2), border = NA)
+    abline(v = 65535, col = adjustcolor("magenta3", alpha = 0.3))
+    abline(h = 65535, col = adjustcolor("magenta3", alpha = 0.3))
+    
+    # fit & add line through bright pixels (excl hot pixels)
+    abline(line(acq[,,cols[1]][which((acq[,,cols[1]] > th["bright", cols[1]] | acq[,,cols[2]] > th["bright", cols[2]]) & acq[,,cols[2]] < 65535, arr.ind = T)],
+                acq[,,cols[2]][which((acq[,,cols[1]] > th["bright", cols[1]] | acq[,,cols[2]] > th["bright", cols[2]]) & acq[,,cols[2]] < 65535, arr.ind = T)]),
+           col = adjustcolor("orange", alpha = 0.6), lty = 2)
+    abline(line(acq[,,cols[1]][which((acq[,,cols[1]] > th["v.bright", cols[1]] | acq[,,cols[2]] > th["v.bright", cols[2]]) & acq[,,cols[2]] < 65535, arr.ind = T)],
+                acq[,,cols[2]][which((acq[,,cols[1]] > th["v.bright", cols[1]] | acq[,,cols[2]] > th["v.bright", cols[2]]) & acq[,,cols[2]] < 65535, arr.ind = T)]),
+           col = adjustcolor("red", alpha = 0.6), lty = 3)
+    
+    # mark dim region
+    rect(0,0,th["dim", cols[1]], th["dim", cols[2]], 
+         col = adjustcolor("cyan3", alpha = 0.2), border = NA)
+    rect(0,0,th["v.dim", cols[1]], th["v.dim", cols[2]], 
+         col = adjustcolor("cornflowerblue", alpha = 0.2), border = NA)
+    
+    # mark non-responsive region
+    nr.lim <- sort(rep(qJohnson(c(5e-04, 1 - 5e-04), JohnsonFit(acq[,,"black"][!is.na(acq[,,"black"])])), 2))
+    rect(nr.lim[1], nr.lim[2], nr.lim[3], nr.lim[4], col = adjustcolor("blue", alpha = 0.2), border = NA)
+}
+
+jpeg(paste0(fpath, "th-splot-black-v-grey.jpg")) ; {
+    par(mar = c(4, 4, 1, 1))
+    scatterplot.with.thresholds(acq, cols = c("black", "grey"))
+    dev.off()
+}
+jpeg(paste0(fpath, "th-splot-black-v-white.jpg")) ; {
+    par(mar = c(4, 4, 1, 1))
+    scatterplot.with.thresholds(acq, cols = c("black", "white"))
+    dev.off()
+}
+jpeg(paste0(fpath, "th-splot-grey-v-white.jpg")) ; {
+    par(mar = c(4, 4, 1, 1))
+    scatterplot.with.thresholds(acq, cols = c("grey", "white"))
+    dev.off()
+}
+
+# plot abs. pixel value vs median-differenced value
+{
+    smoothScatter(acq[,,"black"], md[,,"black"], nrpoints = Inf)
+    abline(line(acq[,,"black"][acq[,,"black"] > 10000], md[,,"black"][acq[,,"black"] > 10000]),
+           col = adjustcolor("darkred", alpha = 0.5))
+    abline(h = 1000, col = "red", lty = 3)
+    
+    smoothScatter(acq[,,"grey"], md[,,"grey"], nrpoints = Inf)
+}
+
+# shading-corrected values vs raw images
+sc <- readRDS("./Other-data/Shading-corrections.rds")
+
+jpeg(paste0(fpath, "th-splot-sc-vs-black.jpg")); {
+    par(mar = c(4, 4, 1, 1))
+    smoothScatter(acq[3:1998,33:2028,"black"], sc[,,"160430"], nrpoints = Inf, xlim = c(0,65535),
+                  ylab = "Shading-corrected", xlab = "Pixelwise mean in black images")
+    
+    # bright pixels
+    rect(th["bright", "black"], -10000, 65535, 60000, col = adjustcolor("orange", alpha = 0.4), border = NA)
+    
+    dev.off()
+}
+jpeg(paste0(fpath, "th-splot-sc-vs-grey.jpg")); {
+    par(mar = c(4, 4, 1, 1))
+    smoothScatter(acq[3:1998,33:2028,"grey"], sc[,,"160430"], nrpoints = Inf, xlim = c(0,65535),
+                  ylab = "Shading-corrected", xlab = "Pixelwise mean in grey images")
+    rect(th["bright", "grey"], -10000, 65535, 60000, col = adjustcolor("orange", alpha = 0.4), border = NA)
+    rect(nr.lim[1], -10000, nr.lim[3], 60000, col = adjustcolor("blue", alpha = 0.2), border = NA)
+    
+    dev.off()
+}
+jpeg(paste0(fpath, "th-splot-sc-vs-white.jpg")); {
+    par(mar = c(4, 4, 1, 1))
+    smoothScatter(acq[3:1998,33:2028,"white"], sc[,,"160430"], nrpoints = Inf, xlim = c(0,65535),
+                  ylab = "Shading-corrected", xlab = "Pixelwise mean in white images")
+    
+    rect(th["bright", "white"], -10000, 65535, 60000, col = adjustcolor("orange", alpha = 0.4), border = NA)
+    rect(nr.lim[1], -10000, nr.lim[3], 60000, col = adjustcolor("blue", alpha = 0.2), border = NA)
+    
+    dev.off()
+}
 
 ####################################################################################################
 
@@ -165,6 +271,30 @@ jpeg(paste0(fpath, "shading-correction-histogram.jpg")); {
                                    c("", "x", "y", "x^2", "y^2", "xy")),
                              1, paste, collapse = ""), "$"), collapse = ""),
           paste0(fpath, "quad-coef-white.txt"))
+}
+
+# shading correction
+{
+    sc[,,"160430"][is.na(sc[,,"160430"]) | is.infinite(sc[,,"160430"])] <- 0
+    quad.lm <- rlm(gv ~ x + y + I(x^2) + I(y^2) + I(x *y), 
+                   setNames(melt(sc[,,"160430"]), nm = c("x", "y", "gv")))
+    
+    quad.fitted <- quad.res <- array(dim = dim(sc[,,"160430"]))
+    quad.fitted[which(!is.na(sc[,,"160430"]), arr.ind = T)] <- quad.lm$fitted.values
+    quad.res[which(!is.na(sc[,,"160430"]), arr.ind = T)] <- quad.lm$residuals
+    
+    jpeg(paste0(fpath, "quad-trend-fitted-sc.jpeg")); {
+        par(mar = c(2, 2, 1, 1))
+        pixel.image(quad.fitted, break.levels = sd.levels(sc[,,"160430"]))
+        draw.panels()
+        dev.off()
+    }
+    
+    write(paste(c("$", apply(cbind(c("", c("", "+")[(coef(quad.lm)[-1] > 0) + 1]),
+                                   format(round(coef(quad.lm), 4), scientific = F),
+                                   c("", "x", "y", "x^2", "y^2", "xy")),
+                             1, paste, collapse = ""), "$"), collapse = ""),
+          paste0(fpath, "quad-coef-grey.txt"))
 }
 
 ####################################################################################################
