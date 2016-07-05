@@ -1,0 +1,106 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\thesubsection}{1em}{}
+	
+\addtolength{\topmargin}{-0.5cm}
+\addtolength{\textheight}{1cm}
+    
+%======================================================================
+
+\begin{document}
+
+Fitting values by linear regression on grey and black values. All results are plotted as a kernel density, with 100 points shown in the regions of lowest density to highlight outliers.
+
+%-----------------------------------------------------
+\begin{figure}[!ht] % predict white values in latest image
+\caption{White values in most recent image (16-04-30)}
+\centering
+
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{All pixels \\ \textit{\scriptsize{\input{./fig/fitted-wv-all.txt}}}}
+\includegraphics[scale=0.3]{./fig/fitted-wv-all-px}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Excluding bad pixels \\ \textit{\scriptsize{\input{./fig/fitted-wv-healthy.txt}}}}
+\includegraphics[scale=0.3]{./fig/fitted-wv-healthy-px}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Residuals (excluding bad pixels) \\ \textit{\scriptsize{\input{./fig/fitted-wv-res.txt}}}}
+\includegraphics[scale=0.3]{./fig/fitted-wv-healthy-res}
+\end{subfigure}
+
+\end{figure}
+%-----------------------------------------------------
+\begin{figure}[!ht] % predict white values in old data before refurbishment
+\caption{White values in old data prior to refurbishment (13-11-22)}
+\centering
+
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{All pixels  \\ \textit{\scriptsize{\input{./fig/fitted-wv-all-old.txt}}}}
+\includegraphics[scale=0.3]{./fig/fitted-wv-all-px-old}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Excluding bad pixels \\ \textit{\scriptsize{\input{./fig/fitted-wv-healthy-old.txt}}}}
+\includegraphics[scale=0.3]{./fig/fitted-wv-healthy-px-old}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Residuals (excluding bad pixels) \\ \textit{\scriptsize{\input{./fig/fitted-wv-res-old.txt}}}}
+\includegraphics[scale=0.3]{./fig/fitted-wv-healthy-res-old}
+\end{subfigure}
+\end{figure}
+%-----------------------------------------------------
+\begin{figure}[!ht] % predict white values in old data after refurbishment
+\caption{White values in old data post refurbishment (14-01-28)}
+\centering
+
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{All pixels \\ \textit{\scriptsize{\input{./fig/fitted-wv-all-refurb.txt}}}}
+\includegraphics[scale=0.3]{./fig/fitted-wv-all-px-refurb}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Excluding bad pixels \\ \textit{\scriptsize{\input{./fig/fitted-wv-healthy-refurb.txt}}}}
+\includegraphics[scale=0.3]{./fig/fitted-wv-healthy-px-refurb}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Residuals (excluding bad pixels) \\ \textit{\scriptsize{\input{./fig/fitted-wv-res-refurb.txt}}}}
+\includegraphics[scale=0.3]{./fig/fitted-wv-healthy-res-refurb}
+\end{subfigure}
+\end{figure}
+%-----------------------------------------------------
+\begin{figure}[!ht] % predict shading-corrected value in latest image
+\caption{Shading-corrected values in most recent image (16-04-30)}
+\centering
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{All pixels \\ \textit{\scriptsize{\input{./fig/fitted-sc-all.txt}}}}
+\includegraphics[scale=0.3]{./fig/fitted-sc-all-px}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Excluding bad pixels \\ \textit{\scriptsize{\input{./fig/fitted-sc-healthy.txt}}}}
+\includegraphics[scale=0.3]{./fig/fitted-sc-healthy-px}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Residuals (excluding bad pixels) \\ \textit{\scriptsize{\input{./fig/fitted-sc-res.txt}}}}
+\includegraphics[scale=0.3]{./fig/fitted-sc-healthy-res}
+\end{subfigure}
+\end{figure}
+
+%\newpage
+%\printbibliography
+\end{document}

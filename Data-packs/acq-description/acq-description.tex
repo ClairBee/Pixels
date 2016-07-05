@@ -85,24 +85,24 @@
 \vspace*{10pt}
 
 \begin{subfigure}[t]{0.32\textwidth}
-\caption{Black (cropped)}
+\caption{Black (cropped - edges in grey)}
 \includegraphics[scale=0.3]{./fig/hist-cropped-black}
 \end{subfigure}
 %
 \begin{subfigure}[t]{0.32\textwidth}
-\caption{Grey (cropped)}
+\caption{Grey (cropped - edges in grey)}
 \includegraphics[scale=0.3]{./fig/hist-cropped-grey}
 \end{subfigure}
 %
 \begin{subfigure}[t]{0.32\textwidth}
-\caption{White (cropped)}
+\caption{White (cropped - edges in grey)}
 \includegraphics[scale=0.3]{./fig/hist-cropped-white}
 \end{subfigure}
 
 \end{figure}
 %----------------------------------------------------
 \begin{figure}[!ht] % pixelwise mean values
-\caption{Scatterplot of pixelwise mean values in each image set, showing thresholds and trends \\ \nb{Can we fit a translation to image b \& c, demonstrating similarity of relationship between b/g and g/w data?}}
+\caption{Scatterplot of pixelwise mean values in each image set, showing thresholds and trends}
 
 \centering
 
@@ -129,22 +129,57 @@
 \centering
 
 \begin{subfigure}[t]{0.32\textwidth}
-\caption{Grey values after shading correction}
+\caption{Grey values after shading correction \\\\}
 \includegraphics[scale=0.3]{./fig/shading-correction}
 \end{subfigure}
 %
 \begin{subfigure}[t]{0.32\textwidth}
-\caption{Histogram of grey values after shading correction}
+\caption{Histogram of grey values after shading correction\\}
 \includegraphics[scale=0.3]{./fig/shading-correction-histogram}
 \end{subfigure}
 %
 \begin{subfigure}[t]{0.32\textwidth}
-\caption{Quadratic trend of values after correction}
+\caption{Quadratic trend of values after correction \\ \tiny{\input{./fig/quad-coef-sc.txt}}}
 \includegraphics[scale=0.3]{./fig/quad-trend-fitted-sc}
 \end{subfigure}
 
 \end{figure}
 %----------------------------------------------------
+\begin{figure}[!ht] % predict white/shading-corrected values
+\caption{Predicting values by linear regression over other images}
+\centering
+
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{White $\sim$ black * grey \\ \textit{\scriptsize{\input{./fig/fitted-wv-all.txt}}}}
+\includegraphics[scale=0.3]{./fig/fitted-wv-all-px}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Shading-corrected  $\sim$ black * grey  \\ \textit{\scriptsize{\input{./fig/fitted-sc-all.txt}}}}
+\includegraphics[scale=0.3]{./fig/fitted-sc-all-px}
+\end{subfigure}
+
+\end{figure}
+%-----------------------------------------------------
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 \begin{figure}[!ht] % shading correction vs pixelwise mean values
 \caption{Scatterplot of shading-corrected values vs pixelwise means in each raw image}
 
@@ -166,6 +201,4 @@
 \end{subfigure}
 
 \end{figure}
-%----------------------------------------------------
-
-\end{document}
+%-----------------------------------------------------

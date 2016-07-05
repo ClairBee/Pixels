@@ -125,7 +125,7 @@ px$type <- ordered(px$type, levels = Cat)
 
 px <- px[order(px$type),]
 px <- px[!duplicated(px[,1:2]),]
-px <- px[!px$type %in% c("screen.spot", "edge"),]
+px <- px[!px$type %in% c("screen.spot"),]
 
 sc.pad <- array(dim = dim(acq[,,1]))
 sc.pad[3:1998, 33:2028] <- sc[,,12]
@@ -368,40 +368,344 @@ legend("bottomright", col = c("orange", "green3", "blue"), lty = 2,
 ####################################################################################################
 
 # PREDICT WHITE VALUE FROM GREY/BLACK IMAGES                                                    ####
+fpath <- "./Notes/WV-prediction/fig/"
 
 {
+    # data frame of all variables for active region of image
+    df <- merge(setNames(data.frame(melt(acq[,,"black"]), 
+                              melt(acq[,,"grey"]),
+                              melt(acq[,,"white"]))[,c("X1", "X2", "value", "value.1", "value.2")],
+                   nm = c("x", "y", "b", "g", "w")),
+                px, by = c(1:2), all.x = T)
+    df <- df[!is.na(df$b),]
     
+    # fit linear model to healthy px only, check line through fitted/actual
+    rlm <- rlm(w ~ b * g, data = df[is.na(df$type),])       # 231.160       0.995
+    hlm <- lm(w ~ b * g, data = df[is.na(df$type),])        # 167.6664      0.9964
+    alm <- lm(w ~ b * g, data = df)                         # 236.2960      0.9949
+    
+    hlm.p <- predict(hlm, interval = "conf")
+    
+    df$h.fv[is.na(df$type)] <- hlm$fitted.values
+    df$h.res[is.na(df$type)] <- hlm$residuals
+    
+    df$a.fv <- alm$fitted.values
+    df$a.res <- alm$residuals
+    
+    write(paste0("Adj. $r^2$ ", round(summary(alm)$adj.r.squared, 3), "; ",
+                 "residual SD ", round(summary(alm)$sigma, 2)),
+          paste0(fpath, "fitted-wv-all.txt"))
+    write(paste0("Adj. $r^2$ ", round(summary(hlm)$adj.r.squared, 3), "; ",
+                 "residual SD ", round(summary(hlm)$sigma, 2)),
+          paste0(fpath, "fitted-wv-healthy.txt"))
+    write(paste0(sum(abs(hlm$residuals) > 2 * sd(df$h.fv, na.rm = T)), " px > ", round(2 * sd(df$h.fv, na.rm = T), 0), " res"),
+          paste0(fpath, "fitted-wv-res.txt"))
+    
+    pdf(paste0(fpath, "fitted-wv-all-px.pdf")); {
+        par(mar = c(4, 4, 1, 1))
+        smoothScatter(df$w, df$a.fv, xlim = c(0,65535), ylim = c(0,65535),
+                      colramp = colorRampPalette(c(NA, "gold", "red", "blue"), space = "Lab"),
+                      xlab = "Observed white value", ylab = "Fitted white value")
+        abline(line(df$w, df$a.fv), col = adjustcolor("darkred", alpha = 0.4), lty = 2)
+        dev.off()
+    }
+   
+    pdf(paste0(fpath, "fitted-wv-healthy-px.pdf")); {
+        par(mar = c(4, 4, 1, 1))
+        smoothScatter(df$w, df$h.fv, xlim = c(0,65535), ylim = c(0,65535),
+                  colramp = colorRampPalette(c(NA, "gold", "red", "blue"), space = "Lab"),
+                  xlab = "Observed white value", ylab = "Fitted white value")
+        abline(line(df$w, df$h.fv), col = adjustcolor("darkred", alpha = 0.4), lty = 2)  
+        dev.off()
+    }
+    
+    pdf(paste0(fpath, "fitted-wv-healthy-res.pdf")); {
+        par(mar = c(4, 4, 1, 1))
+        smoothScatter(df$h.fv, df$h.res, xlim = c(0,65535), ylim = c(-4000,4000),
+                      colramp = colorRampPalette(c(NA, "gold", "red", "blue"), space = "Lab"),
+                      xlab = "Fitted white value", ylab = "Residual")
+        abline(0,0, col = adjustcolor("darkred", alpha = 0.4), lty = 2)  
+        abline(h = 1200 * c(-1,1), col = adjustcolor("darkblue", alpha = 0.4), lty = 2)  
+        dev.off()
+    }
 }
-# remaining px with high residuals may be result of problem with  coords. Run again from scratch above
+
+####################################################################################################
+
+# PREDICT WHITE VALUE IN OLD DATA - 131122                                                      ####
+
+pw.m <- readRDS("./Other-data/Old-data/Pixelwise-means.rds")
+bp <- readRDS("./Other-data/Old-data/bad-px-maps.rds")$"131122"
+bp <- bp[!bp$type %in% c("s.bright", "l.bright", "line.b", "l.dim", "s.dim"),]
+
+# create data frame
 {
-    qq <- setNames(melt(acq[,,"black"]), nm = c("x", "y"))
-    hh <- setNames(data.frame(melt(acq[,,"black"]), 
-                              c(acq[,,"grey"]),
-                              c(acq[,,"white"]))[!is.na(c(acq[,,"black"])),],
-                   nm = c("x", "y", "b", "g", "w"))
-    hh <- merge(hh, px, by = c(1,2), all.x = T)
+    dfo <- setNames(data.frame(melt(pw.m[,,"black", "131122"]), 
+                               melt(pw.m[,,"grey", "131122"]),
+                               melt(pw.m[,,"white", "131122"]))[,c("X1", "X2", "value", "value.1", "value.2")],
+                    nm = c("x", "y", "b", "g", "w"))
     
-    hhlm <- lm(w ~ b * g, data = hh)
-    
-    hh$fv <- hhlm$fitted.values
-    hh$res <- hhlm$residuals
-    
-    smoothScatter(hh$w[hhlm$fitted.values <= 65535], hh$fv[hhlm$fitted.values <= 65535], 
-                  nrpoints = Inf, xlim = c(0,65535), ylim = c(0,65535))
-    abline(line(hh$w[hhlm$fitted.values <= 65535], hhlm$fitted.values[hhlm$fitted.values <= 65535]), col = adjustcolor("red", alpha = 0.4), lty = 2)
-    
-    Cat.cols <- c("purple", "black", "magenta3", "red", "orange", "gold", NA, "yellow", "violet", NA, "green3", "lightskyblue", "grey")
-    
-    points(hh$w[!is.na(hh$type)], hh$fv[!is.na(hh$type)],
-           col = Cat.cols[hh$type[!is.na(hh$type)]], pch = ".", cex = 2)
-    
-    smoothScatter(hh$w[is.na(hh$type)], hh$fv[is.na(hh$type)], 
-                  nrpoints = Inf, xlim = c(0,65535), ylim = c(0,65535),
-                  xlab = "Observed white value", ylab = "Fitted white value",
-                  main = "Predicted white values excluding defect pixels")
-    
-    smoothScatter(hh$fv[is.na(hh$type)], hh$res[is.na(hh$type)])
-    
-    hh[hh$res > 2500 & is.na(hh$type),]
+    dfo <- merge(dfo, bp, by = c(1:2), all.x = T)
+    dfo <- dfo[!is.na(dfo$b),]
 }
+
+# fit models
+{
+    hlm <- lm(w ~ b * g, data = dfo[is.na(dfo$type),])        # 1814.3848     0.9588
+    alm <- lm(w ~ b * g, data = dfo)                         # 236.2960      0.9949
+    
+    dfo$h.fv[is.na(dfo$type)] <- hlm$fitted.values
+    dfo$h.res[is.na(dfo$type)] <- hlm$residuals
+    
+    dfo$a.fv <- alm$fitted.values
+    dfo$a.res <- alm$residuals
+    
+    write(paste0("Adj. $r^2$ ", round(summary(alm)$adj.r.squared, 3), "; ",
+                 "residual SD ", round(summary(alm)$sigma, 2)),
+          paste0(fpath, "fitted-wv-all-old.txt"))
+    write(paste0("Adj. $r^2$ ", round(summary(hlm)$adj.r.squared, 3), "; ",
+                 "residual SD ", round(summary(hlm)$sigma, 2)),
+          paste0(fpath, "fitted-wv-healthy-old.txt"))
+    write(paste0(sum(abs(hlm$residuals) > 2 * sd(df$h.fv, na.rm = T)), " px > ", round(2 * sd(df$h.fv, na.rm = T), 0), " res"),
+          paste0(fpath, "fitted-wv-res-old.txt"))
+}
+
+pdf(paste0(fpath, "fitted-wv-all-px-old.pdf")); {
+    par(mar = c(4, 4, 1, 1))
+    smoothScatter(dfo$w, dfo$a.fv, xlim = c(0,65535), ylim = c(0,65535),
+                  colramp = colorRampPalette(c(NA, "gold", "red", "blue"), space = "Lab"),
+                  xlab = "Observed white value", ylab = "Fitted white value")
+    abline(line(dfo$w, dfo$a.fv), col = adjustcolor("darkred", alpha = 0.4), lty = 2)
+    dev.off()
+}
+
+pdf(paste0(fpath, "fitted-wv-healthy-px-old.pdf")); {
+    par(mar = c(4, 4, 1, 1))
+    smoothScatter(dfo$w, dfo$h.fv, xlim = c(0,65535), ylim = c(0,65535),
+                  colramp = colorRampPalette(c(NA, "gold", "red", "blue"), space = "Lab"),
+                  xlab = "Observed white value", ylab = "Fitted white value")
+    abline(line(dfo$w, dfo$h.fv), col = adjustcolor("darkred", alpha = 0.4), lty = 2)  
+    dev.off()
+}
+
+pdf(paste0(fpath, "fitted-wv-healthy-res-old.pdf")); {
+    par(mar = c(4, 4, 1, 1))
+    smoothScatter(dfo$h.fv, dfo$h.res, xlim = c(0,65535), ylim = c(-4000,4000),
+                  colramp = colorRampPalette(c(NA, "gold", "red", "blue"), space = "Lab"),
+                  xlab = "Fitted white value", ylab = "Residual")
+    abline(0,0, col = adjustcolor("darkred", alpha = 0.4), lty = 2)  
+    abline(h = 1200 * c(-1,1), lty = 2, col = adjustcolor("darkblue", alpha = 0.2))
+    dev.off()
+}
+
+####################################################################################################
+
+# PREDICT WHITE VALUE IN OLD DATA - 140128                                                      ####
+
+pw.m <- readRDS("./Other-data/Old-data/Pixelwise-means.rds")
+bp <- readRDS("./Other-data/Old-data/bad-px-maps.rds")$"140128"
+bp <- bp[!bp$type %in% c("s.bright", "l.bright", "line.b", "l.dim", "s.dim"),]
+
+# create data frame
+{
+    dfo <- setNames(data.frame(melt(pw.m[,,"black", "140128"]), 
+                               melt(pw.m[,,"grey", "140128"]),
+                               melt(pw.m[,,"white", "140128"]))[,c("X1", "X2", "value", "value.1", "value.2")],
+                    nm = c("x", "y", "b", "g", "w"))
+    
+    dfo <- merge(dfo, bp, by = c(1:2), all.x = T)
+    dfo <- dfo[!is.na(dfo$b),]
+}
+
+# fit models
+{
+    hlm <- lm(w ~ b * g, data = dfo[is.na(dfo$type),])        # 1814.3848     0.9588
+    alm <- lm(w ~ b * g, data = dfo)                         # 236.2960      0.9949
+    
+    dfo$h.fv[is.na(dfo$type)] <- hlm$fitted.values
+    dfo$h.res[is.na(dfo$type)] <- hlm$residuals
+    
+    dfo$a.fv <- alm$fitted.values
+    dfo$a.res <- alm$residuals
+    
+    write(paste0("Adj. $r^2$ ", round(summary(alm)$adj.r.squared, 3), "; ",
+                 "residual SD ", round(summary(alm)$sigma, 2)),
+          paste0(fpath, "fitted-wv-all-refurb.txt"))
+    write(paste0("Adj. $r^2$ ", round(summary(hlm)$adj.r.squared, 3), "; ",
+                 "residual SD ", round(summary(hlm)$sigma, 2)),
+          paste0(fpath, "fitted-wv-healthy-refurb.txt"))
+    write(paste0(sum(abs(hlm$residuals) > 2 * sd(df$h.fv, na.rm = T)), " px > ", round(2 * sd(df$h.fv, na.rm = T), 0), " res"),
+          paste0(fpath, "fitted-wv-res-refurb.txt"))
+}
+
+pdf(paste0(fpath, "fitted-wv-all-px-refurb.pdf")); {
+    par(mar = c(4, 4, 1, 1))
+    smoothScatter(dfo$w, dfo$a.fv, xlim = c(0,65535), ylim = c(0,65535),
+                  colramp = colorRampPalette(c(NA, "gold", "red", "blue"), space = "Lab"),
+                  xlab = "Observed white value", ylab = "Fitted white value")
+    abline(line(dfo$w, dfo$a.fv), col = adjustcolor("darkred", alpha = 0.4), lty = 2)
+    dev.off()
+}
+
+pdf(paste0(fpath, "fitted-wv-healthy-px-refurb.pdf")); {
+    par(mar = c(4, 4, 1, 1))
+    smoothScatter(dfo$w, dfo$h.fv, xlim = c(0,65535), ylim = c(0,65535),
+                  colramp = colorRampPalette(c(NA, "gold", "red", "blue"), space = "Lab"),
+                  xlab = "Observed white value", ylab = "Fitted white value")
+    abline(line(dfo$w, dfo$h.fv), col = adjustcolor("darkred", alpha = 0.4), lty = 2)  
+    dev.off()
+}
+
+pdf(paste0(fpath, "fitted-wv-healthy-res-refurb.pdf")); {
+    par(mar = c(4, 4, 1, 1))
+    smoothScatter(dfo$h.fv, dfo$h.res, xlim = c(0,65535), ylim = c(-4000,4000),
+                  colramp = colorRampPalette(c(NA, "gold", "red", "blue"), space = "Lab"),
+                  xlab = "Fitted white value", ylab = "Residual")
+    abline(0,0, col = adjustcolor("darkred", alpha = 0.4), lty = 2)  
+    abline(h = 1200 * c(-1,1), lty = 2, col = adjustcolor("darkblue", alpha = 0.2))
+    dev.off()
+}
+
+####################################################################################################
+
+# PREDICT SC FROM GREY/BLACK IMAGES                                                             ####
+
+sc <- array(dim = c(2048, 2048))
+sc[3:1998, 33:2028] <- readRDS("./Other-data/Shading-corrections.rds")[,,"160430"]
+sc[is.infinite(sc) | is.na(sc)] <- 0
+# where pixel is hot or dead in more than one image, set to 0
+
+# data frame of all variables for active region of image
+{
+    df <- setNames(data.frame(melt(acq[,,"black"]), 
+                                    melt(acq[,,"grey"]),
+                                    melt(acq[,,"white"]),
+                                    melt(sc))[,c("X1", "X2", "value", "value.1", "value.2", "value.3")],
+                         nm = c("x", "y", "b", "g", "w", "sc"))
+    df <- merge(df, px, by = c(1,2), all.x = T)
+    df <- df[!is.na(df$b),]
+    
+    # fit linear model to healthy px only, check line through fitted/actual
+    hlm <- lm(sc ~ b * g, data = df[is.na(df$type),])        # 167.6664      0.9964
+    alm <- lm(sc ~ b * g, data = df)                         # 236.2960      0.9949
+    
+    df$h.fv[is.na(df$type)] <- hlm$fitted.values
+    df$h.res[is.na(df$type)] <- hlm$residuals
+    
+    df$a.fv <- alm$fitted.values
+    df$a.res <- alm$residuals
+    
+    write(paste0("Adj. $r^2$ ", round(summary(alm)$adj.r.squared, 3), "; ",
+                 "residual SD ", round(summary(alm)$sigma, 2)),
+          paste0(fpath, "fitted-sc-all.txt"))
+    write(paste0("Adj. $r^2$ ", round(summary(hlm)$adj.r.squared, 3), "; ",
+                 "residual SD ", round(summary(hlm)$sigma, 2)),
+          paste0(fpath, "fitted-sc-healthy.txt"))
+    write(paste0(sum(abs(hlm$residuals) > 2 * sd(df$h.fv, na.rm = T)), " px > ", round(2 * sd(df$h.fv, na.rm = T), 0), " res"),
+          paste0(fpath, "fitted-sc-res.txt"))
+}
+    
+pdf(paste0(fpath, "fitted-sc-all-px.pdf")); {
+    par(mar = c(4, 4, 1, 1))
+    smoothScatter(df$sc, df$a.fv, 
+                  colramp = colorRampPalette(c(NA, "gold", "red", "blue"), space = "Lab"),
+                  xlab = "Observed value", ylab = "Fitted value")
+    abline(line(df$sc, df$a.fv), col = adjustcolor("darkred", alpha = 0.4), lty = 2)
+    dev.off()
+}
+
+pdf(paste0(fpath, "fitted-sc-healthy-px.pdf")); {
+    par(mar = c(4, 4, 1, 1))
+    smoothScatter(df$sc, df$h.fv, asp = T,
+                  colramp = colorRampPalette(c(NA, "gold", "red", "blue"), space = "Lab"),
+                  xlab = "Observed value", ylab = "Fitted value")
+    abline(line(df$sc, df$h.fv), col = adjustcolor("darkred", alpha = 0.4), lty = 2)  
+    dev.off()
+}
+
+pdf(paste0(fpath, "fitted-sc-healthy-res.pdf")); {
+    par(mar = c(4, 4, 1, 1))
+    smoothScatter(df$h.fv, df$h.res,
+                  colramp = colorRampPalette(c(NA, "gold", "red", "blue"), space = "Lab"),
+                  xlab = "Fitted value", ylab = "Residual")
+    abline(0,0, col = adjustcolor("darkred", alpha = 0.4), lty = 2)  
+    abline(h = 500 * c(-1,1), col = adjustcolor("darkblue", alpha = 0.4), lty = 2)  
+    dev.off()
+}
+
+####################################################################################################
+
+# PREDICT BLACK FROM WHITE/GREY IMAGES                                                          ####
+
+# does process work in reverse? Suspect not
+fpath <- "./Notes/WV-prediction/fig/"
+
+{
+    # data frame of all variables for active region of image
+    df <- merge(setNames(data.frame(melt(acq[,,"black"]), 
+                                    melt(acq[,,"grey"]),
+                                    melt(acq[,,"white"]))[,c("X1", "X2", "value", "value.1", "value.2")],
+                         nm = c("x", "y", "b", "g", "w")),
+                px, by = c(1:2), all.x = T)
+    df <- df[!is.na(df$b),]
+    
+    # fit linear model to healthy px only, check line through fitted/actual
+    hlm <- lm(b ~ w * g, data = df[is.na(df$type),])        # 5458      -0.0001347
+    alm <- lm(b ~ w * g, data = df)                         # 5458      -0.0001347
+    
+    df$h.fv[is.na(df$type)] <- hlm$fitted.values
+    df$h.res[is.na(df$type)] <- hlm$residuals
+    
+    df$a.fv <- alm$fitted.values
+    df$a.res <- alm$residuals
+    
+    write(paste0("Adj. $r^2$ ", round(summary(alm)$adj.r.squared, 3), "; ",
+                 "residual SD ", round(summary(alm)$sigma, 2)),
+          paste0(fpath, "fitted-bv-all.txt"))
+    write(paste0("Adj. $r^2$ ", round(summary(hlm)$adj.r.squared, 3), "; ",
+                 "residual SD ", round(summary(hlm)$sigma, 2)),
+          paste0(fpath, "fitted-bv-healthy.txt"))
+    write(paste0(sum(abs(hlm$residuals) > 2 * sd(df$h.fv, na.rm = T)), " px > ", round(2 * sd(df$h.fv, na.rm = T), 0), " res"),
+          paste0(fpath, "fitted-bv-res.txt"))
+    
+    pdf(paste0(fpath, "fitted-bv-all-px.pdf")); {
+        par(mar = c(4, 4, 1, 1))
+        smoothScatter(df$b, df$a.fv, xlim = c(0,65535), ylim = c(0,65535),
+                      colramp = colorRampPalette(c(NA, "gold", "red", "blue"), space = "Lab"),
+                      xlab = "Observed black value", ylab = "Fitted black value")
+        abline(line(df$b, df$a.fv), col = adjustcolor("darkred", alpha = 0.4), lty = 2)
+        dev.off()
+    }
+    
+    pdf(paste0(fpath, "fitted-bv-healthy-px.pdf")); {
+        par(mar = c(4, 4, 1, 1))
+        smoothScatter(df$b, df$h.fv, xlim = c(0,65535), ylim = c(0,65535),
+                      colramp = colorRampPalette(c(NA, "gold", "red", "blue"), space = "Lab"),
+                      xlab = "Observed black value", ylab = "Fitted black value")
+        abline(line(df$b, df$h.fv), col = adjustcolor("darkred", alpha = 0.4), lty = 2)  
+        dev.off()
+    }
+    
+    pdf(paste0(fpath, "fitted-bv-healthy-res.pdf")); {
+        par(mar = c(4, 4, 1, 1))
+        smoothScatter(df$h.fv, df$h.res, 
+                      colramp = colorRampPalette(c(NA, "gold", "red", "blue"), space = "Lab"),
+                      xlab = "Fitted value", ylab = "Residual")
+        abline(0,0, col = adjustcolor("darkred", alpha = 0.4), lty = 2)  
+        abline(h = 1200 * c(-1,1), col = adjustcolor("darkblue", alpha = 0.4), lty = 2)  
+        dev.off()
+    }
+    
+    df.xt <- df[which(abs(df$h.res) > 2 * sd(df$h.fv, na.rm = T)), ]
+    nrow(df.xt)
+    # only 39px
+    
+    plot(df.xt[,1:2], pch = 20, col = c("red", "black")[(df.xt$h.res > 0) + 1])
+    
+    df.xt$md.b <- md[,,"black"][as.matrix(df.xt[,1:2])]
+    df.xt$md.g <- md[,,"grey"][as.matrix(df.xt[,1:2])]
+}
+
+
+
 

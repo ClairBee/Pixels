@@ -70,7 +70,7 @@ pdf(paste0(fpath, "nonparametric-bw120-image.pdf")); {
     crop.pdf(paste0(fpath, "nonparametric-bw120-image.pdf"))
 }
 
-plot(envelope(bp.ppp, Kinhom, sigma = bw.diggle, simulate = expression(rpoispp(nonpara))))
+# plot(envelope(bp.ppp, Kinhom, sigma = bw.diggle, simulate = expression(rpoispp(nonpara))))
 
 ####################################################################################################
 
@@ -110,8 +110,8 @@ env.plot(bp.ppp, qt.ppm, Kest, normalise = T, main = "")
 
 # difference between model & kernel density
 vv <- nonpara
-vv$v <- (predict(qt.ppm)$v - vv$v) * 128 * 1024
-plot(vv, col = topo.colors(21))
+vv$v <- (predict(qt.ppm)$v * 128 * 1024 - vv$v) 
+plot(vv)
 
 ####################################################################################################
 
@@ -145,8 +145,8 @@ pdf(paste0(fpath, "subpanel-flat-trend-K.pdf"), width = 7, height = 4); {
 
 # difference between model & kernel density
 vv <- nonpara
-vv$v <- (predict(sp.ppm)$v - vv$v) * 128 * 1024
-plot(vv, col = topo.colors(21))
+vv$v <- (predict(sp.ppm)$v * 128 * 1024 - vv$v) 
+plot(vv)
 
 ####################################################################################################
 
@@ -172,6 +172,10 @@ pdf(paste0(fpath, "subpanel-gradient-image.pdf")); {
     crop.pdf(paste0(fpath, "subpanel-gradient-image.pdf"))
 }
 
+# difference between model & kernel density
+vv <- nonpara
+vv$v <- (predict(spg.ppm)$v * 128 * 1024 - vv$v) 
+plot(vv)
 
 ####################################################################################################
 
