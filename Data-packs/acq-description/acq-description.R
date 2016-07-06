@@ -9,7 +9,7 @@ acq <- readRDS("./02_Objects/images/pwm-141009.rds")
 
 Cat.cols <- c("purple", "black", "magenta3", "red", "orange", "yellow", NA, "gold", "grey", NA, "blue", "skyblue", "green3")
 
-write( "Old data after refurbishment: images acquired on 14-01-28, main detector", paste0(fpath, "title.txt"))
+write("Images acquired on 16-04-30, main detector", paste0(fpath, "title.txt"))
 
 ####################################################################################################
 
@@ -196,8 +196,9 @@ jpeg(paste0(fpath, "shading-correction-histogram.jpg")); {
 
 # grey image
 {
+    grey.adj <- acq[,,"grey"] - acq[,,"black"]
     quad.lm <- rlm(gv ~ x + y + I(x^2) + I(y^2) + I(x *y), 
-                   setNames(melt(acq[,,"grey"]), nm = c("x", "y", "gv")))
+                   setNames(melt(grey.adj), nm = c("x", "y", "gv")))
     
     quad.fitted <- quad.res <- array(dim = dim(acq[,,"grey"]))
     quad.fitted[which(!is.na(acq[,,"grey"]), arr.ind = T)] <- quad.lm$fitted.values
@@ -205,7 +206,7 @@ jpeg(paste0(fpath, "shading-correction-histogram.jpg")); {
     
     jpeg(paste0(fpath, "quad-trend-fitted-grey.jpeg")); {
         par(mar = c(2, 2, 1, 1))
-        pixel.image(quad.fitted, break.levels = sd.levels(acq[,,"grey"]))
+        pixel.image(quad.fitted)
         draw.panels()
         dev.off()
     }
@@ -219,8 +220,9 @@ jpeg(paste0(fpath, "shading-correction-histogram.jpg")); {
 
 # white image
 {
+    white.adj <- acq[,,"white"] - acq[,,"black"]
     quad.lm <- rlm(gv ~ x + y + I(x^2) + I(y^2) + I(x *y), 
-                   setNames(melt(acq[,,"white"]), nm = c("x", "y", "gv")))
+                   setNames(melt(white.adj), nm = c("x", "y", "gv")))
     
     quad.fitted <- quad.res <- array(dim = dim(acq[,,"white"]))
     quad.fitted[which(!is.na(acq[,,"white"]), arr.ind = T)] <- quad.lm$fitted.values
@@ -228,12 +230,10 @@ jpeg(paste0(fpath, "shading-correction-histogram.jpg")); {
     
     jpeg(paste0(fpath, "quad-trend-fitted-white.jpeg")); {
         par(mar = c(2, 2, 1, 1))
-        pixel.image(quad.fitted, break.levels = sd.levels(acq[,,"white"]))
+        pixel.image(quad.fitted)
         draw.panels()
         dev.off()
     }
-    
-    pixel.image(quad.res); draw.panels()
     
     write(paste(c("$", apply(cbind(c("", c("", "+")[(coef(quad.lm)[-1] > 0) + 1]),
                                    format(round(coef(quad.lm), 4), scientific = F),
@@ -321,21 +321,3 @@ jpeg(paste0(fpath, "shading-correction-histogram.jpg")); {
         dev.off()
     }
 }
-
-# LOCAL BRIGHTNESS                                                                              ####
-
-# consistency of locally bright pixels between black & grey images
-{
-    hh <- lapply(c(1:20) * 100, 
-                 function(lim) length(which(md[,,"black"] > lim & md[,,"grey"] > lim)) / 
-                     length(which(md[,,"black"] > lim | md[,,"grey"] > lim)))
-    
-    plot(c(1:20) * 100, unlist(hh) * 100, pch = 20, ylab = "% points marked in both images", xlab = "threshold")
-    abline(h = c(1:10)*10, col = adjustcolor("cyan3", alpha = 0.6))
-    abline(h = c(1:10)*10 + 5, col = adjustcolor("cyan3", alpha = 0.2))
-    
-}
-
-####################################################################################################
-
-

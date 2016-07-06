@@ -3,6 +3,8 @@
 
 library("IO.Pixels"); library("CB.Misc")
 
+fpath <- "./Other-data/"
+
 acq <- readRDS("./02_Objects/images/pwm-160430.rds")
 md <- readRDS("./02_Objects/med-diffs/md-160430.rds")
 
@@ -92,7 +94,7 @@ abline(v = 20000)
 
 # BASIC THRESHOLDING - BLACK & GREY                                                             ####
 
-Cat.cols <- c("purple", "black", "magenta3", "red", "orange", "yellow", NA, "gold", "grey", NA, "blue", "skyblue", "green3")
+org.cols <- c("purple", "black", "magenta3", "red", "orange", "yellow", NA, "gold", "grey", NA, "blue", "skyblue", "green3")
 
 # get thresholds for extreme-valued pixels
 th <- apply(acq[,,c("black", "grey")], 3, function(im) {
@@ -101,7 +103,7 @@ th <- apply(acq[,,c("black", "grey")], 3, function(im) {
       bright = med + (65535 - med) / 4, v.bright = med + (65535 - med) / 2)
 })
 
-px <- rbind(data.frame(edge.px(acq, edge.width = 40), type = "edge"),
+px.org <- rbind(data.frame(edge.px(acq, edge.width = 40), type = "edge"),
             data.frame(no.response(bright.image = acq[,,"grey"], dark.image = acq[,,"black"]), type = "no.resp"),
             data.frame(which(acq[,,"black"] == 65535, arr.ind = T), type = "hot"),
             data.frame(which(acq[,,"grey"] == 0, arr.ind = T), type = "dead"),
@@ -121,11 +123,11 @@ px <- rbind(data.frame(edge.px(acq, edge.width = 40), type = "edge"),
             data.frame(which(md[, , "grey"] < -1200, arr.ind = T), type = "l.dim"))
 
 Cat <- c("no.resp", "dead", "hot", "v.bright", "bright", "line.b", "edge", "l.bright", "line.d", "screen.spot", "v.dim", "dim", "l.dim")
-px$type <- ordered(px$type, levels = Cat)
+px.org$type <- ordered(px.org$type, levels = Cat)
 
-px <- px[order(px$type),]
-px <- px[!duplicated(px[,1:2]),]
-px <- px[!px$type %in% c("screen.spot"),]
+px.org <- px.org[order(px.org$type),]
+px.org <- px.org[!duplicated(px.org[,1:2]),]
+px.org <- px.org[!px.org$type %in% c("screen.spot"),]
 
 sc.pad <- array(dim = dim(acq[,,1]))
 sc.pad[3:1998, 33:2028] <- sc[,,12]
@@ -154,6 +156,121 @@ focal.plot(acq[,,"black"], c(119, 1511) + c(2, 32))     # locally bright in blac
 focal.plot(acq[,,"black"], c(90, 1532) + c(2, 32))      # locally bright in black (+ 9942)
 
 md[90+2, 1532+32,]
+
+####################################################################################################
+
+# QUALITATIVE THRESHOLDING                                                                      ####
+
+th <- apply(acq, 3, function(im) {
+    med <- median(im, na.rm = T)
+    c(v.dim = med * 0.5, dim = med * 0.75,
+      bright = med + (65535 - med) / 4, v.bright = med + (65535 - med) / 2)
+})
+
+# identify points that are too bright in black image
+bright <- which(acq[,,"black"] > th["bright", "black"], arr.ind = T)
+plot(bright, pch = 20)
+
+# then points that are too bright in grey image
+warm <- which(acq[,,"grey"] > th["bright", "grey"] & acq[,,"black"] <= th["bright", "black"], arr.ind = T)
+points(warm, col = "red")
+
+# then points with non-linear response (high residual) in white image - excluding edges
+{
+    # data frame of all variables for active region of image
+    df <- setNames(data.frame(melt(acq[,,"black"]), 
+                              melt(acq[,,"grey"]),
+                              melt(acq[,,"white"]))[,c("X1", "X2", "value", "value.1", "value.2")],
+                   nm = c("x", "y", "b", "g", "w"))
+    df <- df[findInterval(df$x, c(40.5, 2008.5)) == 1 & findInterval(df$y, c(40.5, 2008.5)) == 1,]
+    df <- df[!is.na(df$b),]
+    
+    
+    # fit linear model
+    w.lm <- rlm(w ~ b * g, data = df)
+    
+    df$fv <- w.lm$fitted.values
+    df$res <- w.lm$residuals
+    
+    smoothScatter(df$fv, df$res, ylim = c(-3000, 3000), colramp = colorRampPalette(c(NA, "gold", "red", "blue"), space = "Lab"))
+}
+nonlinear <- setNames(df[abs(df$res) > 1000, 1:2], nm = c("row", "col"))
+points(nonlinear, col = "cyan3")
+
+# then points that are non-responsive (same in black & grey)
+stuck <- which(acq[,,"grey"] - acq[,,"black"] < 500 & acq[,,"grey"] > acq[,,"black"], arr.ind = T)
+{
+    diffs <- acq[,,"grey"] - acq[,,"black"]
+    hist(diffs, breaks = "fd", ylim = c(0,30))
+    abline(v = 500, col = "red", lty = 2)
+    summary(c(diffs))
+    
+
+    smoothScatter(acq[,,"black"][px], acq[,,"grey"][px], nrpoints = Inf)
+    smoothScatter(acq[,,"black"][px], acq[,,"white"][px], nrpoints = Inf)
+    
+    abline(0,1, col = adjustcolor("darkred", alpha = 0.4), lty = 3)
+    
+    sum(acq[,,"grey"][px] > 50000 & acq[,,"black"][px] > 60000)
+}
+points(stuck, pch = 15, col = "purple")
+
+# other points that are dim in black images
+dim <- which(acq[,,"black"] < th["dim", "black"], arr.ind = T)
+cool <- which(acq[,,"grey"] < th["dim", "grey"], arr.ind = T)
+
+# bright / dim lines as usual - don't bother reworking
+
+# gather all bad pixels
+px.qual <- rbind(data.frame(bright, type = "bright"),
+                 data.frame(warm, type = "warm"),
+                 data.frame(nonlinear, type = "nonlinear"),
+                 #data.frame(cool, type = "cool"),
+                 data.frame(stuck, type = "stuck"),
+                 data.frame(dim, type = "dim"))
+
+
+px.qual$type <- ordered(px.qual$type, levels = c("bright", "warm", "stuck", "nonlinear", "dim", "cool"))
+px.qual <- px.qual[order(px.qual$type),]
+px.qual <- px.qual[!duplicated(px.qual[,1:2]),]
+
+qual.cols <- c("magenta3", "orange",  "blue", "cyan3", "forestgreen", "green")
+plot(px.qual[,1:2], pch = 20, col = qual.cols[px.qual$type])
+
+saveRDS(px.qual, paste0(fpath, "bpm-qualitative.rds"))
+
+bp <- merge(px.org, px.qual, by = c(1,2), all = T, suffix = c(".org", ".qual"))
+
+table(bp$type.org, bp$type.qual, useNA = "ifany")
+
+sc.qual <- sc.org <- sc <- 60000 * (acq[,,"grey"] - acq[,,"black"]) / (acq[,,"white"] - acq[,,"black"])
+sc.qual[is.infinite(sc.qual)] <- 0; sc.org[is.infinite(sc.org)] <- 0
+
+# ignore defective pixels
+sc.qual[as.matrix(px.qual[,1:2])] <- NA
+sc.org[as.matrix(px.org[,1:2])] <- NA
+
+# ignore edges
+smoothScatter(acq[,,"black"][41:2008,41:2008], sc.qual[41:2008,41:2008], asp = T, nrpoints = 0, xlim = c(4000,9000),
+              colramp = colorRampPalette(c(NA, "gold", "red", "blue"), space = "Lab"))
+points(acq[,,"black"][as.matrix(px.qual[,1:2])], sc[as.matrix(px.qual[,1:2])],
+       pch = ".", cex = 2, col = qual.cols[px.qual$type])
+
+smoothScatter(acq[,,"black"][41:2008,41:2008], sc.org[41:2008,41:2008], asp = T, nrpoints = 0, xlim = c(4000,9000),
+              colramp = colorRampPalette(c(NA, "gold", "red", "blue"), space = "Lab"))
+points(acq[,,"black"][as.matrix(px.org[,1:2])], sc[as.matrix(px.org[,1:2])],
+       pch = ".", cex = 2, col = org.cols[px.org$type])
+points(acq[,,"black"][as.matrix(px.qual[,1:2])],
+       sc[as.matrix(px.qual[,1:2])],
+       cex = 0.3, col = adjustcolor("green3", alpha = 0.3))
+
+####################################################################################################
+
+# DARK-ADJUSTED ERRORS                                                                          ####
+
+# identify errors in black images as usual
+
+# then subtract black image from grey and look for errors in the resulting image
 
 ####################################################################################################
 
@@ -705,7 +822,6 @@ fpath <- "./Notes/WV-prediction/fig/"
     df.xt$md.b <- md[,,"black"][as.matrix(df.xt[,1:2])]
     df.xt$md.g <- md[,,"grey"][as.matrix(df.xt[,1:2])]
 }
-
 
 
 

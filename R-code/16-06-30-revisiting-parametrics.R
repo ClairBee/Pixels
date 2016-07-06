@@ -1,6 +1,6 @@
 
 library("IO.Pixels"); library("CB.Misc")
-acq <- import.acq("./Image-data/160430")
+acq <- readRDS("./02_Objects/images/pwm-160430.rds")
 
 load.pixel.means.2048()
 
@@ -215,3 +215,85 @@ pdf("./Plots/Quadratic-trend-models.pdf"); {
     dev.off()
 }
 
+####################################################################################################
+
+# DARK IMAGE ADJUSTMENT                                                                         ####
+
+# fit quadratic trend to black image
+quad.lm.b <- rlm(gv ~ x + y + I(x^2) + I(y^2) + I(x *y),
+                 setNames(melt(acq[,,"black"]), nm = c("x", "y", "gv")))
+
+quad.fitted <- quad.res <- array(dim = dim(acq[,,"black"]))
+quad.fitted[which(!is.na(acq[,,"black"]), arr.ind = T)] <- quad.lm.b$fitted.values
+quad.res[which(!is.na(acq[,,"black"]), arr.ind = T)] <- quad.lm.b$residuals
+
+# subtract black qt from grey image
+g.adj <- acq[,,"grey"] - quad.fitted
+pixel.image(g.adj)
+
+quad.lm.g <- rlm(gv ~ x + y + I(x^2) + I(y^2) + I(x *y),
+                 setNames(melt(g.adj), nm = c("x", "y", "gv")))
+
+quad.g.fitted <- quad.g.res <- array(dim = dim(acq[,,"black"]))
+quad.g.fitted[which(!is.na(acq[,,"black"]), arr.ind = T)] <- quad.lm.g$fitted.values
+quad.g.res[which(!is.na(acq[,,"black"]), arr.ind = T)] <- quad.lm.g$residuals
+
+pixel.image(quad.g.fitted)
+pixel.image(quad.g.res)
+
+# now fit linear gradient per subpanel
+{
+    sp <- array(quad.g.res, dim = c(128, 16, 1024, 2))
+    panel.lm <- array(dim = dim(sp))
+    coeffs <- c()
+    
+    for (ul in 1:2) {
+        for (p in 1:16) {
+            lm.fit <- rlm(gv ~ x + y,
+                          setNames(melt(sp[,p,,ul]), nm = c("x", "y", "gv")))
+            panel.lm[,p,,ul][which(!is.na(sp[,p,,ul]), arr.ind = T)] <- lm.fit$fitted.values
+            coeffs <- rbind(coeffs, coef(lm.fit))
+        }
+    }
+    panel.lm <- array(panel.lm, dim = c(2048, 2048))
+    panel.res <- quad.g.res - panel.lm
+    
+    pixel.image(panel.res)
+    pixel.image(panel.lm)
+    draw.panels.2048()
+}
+
+# alternatively, subtract black image directly & fit subpanels
+g.res <- acq[,,"grey"] - acq[,,"black"]
+pixel.image(g.res)
+  
+quad.lm.g.res <- rlm(gv ~ x + y + I(x^2) + I(y^2) + I(x *y),
+                 setNames(melt(g.res), nm = c("x", "y", "gv")))
+
+quad.g.fitted <- quad.g.res <- array(dim = dim(acq[,,"black"]))
+quad.g.fitted[which(!is.na(acq[,,"black"]), arr.ind = T)] <- quad.lm.g.res$fitted.values
+quad.g.res[which(!is.na(acq[,,"black"]), arr.ind = T)] <- quad.lm.g.res$residuals
+
+pixel.image(quad.g.fitted)
+pixel.image(quad.g.res)
+
+{
+    sp <- array(quad.g.res, dim = c(128, 16, 1024, 2))
+    panel.lm <- array(dim = dim(sp))
+    coeffs <- c()
+    
+    for (ul in 1:2) {
+        for (p in 1:16) {
+            lm.fit <- rlm(gv ~ x + y,
+                          setNames(melt(sp[,p,,ul]), nm = c("x", "y", "gv")))
+            panel.lm[,p,,ul][which(!is.na(sp[,p,,ul]), arr.ind = T)] <- lm.fit$fitted.values
+            coeffs <- rbind(coeffs, coef(lm.fit))
+        }
+    }
+    panel.lm <- array(panel.lm, dim = c(2048, 2048))
+    panel.res <- quad.g.res - panel.lm
+    
+    pixel.image(panel.res)
+    pixel.image(panel.lm)
+    draw.panels.2048()
+}  
