@@ -1,0 +1,47 @@
+\providecommand{\main}{../..}					% fix bibliography path
+\documentclass[../../IO-Pixels.tex]{subfiles}
+    
+   
+%======================================================================
+
+\begin{document}
+
+\section{Introduction}
+
+%----------------------------------------------------
+\begin{outline}
+Motivation in general terms: detector decay
+
+Specific application: Detectors for QC in 3D printing 
+
+Relevance of this work also for other applications: astronomy, medical imaging,...
+\\
+
+Focus of this paper: malfunctioning pixels
+
+\\
+Questions (from an applied perspective):
+
+- Where do bad (malfunctioning) pixels occur? Are some areas of the detector more likely to have damage?
+
+- Are there patterns? Is a bad pixels more or less likely to occur near another bad pixel?
+
+- Are there different types of bad pixels such as dead, noisy, dim, not etc?
+
+- How can this be classified into states?
+
+- What are typical transitions between states? 
+
+- What are potential causes triggering the transitions? 
+
+- How can we detect what caused transitions?
+\end{outline}
+%----------------------------------------------------
+
+\addfigure{Images of detector damage: old data showing blocked lines, new data showing bright pixels/clusters with shading correction (ideal if we can get images from new detector, showing that defects exist even in brand new panel)}
+
+Investigation of defective pixel development \& behaviour is based on a set of calibration images at various power settings: `black' images (often also referred to as `dark images' in the literature) with no x-ray exposure; `grey' images with a mid-range level of exposure (add power settings and location of GV peak); and `white' images with a high exposure. 20 exposures are taken at each power setting, and the mean and standard deviation of each sequence used to describe the behaviour of the pixels. These are the same sets of calibration images specified in the detector manual \nb{are they? check this!}, and are a natural candidate for the study of pixel behaviour, since these sets of images can also be used to create the shading-correction mask applied in image processing. 
+
+Much of the existing literature on defective pixels focusses on correction, glossing over the process of identifying and classifying bad pixels, referring instead to the bad pixel map provided with each device.  Information on detection of defective pixels are generally confined to the study of astronomy \nb{cite Hubble papers}, which presents a different set of challenges: astronomical imaging depends primarily on exposure time, lacking the added complication of an x-ray source. In addition, defective pixels may be less problematic in astronomy, where multiple exposures at slightly different locations may be combined (dithered?) to obtain a single noise-reduced image; in x-ray imaging, this is not generally a possibility, particularly in medical applications where a key consideration is to expose the patient to the lowest possible dose of radiation, or in CT reconstruction, where any defective pixels will be translated throughout the body of the reconstructed object.
+
+\end{document}

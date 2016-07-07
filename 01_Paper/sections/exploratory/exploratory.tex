@@ -1,0 +1,45 @@
+\providecommand{\main}{../..}					% fix bibliography path
+\documentclass[\main/IO-Pixels.tex]{subfiles}
+   
+\graphicspath{{\main/fig/exploratory/}}
+%======================================================================
+
+\begin{document}
+
+\section{Exploratory analysis of experimental data}
+%----------------------------------------------------
+\begin{outline}
+Means: overall and spatial distribution
+
+SDs: overall and spatial distribution
+
+Subpanels
+
+Refined definition of states in the experimental data; thresholds
+
+\\
++ Screen shots
+
++ Edge cropping
+
++ Parametric description of panel (esp. black images)
+
++ Comparison of images from several detectors
+\end{outline}
+%----------------------------------------------------
+
+\subsection{Description of data}
+\addfigure{Images of black, grey \& white pixelwise means}
+\addfigure{Images of black/grey/white pixelwise SD? Or scatterplot vs pixelwise mean?}
+\addfigure{Images of quadratic trend model for black, grey \& white (grey \& white with dark image removed)}
+\addfigure{Images of linear gradients across subpanels}
+\addfigure{Boxplots of values in each subpanel?}
+
+\subsection{Other considerations: screen spots and edge effects}
+\addfigure{Plot of white image with screen spots circled; shading correction with screen spots circled; screen spots from successive acquisitions overplotted}
+
+\subsection{Thresholding \& definitions of bad pixels}
+
+\addfigure{Histograms showing thresholds of extreme-valued pixels}
+\addfigure{Linear regression of white vs black \& grey images, showing thresholding by residuals}
+\end{document}

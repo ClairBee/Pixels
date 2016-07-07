@@ -5,6 +5,12 @@
 \usetikzlibrary{automata, positioning, shapes.multipart, arrows}
 
 %----------------------------------------------------------------------
+% file locations
+
+\providecommand{\main}{.}					% set folder head, relative to which files can be located
+
+
+%----------------------------------------------------------------------
 % reformat section headers to be smaller \& left-aligned
 \titleformat{\section}
 	{\normalfont\bfseries}
@@ -16,7 +22,7 @@
 	
 %----------------------------------------------------------------------
 % SPECIFY BIBLIOGRAPHY FILE & FIELDS TO EXCLUDE
-%\addbibresource{bibfile.bib}
+\addbibresource{\main/Pixel-refs.bib}
 %\AtEveryBibitem{\clearfield{url}}
 %\AtEveryBibitem{\clearfield{doi}}
 %\AtEveryBibitem{\clearfield{isbn}}
@@ -24,19 +30,50 @@
 
 %----------------------------------------------------------------------
     
+% temporary environment to add outline of paper structure
+\newenvironment{outline}
+    {\ttfamily
+    \color{MidnightBlue}
+    \begin{center}\begin{footnotesize}
+    \begin{tabular}{|p{0.9\textwidth}|}
+    \hline\\
+    }
+    {
+    \\\\\hline
+    \end{tabular} 
+    \end{footnotesize}
+    \end{center}
+    }
+    
+%----------------------------------------------------------------------
+
+% temporary command: note to self to insert figure
+\newcommand{\addfigure}[1]{
+	\vspace{-5pt}
+	\begin{footnotesize}\begin{center}
+	\textcolor{RubineRed}{
+		\begin{tabular}{p{0.01\textwidth}p{0.95\textwidth}}
+			$\circ$ & \texttt{#1}
+		\end{tabular}
+	}
+	\end{center}\end{footnotesize}
+	\vspace{-10pt}
+}
 %======================================================================
 
 \begin{document}
 
-\subfile{./sections/state-model/state-model.tex}
 
-\section{Spatial distribution of pixel defects}
 
-\subsection{Distribution of defective pixel types across subpanels}
+\subfile{./sections/intro/intro.tex}
+\subfile{./sections/tech-data/tech-data.tex}
+\subfile{./sections/pilot/pilot.tex}
+\subfile{./sections/exploratory/exploratory.tex}
+\subfile{./sections/spatial/spatial.tex}
+\subfile{./sections/temporal/temporal.tex}
+\subfile{./sections/discussion/discussion.tex}
 
-\subsection{Distribution of defective pixel types as function of distance from centre}
 
-\subsection{Distribution of features across subpanels}
 %\newpage
 %\printbibliography
 \end{document}

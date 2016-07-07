@@ -1,3 +1,4 @@
+\providecommand{\main}{../..}					% fix bibliography path
 \documentclass[../../IO-Pixels.tex]{subfiles}
     
    
@@ -5,20 +6,33 @@
 
 \begin{document}
 
-\section{Spatial distribution of defective pixels}
+\section{Spatial analysis}
+%----------------------------------------------------
+\begin{outline}
+Spatial statistics 101 (point patterns, F-, G-, K-functions etc)
 
-\subsection{Spatial distribution of all defective pixels}
+Parametric model basics
 
-\todo{CSR for each pixel type: do distributions differ?}
+Parametric model to adjust for spatial inhomogeneity
 
-\todo{Are larger features more likely to develop in some regions than in others?}
+CSR testing using K-functions etc
 
-\todo{$\chi^2$ test for independence across subpanels}
+Patterns: singletons, pairs, clusters, lines, bright lines etc
 
-\subsection{Spatial distribution of screen spots}
+\\
+Above 
 
-\todo{Are spots more likely to occur on certain regions of the screen?}
+- for all malfunctioning pixels and 
 
-\todo{Are spots more likely to occur after certain types of usage?}
+- for subsets (dead, hot, dim etc)
 
+\\
+Modeling: e.g. Neyman-Scott type, Matern, Thomas... models
+
+Intermediate discussion
+\end{outline}
+%----------------------------------------------------
+
+\addfigure{Show G-, F- and normed K-functions for bad pixel map incl. all pixels, and feature roots only (cluster \& line bodies removed)}
+\addfigure{Model spatial inhomogeneity as quadratic trend \& as kernel density. Show K-functions of both}
 \end{document}
