@@ -1,7 +1,7 @@
 \providecommand{\main}{../..}					% fix bibliography path
 \documentclass[\main/IO-Pixels.tex]{subfiles}
    
-\graphicspath{{\main/fig/exploratory/}}
+\graphicspath{{\main/fig/exploratory/}}			% fix graphics path
 %======================================================================
 
 \begin{document}
@@ -36,7 +36,29 @@ Refined definition of states in the experimental data; thresholds
 \addfigure{Boxplots of values in each subpanel?}
 
 \subsection{Other considerations: screen spots and edge effects}
-\addfigure{Plot of white image with screen spots circled; shading correction with screen spots circled; screen spots from successive acquisitions overplotted}
+%----------------------------------------------------
+% screen spots in shading correction & shifting in successive images
+\begin{figure}[!ht]
+\caption{Screen spots visible in the images acquired on 14-10-09 and successive dates (spots are circled for ease of identification)}
+\centering
+
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{White pixelwise mean image}
+\includegraphics[scale=0.3]{pwm-image-141009-white}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{White shading-corrected image}
+\includegraphics[scale=0.3]{sc-image-141009-white}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Shift in apparent position}
+\includegraphics[scale=0.3]{spots-overplotted}
+\end{subfigure}
+\end{figure}
+%----------------------------------------------------
+Screen spots that have appeared since the previous acquisition can be easily identified by subtracting the new grey or white image from the previous acquisition. However, the `shadow' cast by the spots on the detector will shift slightly in different acquisitions due to small differences in the position or angle of the x-ray source, so spots need to be identified and corrected for at each acquisition.
 
 \subsection{Thresholding \& definitions of bad pixels}
 

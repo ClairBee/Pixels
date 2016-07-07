@@ -30,8 +30,11 @@
 
 %----------------------------------------------------------------------
     
+% UPDATE TO SWITCH ON & OFF USING BOOLEAN FLAG
+
 % temporary environment to add outline of paper structure
 \newenvironment{outline}
+%    {\comment}				# uncomment & comment everything else out to hide outline structure
     {\ttfamily
     \color{MidnightBlue}
     \begin{center}\begin{footnotesize}
@@ -48,6 +51,7 @@
 %----------------------------------------------------------------------
 
 % temporary command: note to self to insert figure
+% comment out contents to hide
 \newcommand{\addfigure}[1]{
 	\vspace{-5pt}
 	\begin{footnotesize}\begin{center}
@@ -59,11 +63,11 @@
 	\end{center}\end{footnotesize}
 	\vspace{-10pt}
 }
+
+
 %======================================================================
 
 \begin{document}
-
-
 
 \subfile{./sections/intro/intro.tex}
 \subfile{./sections/tech-data/tech-data.tex}
