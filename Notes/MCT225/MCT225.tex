@@ -1,0 +1,55 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{/home/clair/Documents/mystyle}
+
+%----------------------------------------------------------------------
+% reformat section headers to be smaller \& left-aligned
+\titleformat{\section}
+	{\normalfont\bfseries}
+	{\thesection}{1em}{}
+	
+\titleformat{\subsection}
+	{\normalfont\bfseries}
+	{\thesubsection}{1em}{}
+	
+%----------------------------------------------------------------------
+
+%\addtolength{\topmargin}{-0.5cm}
+%\addtolength{\textheight}{1cm}
+
+    
+%======================================================================
+
+\begin{document}
+
+\section{New detector data: MCT225}
+
+Images from detector MCT225 at Nikon. Panel is different model (Perkin Elmer AN 1620 CS), consisting of 16 subpanels of 128 columns, rather than 32 subpanels in the WMG detector. The detector is much less sensitive than the WMG machine, requiring double the power to obtain a similar dynamic range.
+
+\resizebox{\textwidth}{!}{\csvautotabular{./fig/Image-summary.csv}}
+
+%----------------------------------------------------------------------
+% Images of pixelwise means
+\begin{figure}[!ht]
+\caption{Pixelwise means from MCT225}
+\centering
+
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Black}
+\includegraphics[scale=0.3]{./fig/pw-mean-black}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{Grey}
+\includegraphics[scale=0.3]{./fig/pw-mean-grey}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{White}
+\includegraphics[scale=0.3]{./fig/pw-mean-white}
+\end{subfigure}
+\end{figure}
+%----------------------------------------------------------------------
+
+A damaged area is visible in the middle of the panel, where the white and grey responses are much lower than expected. A number of dark columns can also be clearly seen.
+
+\end{document}
