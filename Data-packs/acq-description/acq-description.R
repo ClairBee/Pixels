@@ -2,14 +2,14 @@
 library("IO.Pixels"); library("CB.Misc")
 
 fpath <- "./Data-packs/acq-description/fig/"
-acq <- readRDS("./02_Objects/images/pwm-141009.rds")
 #md <- readRDS("./02_Objects/med-diffs/md-160430.rds")
 
 .median <- hijack(median, na.rm = TRUE)
 
 Cat.cols <- c("purple", "black", "magenta3", "red", "orange", "yellow", NA, "gold", "grey", NA, "blue", "skyblue", "green3")
 
-write("Images acquired on 16-04-30, main detector", paste0(fpath, "title.txt"))
+acq <- readRDS("./02_Objects/images/pwm-131122.rds")
+write("Old data: images acquired on 13-11-22, main detector", paste0(fpath, "title.txt"))
 
 ####################################################################################################
 
@@ -19,6 +19,8 @@ write("Images acquired on 16-04-30, main detector", paste0(fpath, "title.txt"))
 # "./02_Objects/images/pwm-160430.rds"; "Images acquired on 16-04-30, main detector"
 # "./02_Objects/old-data/pwm-131122.rds"; "Old data: images acquired on 13-11-22, main detector"
 # "./02_Objects/old-data/pwm-140128.rds"; "Old data after refurbishment: images acquired on 14-01-28, main detector"
+# "./02_Objects/images/pwm-MCT225.rds"; "Images acquired on 16-07-02, Aylesbury detector MCT225"
+# "./02_Objects/images/pwm-160705.rds"; "Images acquired on 16-07-05, main detector"
 
 ####################################################################################################
 

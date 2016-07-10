@@ -27,6 +27,7 @@ Refined definition of states in the experimental data; thresholds
 + Comparison of images from several detectors
 \end{outline}
 %----------------------------------------------------
+Unless stated otherwise, image plots are shaded to highlight changes in value close to the mean; extreme values are less finely binned.
 
 \subsection{Description of data}
 \addfigure{Images of black, grey \& white pixelwise means}
@@ -58,6 +59,8 @@ Refined definition of states in the experimental data; thresholds
 \end{subfigure}
 \end{figure}
 %----------------------------------------------------
+\addfigure{Need to decide how to handle screen spots. Do they need to be removed from shading-corrected image (as suggested by plot above) or is the shading correction still effective enough that we can afford to ignore them (as suggested by the actual approach taken)? In SC image for 141009, 99.9\% of values lie between 19624 and 20225 (range of 600px)}
+
 Screen spots that have appeared since the previous acquisition can be easily identified by subtracting the new grey or white image from the previous acquisition. However, the `shadow' cast by the spots on the detector will shift slightly in different acquisitions due to small differences in the position or angle of the x-ray source, so spots need to be identified and corrected for at each acquisition.
 
 \subsection{Thresholding \& definitions of bad pixels}

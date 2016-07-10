@@ -56,6 +56,12 @@ im.160430 <- import.acq("/home/clair/Documents/Pixels/Image-data/160430")
 
 saveRDS(im.160430, "./02_Objects/images/acq-160430.rds")
 
+im.MCT225 <-  import.acq("/home/clair/Documents/Pixels/Image-data/MCT225")
+saveRDS(im.MCT225, "./02_Objects/images/acq-MCT225.rds")
+
+im.160705 <-  import.acq("/home/clair/Documents/Pixels/Image-data/160705")
+saveRDS(im.160705, "./02_Objects/images/acq-160705.rds")
+
 ####################################################################################################
 
 # CONVERT EXISTING IMAGES TO SAME FORMAT                                                        ####

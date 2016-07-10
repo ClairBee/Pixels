@@ -329,3 +329,23 @@ points(xt[xt$acq.date %in% acq.datetimes(), "acq.date"],
        pch = 21, bg = "gold", col = "orange")
 
 ####################################################################################################
+
+####################################################################################################
+
+# REGION OF INTEREST                                                                            ####
+
+targ <- setNames(xtek[, c("XraySettings.Settings.kV", "XraySettings.Settings.uA", 
+                 "ImagingSettings..attrs.exposure",
+                 "VolumeOfInterest.XStart", "VolumeOfInterest.XEnd", 
+                 "VolumeOfInterest.YStart", "VolumeOfInterest.YEnd",
+                 "VolumeOfInterest.ZStart", "VolumeOfInterest.ZEnd",
+                 "Projections")],
+                 nm = c("kV", "uA", "exp", "x.start", "x.end", "y.start", "y.end", "z.start", "z.end", "proj"))
+
+targ$x.mid <- (targ$x.start + targ$x.end) / 2
+targ$y.mid <- (targ$y.start + targ$y.end) / 2
+targ$z.mid <- (targ$z.start + targ$z.end) / 2
+
+plot(targ$x.mid, targ$y.mid, pch = 20, xlim = c(0,2048), ylim = c(0,2048))
+plot(targ$x.mid, targ$z.mid, pch = 20, xlim = c(0,2048), ylim = c(0,2048))
+plot(targ$y.mid, targ$z.mid, pch = 20, xlim = c(0,2048), ylim = c(0,2048))

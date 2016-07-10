@@ -19,10 +19,8 @@ md.160430 <- readRDS("./02_Objects/med-diffs/md-160430.rds")
 # FUNCTIONS TO GET VARIOUS BAD PIXEL LISTS                                                      ####
 
 # basic thresholding (incl. locally bright/dim px)
-basic.bpx <- function(dt) {
-    dt <- toString(dt)
-    acq <- eval(parse(text = paste0("acq.", dt)))
-    
+basic.bpx <- function(acq) {
+
     # calculate thresholds
     th <- apply(acq[,,c("black", "grey")], 3, function(im) {
         med <- median(im, na.rm = T)

@@ -23,7 +23,7 @@
 
 \section{New detector data: MCT225}
 
-Images from detector MCT225 at Nikon. Panel is different model (Perkin Elmer AN 1620 CS), consisting of 16 subpanels of 128 columns, rather than 32 subpanels in the WMG detector. The detector is much less sensitive than the WMG machine, requiring double the power to obtain a similar dynamic range.
+Images from detector MCT225 at Nikon. Panel is different model (Perkin Elmer AN 1620 CS), consisting of 16 subpanels of 128 columns, rather than 32 subpanels in the WMG detector; this means that the panel has no horizontal midline, and behaves like the lower panel of the WMG detector. The detector is less sensitive than the WMG panel, requiring double the power to obtain a similar dynamic range, and its active pixels (excluding those covered by dark lines) have a lower standard deviation than we might expect, given that the mean value of MCT225 is higher than that of the WMG panel.
 
 \resizebox{\textwidth}{!}{\csvautotabular{./fig/Image-summary.csv}}
 
@@ -50,6 +50,120 @@ Images from detector MCT225 at Nikon. Panel is different model (Perkin Elmer AN 
 \end{figure}
 %----------------------------------------------------------------------
 
+
+%----------------------------------------------------------------------
+% Histograms showing thresholds of extreme values (with counts)
+\begin{figure}[!ht]
+\caption{Histograms of pixelwise mean values in each image, with thresholds for globally extreme pixels marked. The lower histogram is cropped to show frequencies of 30 and lower. \\
+A much smaller number of globally bright pixels occur in this detector than in the WMG panel (only 10px have a grey value greater than 10000 in the black images here, compared to 961 in the WMG detector on 16-04-30)}
+\centering
+
+\begin{subfigure}[t]{0.3\textwidth}
+\caption{Black images}
+\includegraphics[scale=0.3]{./fig/MCT225-hist-black}
+
+\includegraphics[scale=0.3]{./fig/MCT225-hist-black-cropped}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.3\textwidth}
+\caption{Grey images}
+\includegraphics[scale=0.3]{./fig/MCT225-hist-grey}
+
+\includegraphics[scale=0.3]{./fig/MCT225-hist-grey-cropped}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.3\textwidth}
+\caption{White images}
+\includegraphics[scale=0.3]{./fig/MCT225-hist-white}
+
+\includegraphics[scale=0.3]{./fig/MCT225-hist-white-cropped}
+\end{subfigure}
+\end{figure}
+%----------------------------------------------------------------------
+
+
+
 A damaged area is visible in the middle of the panel, where the white and grey responses are much lower than expected. A number of dark columns can also be clearly seen.
 
+\section{New features in MCT225 data}
+
+%----------------------------------------------------------------------
+% Ends of double lines
+\begin{figure}[!ht]
+\caption{\textbf{Double-column defects:} all run from a left-facing `hook' to the upper panel edge. Based on this, we assume that readout amplifiers are at the bottom edge of the panel; based on the gradient across each subpanel, the amplifiers are most likely in the bottom-right corners.\\
+\footnotesize{In each case, one of the columns has no x-ray response (dark blue). However, the secondary line may appear on either side, and may be either dim (blue or green), or bright (yellow). In addition, extending from the end of the blocked column to the lower panel edge is a slightly elevated column, between 150 and 250 grey-values above the neighbouring column. It is not clear whether there is a relationship between distance from panel edge and brightness of column offset.}}
+\centering
+
+\begin{subfigure}[t]{0.19\textwidth}
+\caption{Column 256/7, \\row 1880} % 130gv high
+\centering
+\includegraphics[scale=0.5]{./fig/line-end-256.pdf}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.19\textwidth}
+\caption{Column 448/9, \\row 1137} % 260gv offset
+\centering
+\includegraphics[scale=0.5]{./fig/line-end-448.pdf}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.19\textwidth}
+\caption{Column 882/3,\\ row 1119} % 150gv offset
+\centering
+\includegraphics[scale=0.5]{./fig/line-end-882.pdf}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.19\textwidth}
+\caption{Column 1691/2, \\ row 1359} % 200gv offset
+\centering
+\includegraphics[scale=0.5]{./fig/line-end-1691.pdf}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.19\textwidth}
+\caption{Column 1926/7, \\ row 1627} % 60gv offset
+\centering
+\includegraphics[scale=0.5]{./fig/line-end-1926.pdf}
+\end{subfigure}
+
+
+\end{figure}
+%----------------------------------------------------------------------
+
+%----------------------------------------------------------------------
+% Ring-shaped artefacts
+\begin{figure}[!ht]
+\caption{\textbf{Ring-shaped clusters: } small, oval or circular features with an edge of defective pixels, and maybe a second, concentric layer. May be either bright or dim. Crucially, pixels inside the outer rim appear normal (as distinct from a screen spot, which has a smooth gradient from every edge to its darkest point).}
+\centering
+
+\begin{subfigure}[t]{0.19\textwidth}
+\caption{Column 892, \\row 345}
+\centering
+\includegraphics[scale=0.5]{./fig/ring-cluster-892.pdf}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.19\textwidth}
+\caption{Column 356, \\row 1829}
+\centering
+\includegraphics[scale=0.5]{./fig/ring-cluster-356.pdf}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.19\textwidth}
+\caption{Column 1208, \\row 1955}
+\centering
+\includegraphics[scale=0.5]{./fig/ring-cluster-1208.pdf}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.19\textwidth}
+\caption{Column 105, \\row 640}
+\centering
+\includegraphics[scale=0.5]{./fig/ring-cluster-105.pdf}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.19\textwidth}
+\caption{Column 236, \\row 271}
+\centering
+\includegraphics[scale=0.5]{./fig/ring-cluster-236.pdf}
+\end{subfigure}
+
+\end{figure}
+%----------------------------------------------------------------------
 \end{document}

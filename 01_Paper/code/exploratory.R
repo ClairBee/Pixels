@@ -56,3 +56,5 @@ jpeg(paste0(fpath, "spots-overplotted.jpg")); {
            legend = sapply(dimnames(pw.m)[[4]][1:3], fancy.date))
     dev.off()
 }
+
+####################################################################################################

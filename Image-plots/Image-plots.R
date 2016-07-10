@@ -3,15 +3,22 @@ library("IO.Pixels"); library("CB.Misc")
 
 load.pixel.means()
 
+pw.m <- abind(sapply(c("130613", "130701", "131002", "131122", "140128", "MCT225"), 
+                     function(nm) readRDS(paste0("./02_Objects/images/pwm-", nm, ".rds")), 
+                     simplify = F),
+              along = 4)
+
+setwd("~/Documents/Pixels/Image-plots/")
+
 ####################################################################################################
 
 # DIFFERENCES BETWEEN SUCCESSIVE ACQUISITIONS                                                   ####
 
-diff <- pw.m[,,, 2:12] - pw.m[,,, 1:11]
+diff <- pw.m[,,, 2:dim(pw.m)[[4]]] - pw.m[,,, 1:(dim(pw.m)[[4]]-1)]
 
 for (col in dimnames(diff)[[3]]) {
     for (dt in dimnames(diff)[[4]]) {
-        bmp(paste0("./Diffs-between-acquisitions/image-diffs-", col, "-", dt, ".bmp"), width = 1920, height = 1920)
+        bmp(paste0("./Diffs-between-acquisitions/image-diffs-", col, "-", dt, ".bmp"), width = 2048, height = 2048)
             pixel.image(diff[ , , col, dt], title = paste0(col, " - ", dt))
         dev.off()
     }
@@ -25,7 +32,7 @@ for (col in dimnames(diff)[[3]]) {
 
 for (col in dimnames(pw.m)[[3]]) {
     for (dt in dimnames(pw.m)[[4]]) {
-        bmp(paste0("./Pixelwise-means/pw-mean-", col, "-", dt, ".bmp"), width = 1920, height = 1920)
+        bmp(paste0("./Pixelwise-means/pw-mean-", col, "-", dt, ".bmp"), width = 2048, height = 2048)
         pixel.image(pw.m[ , , col, dt], title = paste0(col, " - ", dt))
         dev.off()
     }
@@ -35,17 +42,12 @@ for (col in dimnames(pw.m)[[3]]) {
 
 # SHADING-CORRECTED IMAGES                                                                      ####
 
-sc <- readRDS("../Other-data/Shading-corrections.rds")
-
-sc[which(is.infinite(sc))] <- 0
-
-for (dt in dimnames(sc)[[3]]) {
-        bmp(paste0("./Shading-corrections/shading-correction-", col, "-", dt, ".bmp"), width = 1920, height = 1920)
-        pixel.image(sc[ , , dt], title = paste0(col, " - ", dt))
+for (dt in dimnames(pw.m)[[4]]) {
+        bmp(paste0("./Shading-corrections/shading-correction-", dt, ".bmp"), width = 2048, height = 2048)
+        pixel.image(shading.corrected(pw.m[,,, dt]), title = paste0(col, " - ", dt))
         dev.off()
 }
 
-apply(sc, 3, mean, na.rm = T)
 
 ####################################################################################################
 
