@@ -54,13 +54,13 @@ import.acq <- function(acq.folder, subfolders = c("black", "grey", "white"), pan
 im.160430 <- import.acq("/home/clair/Documents/Pixels/Image-data/160430")
 
 
-saveRDS(im.160430, "./02_Objects/images/acq-160430.rds")
+saveRDS(im.160430, "./02_Objects/images/pwm-160430.rds")
 
 im.MCT225 <-  import.acq("/home/clair/Documents/Pixels/Image-data/MCT225")
-saveRDS(im.MCT225, "./02_Objects/images/acq-MCT225.rds")
+saveRDS(im.MCT225, "./02_Objects/stdevs/pwm-MCT225.rds")
 
 im.160705 <-  import.acq("/home/clair/Documents/Pixels/Image-data/160705")
-saveRDS(im.160705, "./02_Objects/images/acq-160705.rds")
+saveRDS(im.160705, "./02_Objects/images/pwm-160705.rds")
 
 ####################################################################################################
 
@@ -104,3 +104,42 @@ lapply(names(md.b), function(dt) {
     md[3: 1998, 33 : 2028,"grey"] <- md.g[[dt]]
     saveRDS(md, paste0("./02_Objects/med-diffs/md-", dt, ".rds"))
 })
+
+####################################################################################################
+
+# COMPARE POWER SETTINGS VS OUTPUT: HOW DOES THIS RELATIONSHIP RELATE TO DAMAGE LEVELS?
+
+library("IO.Pixels"); library("CB.Misc")
+
+load.pixel.means.2048()
+zz <- summarise.profiles()
+pw.m <- pw.m[,,, dimnames(pw.m)[[4]] %in% zz$date]
+zz <- zz[zz$date %in% dimnames(pw.m)[[4]],]
+
+zz <- setNames(cbind(zz,
+                     c(apply(pw.m[,,,], 4, apply, 3, mean, na.rm = T)), 
+                     apply(apply(pw.m, 3:4,  quantile, c(0.01, 0.25, 0.5, 0.75, 0.99), na.rm = T), 1, c)),
+               nm = c(colnames(zz), "mean", paste("q.", c(1, 25, 50, 75, 99), sep = "")))
+zz$col <- NA
+zz$col[zz$date %in% c("MCT225", "160430", "160705")] <- sort(rep(c("blue", "red", "green3"), 3))
+
+
+plot(zz$Power, zz$mean, pch = 20, cex = 0.8, ylim = c(0,65535),
+     col = zz$col)
+lines(c(apply(zz[!is.na(zz$col),], 1, function(r) as.numeric(c(r["Power"], r["Power"], NA)))),
+      c(apply(zz[!is.na(zz$col),], 1, function(r) as.numeric(c(r["q.1"], r["q.99"], NA)))))
+legend("bottomright", col = unique(zz$col[!is.na(zz$col)]), 
+       legend = unique(zz$date[!is.na(zz$col)]), pch = 20, bty = "n")
+
+od <- read.csv("./Other-data/Old-data/xml-summary.csv")
+
+od.df <- data.frame(date = od$X, batch = "white", od$kV, od$uA,
+                    CameraProperties.imageOffsetX = od$ImagingSettings.imageOffsetX,
+                    CameraProperties.imageOffsetY = od$ImagingSettings.imageOffsetY,
+                    CameraProperties.imageSizeX = od$ImagingSettings.imageSizeX,
+                    CameraProperties.imageSizeY = od$ImagingSettings.imageSizeY,
+                    CameraProperties..attrs.exposure = od$ImagingSettings..attrs.exposure,
+                    CameraProperties..attrs.gain = od$ImagingSettings..attrs.gain)
+
+rownames(od) <- c()
+####################################################################################################

@@ -218,3 +218,9 @@ df <- df[order(rownames(df)),]
  saveRDS(ff.corr, file = "./Other-data/Flat-field-corrected.rds")
  
  # need to write function to add single image batch to summary files                     ####
+ 
+ ############################################################################################
+ 
+ # IMPORT NON-STANDARD DATA                                                             ####
+ 
+ 

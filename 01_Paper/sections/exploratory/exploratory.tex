@@ -18,7 +18,11 @@ Subpanels
 Refined definition of states in the experimental data; thresholds
 
 \\
-+ Screen shots
++ Compare/assess `official' thresholds in manual: why do we need to change them? (eg. in 160430, pixels with gv 65535 in all images aren't picked up as defective because 150\% of white median value is > 65535) 
+
++ Other indicators of poor detector health: \\ \-\  \-\ - power in vs brightness out \\ \-\  \-\ - success of shading correction (eg. non-normality: 131122 vs 160430) \\\-\  \-\ - difference from parametric spot model (should have approx. circular response)
+
++ Screen spots
 
 + Edge cropping
 
@@ -27,7 +31,9 @@ Refined definition of states in the experimental data; thresholds
 + Comparison of images from several detectors
 \end{outline}
 %----------------------------------------------------
-Unless stated otherwise, image plots are shaded to highlight changes in value close to the mean; extreme values are less finely binned.
+Unless stated otherwise, image plots are shaded to highlight changes in value close to the mean, with extreme values less finely binned.
+
+Should probably formally limit our analysis to central region of detector (possibly as defined in manual?), since extreme edges are less likely to be of interest. Therefore can use median filtering etc without losing any data, since we are cropping the edge anyway.
 
 \subsection{Description of data}
 
@@ -68,6 +74,46 @@ Screen spots that have appeared since the previous acquisition can be easily ide
 
 \subsection{Thresholding \& definitions of bad pixels}
 
+Need to consider \& justify the local thresholding limit. Currently using 2x SD of image as limit for median differences, but would surely make more sense to use a pixelwise standard deviation? Or even a local standard deviation (eg. standard deviation within kernel region)
+
 \addfigure{Histograms showing thresholds of extreme-valued pixels}
 \addfigure{Linear regression of white vs black \& grey images, showing thresholding by residuals}
+
+\addfigure{Comparison of `official' classifications given in manual vs our thresholds}
+
+\subsection{Larger features}
+
+\subsubsection{Column defects}
+
+Data in a CCD panel is read out by transferring charge vertically along columns, \nb{CONFIRM} from the midline towards amplifiers situated at the outer edges of the panel. It is not uncommon for a single defective pixel (or a cluster of pixels) to affect the behaviour of other pixels in the same column. In the most severe cases, a column of dark pixels will occur (\autoref{fig:dark column}), appearing as a black line in the grey and white images. The affected pixels exhibit no response to the presence of the x-ray source, with similar values in the black, grey and white images. Close inspection of transects along dark columns in the grey and white images often shows a stepped or sawtooth pattern of values, increasing at regular intervals  \nb{try to include this in the example images}. This regularity suggests that no additional charge is being added from the pixels along the dark column, that the root defect is somehow blocking its transfer along the channel to the readout sensor \nb{ideally, could relate this gradient to y-gradient along subpanel, but this is a tall ask}.
+
+In less severe cases, a column may appear slightly brighter or dimmer than its neighbours, often by only a few hundred GV. Again, the offset from the neighbouring columns generally remains constant \nb{enumerate this: how many do remain constant, how many dip, how many appear in combination?}, suggesting that the offset may be the effect of additional charge being `leaked' or `drained' by the root defect, rather than a similar defect appearing in each pixel along the length of the column defect. Dim or dark columns have only been observed running from the root away from the amplifier, with bright columns only observed running from the root towards the amplifier \nb{CONFIRM}, with the two features often appearing in combination, on either side of a particularly bright or dark pixel (\autoref{fig:bright-dim column}).
+
+%----------------------------------------------------
+% transects along each type of column defect
+\begin{figure}[!ht]
+\caption{Pixel images and column transects showing known types of column defect in the dark images acquired on 13-11-22. In each transect, the defective column is shown in black, with an unaffected neighbouring column shown in blue for reference.}
+
+	\begin{subfigure}[t]{0.24\textwidth}
+	\caption{Dark pixels}
+	\label{fig:dark column}
+	\end{subfigure}
+		%
+	\begin{subfigure}[t]{0.24\textwidth}
+	\caption{Bright pixels}
+	\label{fig:bright column}
+	\end{subfigure}
+		%
+	\begin{subfigure}[t]{0.24\textwidth}
+	\caption{Slightly dim pixels}
+	\label{fig:dim column}
+	\end{subfigure}
+		%
+	\begin{subfigure}[t]{0.24\textwidth}
+	\caption{Bright and dim pixels}
+	\label{fig:bright-dim column}
+	\end{subfigure}
+	
+\end{figure}
+%----------------------------------------------------	
 \end{document}

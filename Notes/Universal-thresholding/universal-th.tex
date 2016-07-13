@@ -11,6 +11,8 @@
 	{\normalfont\bfseries}
 	{\thesubsection}{1em}{}
 	
+\addtolength{\topmargin}{-0.5cm}
+\addtolength{\textheight}{1cm}
 %----------------------------------------------------------------------
 
 \graphicspath{{./fig/}}
@@ -19,20 +21,27 @@
 	\begin{figure}[!ht]
 	\caption{#2}
 	
-	\begin{subfigure}[t]{0.32\textwidth}
+		%
+	\begin{subfigure}[t]{0.24\textwidth}
 	\caption{13-11-22 (pre refurb)}
-	\includegraphics[scale=0.3]{#1-131122}
+	\includegraphics[scale=0.22]{#1-131122}
 	\end{subfigure}
 		%
-	\begin{subfigure}[t]{0.32\textwidth}
-	\caption{MCT225 (Nikon panel)}
-	\includegraphics[scale=0.3]{#1-MCT225}
+	\begin{subfigure}[t]{0.24\textwidth}
+	\caption{14-01-28 (post refurb)}
+	\includegraphics[scale=0.22]{#1-140128}
 	\end{subfigure}
-			%
-	\begin{subfigure}[t]{0.32\textwidth}
+		%
+	\begin{subfigure}[t]{0.24\textwidth}
 	\caption{16-04-30 (WMG latest)}
-	\includegraphics[scale=0.3]{#1-160430}
+	\includegraphics[scale=0.22]{#1-160430}
 	\end{subfigure}
+		%
+	\begin{subfigure}[t]{0.24\textwidth}
+	\caption{MCT225 (Nikon panel)}
+	\includegraphics[scale=0.22]{#1-MCT225}
+	\end{subfigure}
+		%
 	
 	\end{figure}
 }
@@ -48,8 +57,16 @@
 
 \plotset{wlm-unclassified}{All identified defective pixels excluded}
 
+%======================================================================
+
+\plotset{bad-px-plot}{Plots of identified defective pixels}
+
 \plotset{sc-image-excl-defects}{Shading-corrected image, excluding all defective pixels identified}
 
 \plotset{sc-hist-excl-defects}{Histogram of shading-corrected image, excluding all defective pixels identified}
+
+\plotset{sc-mid-hist-excl-defects}{Histogram of median differences shading-corrected image, excluding all defective pixels identified}
+
+Remaining noise is most likely due to column defects not yet picked up.
 
 \end{document}
