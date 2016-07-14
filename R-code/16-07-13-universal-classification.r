@@ -8,6 +8,7 @@ df <- readRDS(paste0(fpath, "all-px.rds"))
 .smoothScatter <- hijack(smoothScatter, nrpoints = 0, 
                          colramp = colorRampPalette(c(NA, "gold", "red", "blue"), space = "Lab"),
                          xlab = "", ylab = "")
+.sd <- hijack(sd, na.rm = T)
 
 ####################################################################################################
 
@@ -103,22 +104,22 @@ pixel.plots <- function(cn, ...) {
 # CLASSIFY BAD PIXELS                                                                           ####
 
 # official classification
+df <- lapply(df, assign.official)
 {
-    df <- lapply(df, assign.official)
     pixel.plots("t.off", cex = 0.5)
     lapply(df, function(dd) table(dd$t.off))
 }
 
 # non-linear pixels (in grey image)
+df <- lapply(df, assign.glm)
 {
-    df <- lapply(df, assign.glm)
     pixel.plots("t.glm", cex = 0.5, col = "grey")
     lapply(df, function(dd) table(dd$t.glm, dd$t.off, useNA = "ifany"))
 }
 
 # new thresholds
+df <- lapply(df, assign.category)
 {
-    df <- lapply(df, assign.category)
     pixel.plots("type", cex = 0.5, col = "darkblue")
     lapply(df, function(dd) table(dd$t.glm, dd$type, useNA = "ifany"))
     lapply(df, function(dd) table(dd$t.off, dd$type, useNA = "ifany"))
@@ -177,7 +178,7 @@ pixel.plots <- function(cn, ...) {
     }
 }
 
-# classify lines in median-switched data
+# LINE CLASSIFICATION NEEDS TO BE SORTED OUT
 {
     plot.line.diffs <- function(ll, im) {
         dd <- ddply(data.frame(which(ll > 0, arr.ind = T)), .(x = row), summarise,
@@ -195,7 +196,9 @@ pixel.plots <- function(cn, ...) {
                   abline(v = 1024.5, col = "blue")
               })
     }
-    
+
+    # classify lines in median-switched data
+
     # 131122
     {
         ll.131122 <- find.lines(fixed[,,"grey", "131122"], dim.lines = F, threshold = 4000) + 
@@ -227,8 +230,60 @@ pixel.plots <- function(cn, ...) {
     points(pw.m[522,,"black", "131122"], pch = ".", col = c(NA, "red")[c(1:1024) %in% c(735:912) + 1])
 }
 
-# histogram of median-switched data
+####################################################################################################
+
+# EXTRACT & COMPARE BAD PIXEL MAPS                                                              ####
+
+# extract each type of bad pixel map
+bpx.off <- lapply(df, function(px) px[!is.na(px$t.off),])       # 8431, 686, 3281, 6280
+bpx.cb <- lapply(df, function(px) px[!is.na(px$type),])         # 9664, 97941, 3351, 7852 
+bpx.nl <- lapply(df, function(px) px[!is.na(px$t.glm),])        # 9004, 686, 2586, 3105
+
+# high shading correction median diff (300px brighter than neighbours)  # 9872, 680, 2296, 6681 
+bpx.scmd <- lapply(df, function(px) px[which(abs(px$sc.md) > 200),])
+
+pixel.plot(bpx.cb[[i]], cex = 0.4, col = "magenta3")
+points(bpx.off[[i]][,1:2], pch = 15, cex = 0.4, col = "blue")
+points(bpx.nl[[i]][,1:2], pch = 15, cex = 0.4, col = "green3")
+points(bpx.scmd[[i]][,1:2], pch = 15, cex = 0.4, col = "cyan3")
+
+# 131122: CB has more general scatter, NL pixks up some scatter & more points in corners
+# 140128: CB has lots of bright pixels (because of wide spread of values), others v similar
+# MCT225: broadly similar situation to 131122
+# 160430: all v. similar, general noisiness in detector forming circular pattern
+
+
+    
+####################################################################################################
+
+# QUADRAT TESTS                                                                                 ####
+
+apply(which(!is.na(fixed[,,"black", "140128"]), arr.ind = T), 2, range)
+
+im.params <- list("131122" = list(x.dim = c(25, 2024), y.dim = c(225, 1824),
+                                  x.panels = panel.edges()$x, y.panels = panel.edges()$y),
+                  "140128" = list(x.dim = c(1, 2000), y.dim =  c(29, 2028),
+                                  x.panels = panel.edges()$x, y.panels = panel.edges()$y),
+                  "MCT225" = list(x.dim = c(25, 2024), y.dim =  c(25, 2024),
+                                  x.panels = panel.edges()$x, y.panels = range(panel.edges()$y)),
+                  "160430" = list(x.dim = c(3,1998), y.dim = c(33,2028),
+                                  x.panels = panel.edges()$x, y.panels = panel.edges()$y))
+
+# official pixels
+sapply(names(bpx.off), function(nm) {
+    px <- bpx.off[[nm]]
+    im.dims <- im.params[[nm]]
+    quadrat.test(ppp(px$x, px$y, im.dims$x.dim, im.dims$y.dim),
+                 xbreaks = im.dims$x.panels - 0.5, ybreaks = im.dims$y.panels - 0.5)
+}, simplify = F)
+
+# CB pixels
+sapply(names(bpx.off), function(nm) {
+    px <- bpx.cb[[nm]]
+    im.dims <- im.params[[nm]]
+    quadrat.test(ppp(px$x, px$y, im.dims$x.dim, im.dims$y.dim),
+                 xbreaks = im.dims$x.panels - 0.5, ybreaks = im.dims$y.panels - 0.5)
+}, simplify = F)
 
 
 ####################################################################################################
-

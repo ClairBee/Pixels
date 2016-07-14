@@ -1,9 +1,5 @@
 
-TO DO: JULY 14TH
 
- - LOOK FOR CHANGE-POINT APPROACH TO LINE DETECTION
- - LOOK FOR MEDIAN-DIFFERENCE CONVOLUTION-BASED APPROACH TO LINE DETECTION
- - CREATE PLOTS OF EACH TYPE OF LINE DEFECT FOR PAPER
 
 ####################################################################################################
 
