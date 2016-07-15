@@ -17,9 +17,9 @@
 
 \graphicspath{{./fig/}}
 
-\newcommand{\plotset}[2]{
+\newcommand{\plotset}[3]{
 	\begin{figure}[!ht]
-	\caption{#2}
+	\caption{#2\footnotesize{#3}}
 	
 		%
 	\begin{subfigure}[t]{0.24\textwidth}
@@ -49,24 +49,26 @@
 
 \begin{document}
 
-\plotset{wlm-all}{All pixels}
+\plotset{th-hist-black}{Histograms of black values, showing thresholds}{}
 
-\plotset{wlm-ex-dark}{Dark lines excluded}
+\plotset{th-hist-grey}{Histograms of grey values, showing thresholds}{}
 
-\plotset{wlm-ex-global}{Globally extreme pixels excluded}
+\plotset{th-hist-white}{Histograms of white values, showing thresholds}{}
 
-\plotset{wlm-unclassified}{All identified defective pixels excluded}
+\plotset{bad-px-plot}{Plots of identified defective pixels}{\\ $\bullet$ dark pixels (no response); \textcolor{green}{$\bullet$} lines of bright pixels; \textcolor{red}{$\bullet$} closer to 65535 than to median; \textcolor{blue}{$\bullet$}  closer to 0 than to median;  \textcolor{gold}{$\bullet$} locally bright (more than 2SD above neighbours); \textcolor{Turquoise}{$\bullet$} locally dim (more than 2SD below neighbours)}
+
 
 %======================================================================
 
-\plotset{bad-px-plot}{Plots of identified defective pixels}
+\newpage
 
-\plotset{sc-image-excl-defects}{Shading-corrected image, excluding all defective pixels identified}
+\plotset{sc-image}{Shading-corrected images}{}
 
-\plotset{sc-hist-excl-defects}{Histogram of shading-corrected image, excluding all defective pixels identified}
+\plotset{sc-hist-all-px}{Histogram of shading-corrected values}{}
 
-\plotset{sc-mid-hist-excl-defects}{Histogram of median differences shading-corrected image, excluding all defective pixels identified}
+\plotset{sc-hist-excl-defects}{Histogram of shading-corrected image, excluding all defective pixels identified}{}
 
-Remaining noise is most likely due to column defects not yet picked up.
+\plotset{sc-mid-hist-excl-defects}{Histogram of differences between original shading-corrected image and median-smoothed version, excluding all defective pixels identified}{\\ \\ Cluster of locally bright pixels in 13-11-22 image is probably due to less-severe lines not being included in bad pixel map while algorithm is being refined.}
+
 
 \end{document}

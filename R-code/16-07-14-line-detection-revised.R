@@ -2,6 +2,9 @@
 # NEEDS MORE WORK ON CLASSIFICATION
 # MAYBE LOOK AT MEDIAN NEIGHBOUR DIFFERENCE ALONG COLUMN SEGMENT...
 
+# TAKE COLUMNWISE OFFSET FROM MEDIAN-SMOOTHED NEIGHBOURS
+# should stabilise mean along column offset.
+
 # also try packages CPM and ECP.
 # or fit a changepoint model manually (see 'refs' bookmarks for details)
 
@@ -20,6 +23,94 @@ md7 <- abind(sapply(c("131122", "140128", "MCT225", "160430"),
                     function(nm) readRDS(paste0("./02_Objects/med-diffs/md7-", nm, ".rds")), 
                     simplify = F),
              along = 4)
+
+####################################################################################################
+
+# VERBOSE PROCEDURE                                                                             ####
+
+overplot <- function(im.array, column, dt, xlim = c(0, 2048), hline = 0, vline = 1024.5, ...) {
+    dt <- toString(dt)
+    par(mar = c(2,2,2,1))
+    plot(im.array[column, , "white", dt], type = "l", xlim = xlim, col = "green3", 
+         main = paste0(dt, " column ", column, " (", as.list(sys.call())[[2]], ")"), ...)
+    lines(im.array[column, , "grey", dt], col = "blue")
+    lines(im.array[column, , "black", dt])
+    
+    if (!is.na(vline)) abline(v = vline, col = "red", lty = 2)
+    if (!is.na(hline)) abline(h = hline)
+}
+
+{
+    overplot(md7, 429, "160430", xlim = c(1024, 2048), ylim = c(-1000, 2000))
+    overplot(md7, 745, "140128", xlim = c(0,1024), ylim = c(-1000, 2000))
+    
+    overplot(md7, 736, "131122", xlim = c(0,1024))
+    
+    overplot(md7, 447, "MCT225")
+    overplot(md7, 448, "MCT225")
+    overplot(md7, 449, "MCT225")
+    overplot(md7, 450, "MCT225")
+}
+
+#----------------------------------------------------------------------------
+# ROUTE 1: CONVOLUTION WITH EDGE DETECTION KERNEL
+# convolution generally doesn't work as well with thicker edges though.
+{
+    # convolution of median-differenced images with 5-square kernel
+    k.size <- 5
+    k <- matrix(c(rep(-1, k.size * floor(k.size / 2)), rep(k.size - 1, k.size), rep(-1,k.size * floor(k.size / 2))), ncol = k.size)
+    
+    conv <- array(apply(md7, 3:4, function(im) r2m(focal(m2r(im), k))), dim = dim(md7), dimnames = dimnames(md7))
+    
+    {
+        overplot(md7, 429, "160430", xlim = c(1024, 2048))
+        
+        overplot(conv, 429, "160430", xlim = c(1024, 2048))
+        overplot(conv, 745, "140128", xlim = c(0,1024))
+        
+        overplot(conv, 736, "131122", xlim = c(0,1024))
+        
+        overplot(conv, 447, "MCT225")
+        overplot(conv, 448, "MCT225")
+        overplot(conv, 449, "MCT225")
+        overplot(conv, 450, "MCT225")
+    }
+}
+
+
+#----------------------------------------------------------------------------
+# ROUTE 2: DIRECT THRESHOLDING OF MEDIAN DIFFERENCES
+# more intuitive threshold setting
+{
+    th <- array(apply(conv, 3:4, function(im) abs(im) > 200),
+                dim = dim(conv), dimnames = dimnames(conv))
+    xt <- ddply(data.frame(which(abs(conv) > th, arr.ind = T)), .(x = row), summarise,
+                ymin = min(col), ymax = max(col), range = ymax - ymin + 1, length = length(row),
+                coverage = length / range)
+    xt <- xt[xt$length > 6 & xt$coverage > 0.5,] 
+}
+
+#----------------------------------------------------------------------------
+# alternatively: use MA smoother on med.diffs before thresholding
+
+# WHAT ABOUT DOING EVERYTHING OVER MEDIAN-DIFFERENCED IMAGE? WHY NOT?
+
+pixel.plot(which(md7[,,"black", "160430"] > 1500, arr.ind = T), cex = 0.4)
+pixel.plot(which(md7[,,"white", "160430"] > 1500, arr.ind = T), cex = 0.4)
+
+pixel.plot(which(md7[,,"white", "140128"] > 5000, arr.ind = T), cex = 0.4)
+pixel.plot(which(md7[,,"white", "140128"] > 5000, arr.ind = T), cex = 0.4)
+
+pixel.image(md7[,,"white", "140128"])
+pixel.image(md7[,,"white", "MCT225"])
+
+hh <- count(round(c(md7[,,"white", "160430"]), 0))
+
+smoothScatter(hh$x, cumsum(hh$freq), nrpoints = Inf, xlab = "Median difference", 
+              ylab = "# pixels", xlim = c(-2000, 2000))
+abline(h = 1996^2 / 2, col = "darkgrey")
+abline(v = 0, col = "darkgrey")
+abline(v = c(-1,1) * 1000, col = "darkred", lty = 2)
 
 ####################################################################################################
 
@@ -256,7 +347,7 @@ pixel.plot(which(conv > 3000, arr.ind = T))
 
 ####################################################################################################
 
-# EXAMPLES OF PACKAGES 'CHANGEPOINTS'                                                           ####
+# EXAMPLES OF PACKAGE 'CHANGEPOINTS'                                                           ####
 
 
 data("Lai2005fig4", package = "changepoint")
@@ -278,3 +369,24 @@ logLik(wind.pelt)
 
 wind.bs <- cpt.var(diff(wind[, 11]), method = "BinSeg")
 ncpts(wind.bs)
+
+# ALTERNATIVE PRE-PROCESSING: LOOK FOR LINES VS SMOOTHED NEIGHBOURS                             ####
+
+ms7.160430 <- pw.m[,,,"160430"] - md7[,,,"160430"]
+o.plot(pw.m[429,,"black", "160430"] - pw.m[428,,"black", "160430"],
+       xlim = c(1024, 2048), ylim = c(-500, 1500))
+
+plot(pw.m[429,,"black", "160430"], xlim = c(1024, 2048), type = "l", ylim = c(4500,6500))
+lines(ms7.160430[429,,"black"], col = "blue")
+
+plot(md7[429,,"black", "160430"], md7[429,,"black", "160430"], type = "l", ylim = c(-500,1500))
+
+ma.pre <- movingFun(md7[429,,"black", "160430"], n = 5, fun = mean, type = "to")
+ma.post <- movingFun(md7[429,,"black", "160430"], n = 5, fun = mean, type = "from")
+
+plot(md7[429,,"black", "160430"], ylim = c(-500,15000), xlim = c(1024, 2048), type = "l")
+lines(ma.pre * ma.post, col = "blue")
+
+# again: smears effect of individual v. bright pixels
+
+####################################################################################################

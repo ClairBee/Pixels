@@ -58,11 +58,11 @@ assign.category <- function(dat, dark.th = 5000) {
     # support functions
     th.u <- function(vals) {
         med <- median(vals, na.rm = T)
-        med + (65535 - med)/4
+        med + (65535 - med)/2
     }
     th.l <- function(vals) {
         med <- median(vals, na.rm = T)
-        med * 0.75
+        med * 0.5
     }
     local.th <- 2 * c("b" = .sd(dat$b), "g" = .sd(dat$g), "w" = .sd(dat$w))
     
@@ -93,7 +93,7 @@ lapply(names(df),
            px <- df[[nm]]
            pdf(paste0(fpath, "bad-px-plot-", nm, ".pdf"))
            par(mar = c(2,2,1,1))
-           plot(px[,1:2][!is.na(px$type),], pch = ".", cex = 2, col = c.cols[px$type[!is.na(px$type)]],
+           plot(px[,1:2][!is.na(px$type),], pch = ".", cex = 4, col = c.cols[px$type[!is.na(px$type)]],
                 xlab = "", ylab = "")
            dev.off()
        })
@@ -119,10 +119,57 @@ th.hist <- function(im, crop = NA) {
     rect(med /2, 0, med * 0.75, ym, col = adjustcolor("cyan3", alpha = 0.3), border = NA)
 }
 
-th.hist(pw.m[,,"black", "140128"], crop = 30)
-th.hist(pw.m[,,"grey", "140128"], crop = 30)
-th.hist(pw.m[,,"white", "140128"], crop = NA)
-th.hist(pw.m[,,"white", "MCT225"], crop = NA)
+pdf(paste0(fpath, "th-hist-black-140128.pdf"), height = 4); {
+    th.hist(pw.m[,,"black", "140128"], crop = NA)
+    dev.off()
+}
+pdf(paste0(fpath, "th-hist-grey-140128.pdf"), height = 4); {
+    th.hist(pw.m[,,"grey", "140128"], crop = NA)
+    dev.off()
+}
+pdf(paste0(fpath, "th-hist-white-140128.pdf"), height = 4); {
+    th.hist(pw.m[,,"white", "140128"], crop = NA)
+    dev.off()
+}
+
+pdf(paste0(fpath, "th-hist-black-131122.pdf"), height = 4); {
+    th.hist(pw.m[,,"black", "131122"], crop = NA)
+    dev.off()
+}
+pdf(paste0(fpath, "th-hist-grey-131122.pdf"), height = 4); {
+    th.hist(pw.m[,,"grey", "131122"], crop = NA)
+    dev.off()
+}
+pdf(paste0(fpath, "th-hist-white-131122.pdf"), height = 4); {
+    th.hist(pw.m[,,"white", "131122"], crop = NA)
+    dev.off()
+}
+
+pdf(paste0(fpath, "th-hist-black-160430.pdf"), height = 4); {
+    th.hist(pw.m[,,"black", "160430"], crop = NA)
+    dev.off()
+}
+pdf(paste0(fpath, "th-hist-grey-160430.pdf"), height = 4); {
+    th.hist(pw.m[,,"grey", "160430"], crop = NA)
+    dev.off()
+}
+pdf(paste0(fpath, "th-hist-white-160430.pdf"), height = 4); {
+    th.hist(pw.m[,,"white", "160430"], crop = NA)
+    dev.off()
+}
+
+pdf(paste0(fpath, "th-hist-black-MCT225.pdf"), height = 4); {
+    th.hist(pw.m[,,"black", "MCT225"], crop = NA)
+    dev.off()
+}
+pdf(paste0(fpath, "th-hist-grey-MCT225.pdf"), height = 4); {
+    th.hist(pw.m[,,"grey", "MCT225"], crop = NA)
+    dev.off()
+}
+pdf(paste0(fpath, "th-hist-white-MCT225.pdf"), height = 4); {
+    th.hist(pw.m[,,"white", "MCT225"], crop = NA)
+    dev.off()
+}
 
 
 # current 'globally extreme' setting picks up a lot of px from 14-01-28. Part of same 'doughnut' shape
@@ -298,6 +345,17 @@ sc.md <- abind(sapply(c("131122", "140128", "MCT225", "160430"),
                       simplify = F),
                along = 3)
 
+# shading-corrected images (all pixels)
+lapply(names(df),
+       function(nm) {
+           sc.im <- sc[,,nm]
+           jpeg(paste0(fpath, "sc-image-", nm, ".jpg"))
+           par(mar = c(2,2,1,1))
+           pixel.image(sc.im)
+           dev.off()
+       })
+
+# shading-corrected image excluding defects
 lapply(names(df),
        function(nm) {
            sc.im <- sc[,,nm]
@@ -311,22 +369,31 @@ lapply(names(df),
 # histogram of shading-corrected values excluding identified defects
 lapply(names(df),
        function(nm) {
-           sc.im <- sc[,,nm]
-           sc.im[as.matrix(df[[nm]][!is.na(df[[nm]]$type), c("x", "y")])] <- NA
-           pdf(paste0(fpath, "sc-hist-excl-defects-", nm, ".pdf"), height = 4)
+           px <- df[[nm]]
+           jpeg(paste0(fpath, "sc-hist-excl-defects-", nm, ".jpg"), height = 240)
            par(mar = c(2,2,1,1))
-           hist(sc.im, breaks = "fd", ylim = c(0,30), xlab = "", ylab = "", main = "")
+           hist(px$sc[is.na(px$type)], breaks = "fd", ylim = c(0,30), xlab = "", ylab = "", main = "")
            dev.off()
        })
 
 # histogram of median differences of shading-corrected values, excluding identified defects
 lapply(names(df),
        function(nm) {
-           sc.im <- sc.md[,,nm]
-           sc.im[as.matrix(df[[nm]][!is.na(df[[nm]]$type), c("x", "y")])] <- NA
-           pdf(paste0(fpath, "sc-mid-hist-excl-defects-", nm, ".pdf"), height = 4)
+           px <- df[[nm]]
+           jpeg(paste0(fpath, "sc-mid-hist-excl-defects-", nm, ".jpg"), height = 240)
            par(mar = c(2,2,1,1))
-           hist(sc.im, breaks = "fd", ylim = c(0,30), xlab = "", ylab = "", main = "")
+           hist(px$sc.md[is.na(px$type)], breaks = "fd", ylim = c(0,30), xlab = "", ylab = "", main = "")
+           abline(v = 150 * c(-1,1), col = "red")
+           dev.off()
+       })
+
+# histogram of shading-corrected values - all pixels
+lapply(names(df),
+       function(nm) {
+           px <- df[[nm]]
+           jpeg(paste0(fpath, "sc-hist-all-px-", nm, ".jpg"), height = 240)
+           par(mar = c(2,2,1,1))
+           hist(px$sc, breaks = "fd", ylim = c(0,30), xlab = "", ylab = "", main = "")
            dev.off()
        })
 

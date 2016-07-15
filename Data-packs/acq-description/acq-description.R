@@ -8,8 +8,8 @@ fpath <- "./Data-packs/acq-description/fig/"
 
 Cat.cols <- c("purple", "black", "magenta3", "red", "orange", "yellow", NA, "gold", "grey", NA, "blue", "skyblue", "green3")
 
-acq <- readRDS("./02_Objects/images/pwm-131122.rds")
-write("Old data: images acquired on 13-11-22, main detector", paste0(fpath, "title.txt"))
+acq <- readRDS("./02_Objects/images/pwm-140128.rds")
+write("Old data, after refurbishment: images acquired on 14-01-28, main detector", paste0(fpath, "title.txt"))
 
 ####################################################################################################
 

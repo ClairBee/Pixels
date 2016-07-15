@@ -1,4 +1,7 @@
 
+# update pixel.plot function to handle ppp objects
+
+library("IO.Pixels"); library("CB.Misc")
 fpath <- "./Notes/Universal-thresholding/fig/"
 
 df <- readRDS(paste0(fpath, "all-px.rds"))
@@ -19,11 +22,11 @@ assign.category <- function(dat, dark.th = 5000) {
     # support functions
     th.u <- function(vals) {
         med <- median(vals, na.rm = T)
-        med + (65535 - med)/4
+        med + (65535 - med)/2
     }
     th.l <- function(vals) {
         med <- median(vals, na.rm = T)
-        med * 0.75
+        med * 0.5
     }
     local.th <- 2 * c("b" = .sd(dat$b), "g" = .sd(dat$g), "w" = .sd(dat$w))
     
@@ -239,7 +242,7 @@ bpx.off <- lapply(df, function(px) px[!is.na(px$t.off),])       # 8431, 686, 328
 bpx.cb <- lapply(df, function(px) px[!is.na(px$type),])         # 9664, 97941, 3351, 7852 
 bpx.nl <- lapply(df, function(px) px[!is.na(px$t.glm),])        # 9004, 686, 2586, 3105
 
-# high shading correction median diff (300px brighter than neighbours)  # 9872, 680, 2296, 6681 
+# high shading-corrected median diff (300px brighter than neighbours)  # 9872, 680, 2296, 6681 
 bpx.scmd <- lapply(df, function(px) px[which(abs(px$sc.md) > 200),])
 
 pixel.plot(bpx.cb[[i]], cex = 0.4, col = "magenta3")
@@ -252,38 +255,182 @@ points(bpx.scmd[[i]][,1:2], pch = 15, cex = 0.4, col = "cyan3")
 # MCT225: broadly similar situation to 131122
 # 160430: all v. similar, general noisiness in detector forming circular pattern
 
-
+# identify column features so that they can be easily removed
+tag.lines <- function(px) {
     
+    # identify & group all adjacent pixels
+    cc <- clump(m2r(bpx2im(data.frame(px[,1:2], type = 1), im.dim = c(2048, 2048))), dir = 4)
+    xy <- data.frame(xyFromCell(cc, which(!is.na(getValues(cc)))), 
+                     id = getValues(cc)[!is.na(getValues(cc))])
+    
+    # filter out & retain only long line segments (> 5px)
+    ll <- ddply(xy, .(col = x, id), summarise, 
+                ymin = min(y), ymax = max(y), length = max(y)-min(y) + 1)
+    ll <- ll[ll$length > 5,]
+    
+    # check if any lines actually occur
+    if (nrow(ll) > 0) {
+        # turn line summary into list of coordinates
+        zz <- do.call("rbind", apply(ll, 1, 
+                                     function(l) cbind(x = l["col"], 
+                                                       y = c(l["ymin"]:l["ymax"]), 
+                                                       l.id = paste0("line.", l["id"]))))
+        
+        # tag identified pixels in original list of coordinates & return
+        px <- merge(px, data.frame(zz), by = c(1:2), all.x = T)
+    } else {
+        px$"l.id" <- NA
+    }
+
+    return(px)
+}
+
+bpx.off <- lapply(bpx.off, tag.lines)
+bpx.cb <- lapply(bpx.cb, tag.lines)
+bpx.nl <- lapply(bpx.nl, tag.lines)
+bpx.scmd <- lapply(bpx.scmd, tag.lines)
+
+# identify clusters to that they can easily be removed
+
+# convert to list of ppp objects for easier reference
+im.dims <- lapply(df, function(px) list(x = range(px$x[!is.na(px$b)]), y = range(px$y[!is.na(px$b)])))
+
+bpx2ppp <- function(bpx, exclude.lines = T) {
+    sapply(names(bpx), function(nm) {
+        px <- bpx[[nm]]
+        
+        # filter lines if necessary
+        if (exclude.lines) px <- px[is.na(px$l.id),]
+
+        pp <- ppp(px$x, px$y, im.dims[[nm]]$x, im.dims[[nm]]$y)
+    }, simplify = F)
+}
+
+ppp.off <- bpx2ppp(bpx.off, exclude.lines = T)
+ppp.cb <- bpx2ppp(bpx.cb, exclude.lines = T)
+ppp.nl <- bpx2ppp(bpx.nl, exclude.lines = T)
+ppp.scmd <- bpx2ppp(bpx.scmd, exclude.lines = T)
+
+
+                                    # 131122 140128 MCT225 160430
+sapply(ppp.off, "[[", "n")          #     97     81     48   5892
+sapply(ppp.cb, "[[", "n")           #    529    244    118   6862
+sapply(ppp.nl, "[[", "n")           #   1701     81    374   2654
+sapply(ppp.scmd, "[[", "n")         #    153     77    546   6681
+
+
 ####################################################################################################
 
 # QUADRAT TESTS                                                                                 ####
 
-apply(which(!is.na(fixed[,,"black", "140128"]), arr.ind = T), 2, range)
-
-im.params <- list("131122" = list(x.dim = c(25, 2024), y.dim = c(225, 1824),
-                                  x.panels = panel.edges()$x, y.panels = panel.edges()$y),
-                  "140128" = list(x.dim = c(1, 2000), y.dim =  c(29, 2028),
-                                  x.panels = panel.edges()$x, y.panels = panel.edges()$y),
-                  "MCT225" = list(x.dim = c(25, 2024), y.dim =  c(25, 2024),
-                                  x.panels = panel.edges()$x, y.panels = range(panel.edges()$y)),
-                  "160430" = list(x.dim = c(3,1998), y.dim = c(33,2028),
-                                  x.panels = panel.edges()$x, y.panels = panel.edges()$y))
+# need to rework this code - MCT225 panels are wrong
 
 # official pixels
 sapply(names(bpx.off), function(nm) {
-    px <- bpx.off[[nm]]
-    im.dims <- im.params[[nm]]
-    quadrat.test(ppp(px$x, px$y, im.dims$x.dim, im.dims$y.dim),
-                 xbreaks = im.dims$x.panels - 0.5, ybreaks = im.dims$y.panels - 0.5)
+    quadrat.test(ppp.off[[nm]],
+                 xbreaks = panel.edges()$x - 0.5, ybreaks = panel.edges()$y - 0.5)
 }, simplify = F)
 
 # CB pixels
 sapply(names(bpx.off), function(nm) {
-    px <- bpx.cb[[nm]]
-    im.dims <- im.params[[nm]]
-    quadrat.test(ppp(px$x, px$y, im.dims$x.dim, im.dims$y.dim),
-                 xbreaks = im.dims$x.panels - 0.5, ybreaks = im.dims$y.panels - 0.5)
+    quadrat.test(ppp.cb[[nm]],
+                 xbreaks = panel.edges()$x - 0.5, ybreaks = panel.edges()$y - 0.5)
 }, simplify = F)
 
+# nonlinear pixels
+sapply(names(bpx.off), function(nm) {
+    quadrat.test(ppp.nl[[nm]],
+                 xbreaks = panel.edges()$x - 0.5, ybreaks = panel.edges()$y - 0.5)
+}, simplify = F)
+
+# shading-corrected median-differenced pixels
+sapply(names(bpx.off), function(nm) {
+    quadrat.test(ppp.scmd[[nm]],
+                 xbreaks = panel.edges()$x - 0.5, ybreaks = panel.edges()$y - 0.5)
+}, simplify = F)
 
 ####################################################################################################
+
+# ENVELOPE FUNCTIONS                                                                            ####
+
+# envelope plotting function
+env.plot <- function(px.ppp, px.ppm, dist.fun, normalise = F, ...) {
+    
+    if (normalise) {
+        trans <- expression(. - pi * r ** 2)
+    } else {
+        trans <- NULL
+    }
+    
+    plot(envelope(px.ppm, dist.fun, nsim = 99, nrank = 2, transform = trans, verbose = F, fix.n = T), 
+         col = "blue", legend = F, shadecol = adjustcolor("cyan3", alpha = 0.2), ...)
+    plot(envelope(px.ppp, dist.fun, nsim = 99, nrank = 2, transform = trans, verbose = F, fix.n = T), 
+         add = T, legend = F, shadecol = adjustcolor("gold", alpha = 0.2))
+    
+    legend("topleft", bty = "n",
+           pt.bg = adjustcolor(c("gold", "cyan3", NA, NA, NA), alpha = 0.2), 
+           col = c(NA, NA, "red", "blue", "black"),
+           pch = c(22, 22, NA, NA, NA), 
+           lty = c(NA, NA, 2, 2, 1),
+           legend = c("Envelope for data", "Envelope for model", "Theoretical (data)", "Theoretical (model)", "Observed"))
+}
+
+plot(envelope(ppp.cb$"160430", Gest, nsim = 99, nrank = 2, verbose = F, fix.n = T))
+plot(envelope(ppp.cb$"160430", Fest, nsim = 99, nrank = 2, verbose = F, fix.n = T))
+plot(envelope(ppp.cb$"160430", Kest, nsim = 99, nrank = 2, verbose = F, fix.n = T, transform = expression(. - pi * r ** 2)))
+
+plot(envelope(ppp.cb$"131122", Kest, nsim = 99, nrank = 2, verbose = F, fix.n = T, transform = expression(. - pi * r ** 2)))
+plot(envelope(ppp.cb$"140128", Kest, nsim = 99, nrank = 2, verbose = F, fix.n = T, transform = expression(. - pi * r ** 2)))
+plot(envelope(ppp.cb$"MCT225", Kest, nsim = 99, nrank = 2, verbose = F, fix.n = T, transform = expression(. - pi * r ** 2)))
+
+pixel.plot(bpx.cb$"MCT225")
+pixel.image(pw.m[,,"grey", "MCT225"], xlim = c(1540, 1600), ylim = c(1150, 1200))
+
+####################################################################################################
+
+# NONPARAMETRIC DENSITY                                                                         ####
+
+# function to rescale ppm values for easier interpretation of plots
+scale.ppm <- function(px.ppm, scale.by = 128 * 1024) {
+    
+    fv <- predict(px.ppm)
+    fv$v <- fv$v * scale.by
+    fv
+}
+
+
+nonpara <- function(bpx.ppp, scale.by = 128*1024, sig = bw.diggle(bpx.ppp), return.model = F) {
+    
+    # bandwidth est using MSE approach
+    np <- density(bpx.ppp, sigma = sig)
+    
+    # rescale intensity for easier interpretation
+    np$v <- np$v * 128*1024
+    
+    plot(np, main = "")
+    
+    if (return.model) return(np)
+}
+
+lapply(ppp.off, bw.diggle)
+lapply(ppp.off, nonpara, sig = 80)
+
+lapply(ppp.cb, bw.diggle)
+lapply(ppp.cb, nonpara, sig = 80)
+
+lapply(ppp.nl, bw.diggle)
+lapply(ppp.nl, nonpara, sig = 80)
+
+lapply(ppp.scmd, bw.diggle)
+lapply(ppp.scmd, nonpara, sig = 80)
+
+####################################################################################################
+
+# PARAMETRIC MODELLING                                                                          ####
+
+zz <- lapply(ppp.cb, ppm, ~ x + y + I(x^2) + I(y^2) + I(x *y))
+
+lapply(zz, plot, se = F)
+
+lapply(lapply(ppp.nl, ppm, ~ x + y + I(x^2) + I(y^2) + I(x *y)), plot, se = F)
+
