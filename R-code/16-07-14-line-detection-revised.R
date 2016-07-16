@@ -1,12 +1,7 @@
 
 # NEEDS MORE WORK ON CLASSIFICATION
-# MAYBE LOOK AT MEDIAN NEIGHBOUR DIFFERENCE ALONG COLUMN SEGMENT...
 
-# TAKE COLUMNWISE OFFSET FROM MEDIAN-SMOOTHED NEIGHBOURS
-# should stabilise mean along column offset.
-
-# also try packages CPM and ECP.
-# or fit a changepoint model manually (see 'refs' bookmarks for details)
+# could fit a changepoint model manually (see 'refs' bookmarks for details)?
 
 ####################################################################################################
 
@@ -46,11 +41,71 @@ overplot <- function(im.array, column, dt, xlim = c(0, 2048), hline = 0, vline =
     
     overplot(md7, 736, "131122", xlim = c(0,1024))
     
-    overplot(md7, 447, "MCT225")
-    overplot(md7, 448, "MCT225")
-    overplot(md7, 449, "MCT225")
-    overplot(md7, 450, "MCT225")
+    overplot(md7, 750, "131122", xlim = c(0,1024))
+    
+    
+    overplot(md7, 447, "MCT225", xlim = c(1024, 2048))
+    overplot(md7, 448, "MCT225", xlim = c(1024, 2048))
+    overplot(md7, 449, "MCT225", xlim = c(1024, 2048))
+    overplot(md7, 450, "MCT225", xlim = c(1024, 2048))
 }
+
+
+#----------------------------------------------------------------------------
+# ROUTE 0: REPLACE DARK PIXELS WITH MEDIAN VALUES, THEN CONVOLVE
+
+# taking a new median leads to over-smoothing (variance change), so can only check for mean changepoint
+{
+    med.replace <- function(im, px, w = 5) {
+        
+        get.px <- cbind(px[1] + c(-floor(w/2):floor(w/2)), px[2])
+        get.px <- get.px[get.px[,1] %in% c(1:2048),]
+        median(im[get.px], na.rm = T)
+    }
+    
+    mr7 <- md7          # array to hold median-replaced values
+    
+    for (dt in dimnames(pw.m)[[4]]) {
+        for (icol in dimnames(pw.m)[[3]]) {
+            px <- which(pw.m[,,"white", dt] - pw.m[,,"black", dt] < 10000 & pw.m[,,"white", dt] < 15000, arr.ind = T)
+            mr7[,,icol,dt][px] <- apply(px, 1, med.replace, im = mr7[,,icol, dt], w = 11)
+        }
+    }
+    
+    plot(md7[1926, , "grey", "MCT225"], type = "l")
+    lines(mr7[1926,,"grey", "MCT225"], col = "blue")
+    
+    plot(md7[1927, , "grey", "MCT225"], type = "l")
+    lines(mr7[1927, , "grey", "MCT225"], col = "red")
+    
+
+}
+
+# convolution (kernel splitting now unnecessary)
+{
+    k.size <- 5
+    k <- matrix(c(rep(-1, k.size * floor(k.size / 2)), rep(k.size - 1, k.size), rep(-1,k.size * floor(k.size / 2))), ncol = k.size)
+    
+    conv.mr <- array(apply(mr7, 3:4, function(im) r2m(focal(m2r(im), k))), dim = dim(md7), dimnames = dimnames(md7))
+    {
+        overplot(conv.mr, 429, "160430", xlim = c(1024, 2048), hline = 3000)
+        overplot(conv.mr, 745, "140128", xlim = c(0,1024), hline = 3000)    # smoothed away
+        
+        overplot(conv.mr, 736, "131122", xlim = c(0,1024), hline = 3000)
+        
+        overplot(conv.mr, 447, "MCT225", xlim = c(1024, 2048))
+        overplot(conv.mr, 448, "MCT225", xlim = c(1024, 2048))
+        overplot(conv.mr, 449, "MCT225", xlim = c(1024, 2048))
+        overplot(conv.mr, 450, "MCT225", xlim = c(1024, 2048))  
+        
+        overplot(md7, 447, "MCT225", xlim = c(1024, 2048))
+        overplot(md7, 448, "MCT225", xlim = c(1024, 2048))
+        overplot(md7, 449, "MCT225", xlim = c(1024, 2048))
+        overplot(md7, 450, "MCT225", xlim = c(1024, 2048))  
+        }
+    
+}
+
 
 #----------------------------------------------------------------------------
 # ROUTE 1: CONVOLUTION WITH EDGE DETECTION KERNEL
@@ -61,20 +116,77 @@ overplot <- function(im.array, column, dt, xlim = c(0, 2048), hline = 0, vline =
     k <- matrix(c(rep(-1, k.size * floor(k.size / 2)), rep(k.size - 1, k.size), rep(-1,k.size * floor(k.size / 2))), ncol = k.size)
     
     conv <- array(apply(md7, 3:4, function(im) r2m(focal(m2r(im), k))), dim = dim(md7), dimnames = dimnames(md7))
-    
     {
-        overplot(md7, 429, "160430", xlim = c(1024, 2048))
+        overplot(conv, 429, "160430", xlim = c(1024, 2048), hline = 3000)
+        overplot(conv, 745, "140128", xlim = c(0,1024), hline = 3000)
         
-        overplot(conv, 429, "160430", xlim = c(1024, 2048))
-        overplot(conv, 745, "140128", xlim = c(0,1024))
+        overplot(conv, 736, "131122", xlim = c(0,1024), hline = 3000)
         
-        overplot(conv, 736, "131122", xlim = c(0,1024))
-        
-        overplot(conv, 447, "MCT225")
-        overplot(conv, 448, "MCT225")
-        overplot(conv, 449, "MCT225")
-        overplot(conv, 450, "MCT225")
+        overplot(conv, 447, "MCT225", hline = 3000)
+        overplot(conv, 448, "MCT225", hline = 3000)
+        overplot(conv, 449, "MCT225", hline = 3000)
+        overplot(conv, 450, "MCT225", hline = 3000)
     }
+    
+    # thresholding (using low threshold of 3000)
+    th <- array(apply(conv, 3:4, function(im) abs(im) > 3000),
+                dim = dim(conv), dimnames = dimnames(conv))
+    {
+        overplot(th, 429, "160430", xlim = c(1024, 2048)
+        
+        overplot(th, 745, "140128", xlim = c(0,1024))
+        
+        overplot(th, 736, "131122", xlim = c(0,1024))
+        
+        overplot(th, 447, "MCT225")
+        overplot(th, 448, "MCT225")
+        overplot(th, 449, "MCT225")
+        overplot(th, 450, "MCT225")
+    }
+    
+    # summarise candidate columns
+    tth <- th[,,"black", "160430"]
+    
+    xt <- ddply(data.frame(which(abs(tth) > 0, arr.ind = T)), .(x = row), summarise,
+                ymin = min(col), ymax = max(col), range = ymax - ymin + 1, length = length(row),
+                coverage = length / range)
+    xt <- xt[xt$length > 6 & xt$coverage > 0.5,] 
+
+}
+
+
+#----------------------------------------------------------------------------
+# ROUTE 1.2: CONVOLUTION WITH 'SPLIT' KERNEL
+{
+    k.size <- 5
+    split.by <- 1
+    
+    k <- matrix(c(rep(-1/k.size, k.size * floor(k.size / 2)),
+                  rep(0, k.size * split.by),
+                  rep(k.size - 1, k.size),
+                  rep(0, k.size * split.by),
+                  rep(-1/k.size, k.size * floor(k.size / 2))),
+                nrow = k.size)
+           
+    conv.sp <- array(apply(md7, 3:4, function(im) r2m(focal(m2r(im), k))),
+                     dim = dim(md7), dimnames = dimnames(md7))
+    
+    pixel.image(conv.sp[,,"black", "MCT225"], xlim = c(400,500), ylim = c(1100, 1200))
+    o.plot(conv.sp[,1160, "grey", "MCT225"], xlim = c(400,500), ylim = c())
+    o.plot(md7[,1160, "grey", "MCT225"], xlim = c(400,500), col = "blue", add = T)
+    abline(h = -10000, col = "red")
+    
+    pixel.image(md7[,,"grey", "MCT225"], xlim = c(400,500), ylim = c(1100, 1200))
+    points(which(abs(conv.sp[,,"grey", "MCT225"]) > 10000, arr.ind = T), pch = 0)
+    plot(conv.sp[,1160, "black", "MCT225"], type = "l", xlim = c(400,500))
+    # finds pair of defective columns, with 2-px edge
+    
+    overplot(conv.sp, 449, "MCT225", xlim = c(1024, 2048))
+    overplot(conv.sp, 750, "MCT225", xlim = c(1024, 2048))
+
+    plot(conv.sp[449,,"black", "MCT225"], xlim = c(1024, 2048), type = "l")
+    
+
 }
 
 
@@ -82,16 +194,111 @@ overplot <- function(im.array, column, dt, xlim = c(0, 2048), hline = 0, vline =
 # ROUTE 2: DIRECT THRESHOLDING OF MEDIAN DIFFERENCES
 # more intuitive threshold setting
 {
-    th <- array(apply(conv, 3:4, function(im) abs(im) > 200),
-                dim = dim(conv), dimnames = dimnames(conv))
+    th <- array(apply(md7, 4,
+                      function(im) abs(im[,,"black"]) > 300 | abs(im[,,"grey"]) > 300),
+                dim = dim(md7[,,1,]), dimnames = dimnames(md7[,,1,]))
+    
+    pixel.image(th[,,"160430"])
+    pixel.plot(which(abs(md7[,,"black", "160430"]) > 300, arr.ind = T))
+    pixel.plot(which(abs(md7[,,"grey", "160430"]) > 300, arr.ind = T))
+    pixel.plot(which(abs(md7[,,"white", "MCT225"]) > 300, arr.ind = T))
+    
     xt <- ddply(data.frame(which(abs(conv) > th, arr.ind = T)), .(x = row), summarise,
                 ymin = min(col), ymax = max(col), range = ymax - ymin + 1, length = length(row),
                 coverage = length / range)
     xt <- xt[xt$length > 6 & xt$coverage > 0.5,] 
 }
 
+
 #----------------------------------------------------------------------------
-# alternatively: use MA smoother on med.diffs before thresholding
+# ROUTE 3: CHANGEPOINT ANALYSIS OF MEDIAN DIFFERENCES
+vv <- md7[449,1024:2021,,"MCT225"]  # 2 fairly clear changepoints
+dd <- md7[750,1024:2021,,"MCT225"]  # dummy line - no discernable changepionts
+    
+# possible package: ECP
+# advantage: multivariate
+{
+    library(ecp)
+    # gives no measure of confidence
+    # not sure how goodness-of-fit measure should be interpreted
+    
+    overplot(md7, 449, "MCT225", xlim = c(1024, 2048))
+    overplot(md7, 750, "MCT225", xlim = c(1024, 2048))
+    
+    zz <- e.cp3o(vv, K = 5)
+    abline(v = 1024 + zz$cpLoc[[4]], col = "cyan3")
+    # basically finds 5 points every time
+    
+    qq <- e.agglo(md7[449,1024:2021,,"MCT225"])
+    qq.d <- e.agglo(dd)
+    abline(v = 1024 + qq.d$estimates, col = "magenta3")
+    # more flexible: found start, end & changepoint when there is one.
+    # in flat data, found 800+ changepoints.
+    
+    aa <- e.divisive(vv)
+    abline(v = 1024 + aa$estimates, col = "green", lty = 2)
+    abline(v = 1024 + aa$order.found[3:8], col = "cyan3")
+    # finds far too many changepionts (although gives order found, so can check sequentially)
+    vv[114,] - vv[113,]
+    vv[144,] - vv[143,]
+    vv[176,] - vv[175,]
+    # may be useful if check magnitude of change at each point.
+}
+
+# possible package: BCP
+{
+    library(bcp)
+    bb <- bcp(vv, p0 = 0.001)
+    
+    overplot(md7, 449, "MCT225", xlim = c(1024, 2048))
+    abline(v = 1024 + which(bb$posterior.prob > 0.95), col = "gold")
+    abline(v = 1024 + which(bb$posterior.prob > 0.999), col = "magenta3")
+    
+    abline(v = 1024 + which.max(bb$posterior.prob), col = "red")
+    
+    overplot(md7, 750, "MCT225", xlim = c(1024, 2048))
+    
+    
+}
+
+# possible package: CPM
+{
+    library(cpm)
+    
+    cc <- detectChangePoint(vv, cpmType = "GLR")
+    overplot(md7, 449, "MCT225", xlim = c(1024, 2048))
+    abline(v = 1024 + cc$changePoint, col = "red")
+    
+    cc2 <- detectChangePoint(vv[cc$changePoint:998,2], cpmType = "Student")
+    abline(v = cc$changePoint + cc2$changePoint, col = "orange")
+    
+    cc3 <- detectChangePoint(vv[cc2$changePoint:998,2], cpmType = "Student")
+    abline(v = cc$changePoint + cc2$changePoint + cc3$changePoint, col = "gold")
+    
+    
+    cm <- processStream(vv[,2], cpmType = "Cramer-von-Mises")
+}
+
+# possible package: changepoint
+# unable to handle multivariate data. Bleh.
+{
+    library(changepoint)
+    
+    cp <- cpt.mean(vv)
+    overplot(md7, 449, "MCT225", xlim = c(1024, 2048))
+    abline(v = 1024 + cc$changePoint, col = "red")
+    
+    cc2 <- detectChangePoint(vv[cc$changePoint:998,2], cpmType = "Student")
+    abline(v = cc$changePoint + cc2$changePoint, col = "orange")
+    
+    cc3 <- detectChangePoint(vv[cc2$changePoint:998,2], cpmType = "Student")
+    abline(v = cc$changePoint + cc2$changePoint + cc3$changePoint, col = "gold")
+    
+    
+    cm <- processStream(vv[,2], cpmType = "Cramer-von-Mises")
+}
+#----------------------------------------------------------------------------
+
 
 # WHAT ABOUT DOING EVERYTHING OVER MEDIAN-DIFFERENCED IMAGE? WHY NOT?
 
@@ -390,3 +597,15 @@ lines(ma.pre * ma.post, col = "blue")
 # again: smears effect of individual v. bright pixels
 
 ####################################################################################################
+
+####################################################################################################
+
+# TEST CASE FOR SPLIT-KERNEL CONVOLUTION                                                        ####
+
+tst <- array(0, dim = c(23, 23))
+tst[12,] <- 300
+pixel.image(tst)
+
+rr <- r2m(focal(m2r(tst), k))
+pixel.image(rr)
+    
