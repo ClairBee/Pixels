@@ -2,6 +2,7 @@
 # update pixel.plot function to handle ppp objects
 # next step: check quadratic trend model (K-function etc) for each pixel map
 # look at deviations from quadratic trend
+# correlation between nonlinearity & brightness is how strong?
 
 library("IO.Pixels"); library("CB.Misc")
 fpath <- "./Notes/Universal-thresholding/fig/"
@@ -237,6 +238,61 @@ df <- lapply(df, assign.category)
 
 ####################################################################################################
 
+# MANUALLY ADD EXTRA LINES OF BAD PIXELS                                                        ####
+
+# 131122
+{
+    pixel.plot(bpx.scmd$"131122", xlim = c(1800, 1900), ylim = c(1000, 1100))
+    click()
+    
+    # find lines maually (all of these have had neighbour columns tested as well)
+    # 17 dark columns to identify - all single columns
+    o.plot(pw.m[88,,"grey", "131122"] - pw.m[87,,"grey", "131122"])     # 88 (upper)
+    o.plot(pw.m[159,,"grey", "131122"] - pw.m[158,,"grey", "131122"]) # 159 (lower)
+    o.plot(pw.m[522,,"grey", "131122"] - pw.m[521,,"grey", "131122"]) # 522 (lower)
+    o.plot(pw.m[610,,"grey", "131122"] - pw.m[609,,"grey", "131122"]) # 610 (upper)
+    o.plot(pw.m[736,,"grey", "131122"] - pw.m[735,,"grey", "131122"]) # 736 (lower)
+    o.plot(pw.m[959,,"grey", "131122"] - pw.m[958,,"grey", "131122"]) # 959 (lower)
+    o.plot(pw.m[1080,,"grey", "131122"] - pw.m[1079,,"grey", "131122"]) # 1080 (lower)
+    o.plot(pw.m[1302,,"grey", "131122"] - pw.m[1301,,"grey", "131122"]) # 1302 (upper)
+    o.plot(pw.m[1314,,"grey", "131122"] - pw.m[1313,,"grey", "131122"]) # 1312 (lower)
+    o.plot(pw.m[1327,,"grey", "131122"] - pw.m[1326,,"grey", "131122"]) # 1327 (upper)
+    o.plot(pw.m[1398,,"grey", "131122"] - pw.m[1397,,"grey", "131122"]) # 1398 (upper)
+    o.plot(pw.m[1396,,"grey", "131122"] - pw.m[1395,,"grey", "131122"]) # 1396 (upper)
+    o.plot(pw.m[1526,,"grey", "131122"] - pw.m[1525,,"grey", "131122"]) # 1526 (upper)
+    o.plot(pw.m[1704,,"grey", "131122"] - pw.m[1703,,"grey", "131122"]) # 1704 (lower)
+    o.plot(pw.m[1766,,"grey", "131122"] - pw.m[1767,,"grey", "131122"]) # 1766 (lower)
+    o.plot(pw.m[1893,,"grey", "131122"] - pw.m[1892,,"grey", "131122"]) # 1893 (upper)
+    o.plot(pw.m[1998,,"grey", "131122"] - pw.m[1997,,"grey", "131122"]) # 1998 (upper)
+    
+    dc <- list("u" = c(88, 1302, 1327, 1398, 1396, 1526, 1998, 1893),
+               "l" = c(159, 522, 610, 736, 959, 1080, 1312, 1704, 1766))
+    
+    sp.131122 <- array(readRDS("./02_Objects/med-diffs/md7-131122.rds"),
+                       dim = c(2048, 1024, 2, 3), 
+                       dimnames = list(NULL, NULL, c("l", "u"), c("black", "grey", "white")))
+    pixel.image(sp.131122[,, "u", "grey"])
+    
+    # now use change-point detection (ecp.divisive/bcp) to identify line ends
+    
+    
+    # 
+    ddply(bpx.scmd$"131122", .(x, l.id), summarise, ymin = min(y), ymax = max(y),
+          range = max(y) - min(y) + 1, length = length(x), coverage = length / range)
+    bpx.scmd$"131122"[bpx.scmd$"131122"$x == 1997 & is.na(bpx.scmd$"131122"$l.id),]
+    
+    pixel.image(pw.m[,,"grey", "131122"], xlim = c(80, 120), ylim = c(1130, 1140))
+    points(bpx.scmd$"131122"[bpx.scmd$"131122"$l.id == "line.64",], pch = 0)
+}
+
+# MCT225
+{
+    
+}
+
+
+####################################################################################################
+
 # EXTRACT & COMPARE BAD PIXEL MAPS                                                              ####
 
 # extract each type of bad pixel map
@@ -404,28 +460,6 @@ sapply(names(bpx.off), function(nm) {
 
 # ENVELOPE FUNCTIONS                                                                            ####
 
-# envelope plotting function
-env.plot <- function(px.ppp, px.ppm, dist.fun, normalise = F, ...) {
-    
-    if (normalise) {
-        trans <- expression(. - pi * r ** 2)
-    } else {
-        trans <- NULL
-    }
-    
-    plot(envelope(px.ppm, dist.fun, nsim = 99, nrank = 2, transform = trans, verbose = F, fix.n = T), 
-         col = "blue", legend = F, shadecol = adjustcolor("cyan3", alpha = 0.2), ...)
-    plot(envelope(px.ppp, dist.fun, nsim = 99, nrank = 2, transform = trans, verbose = F, fix.n = T), 
-         add = T, legend = F, shadecol = adjustcolor("gold", alpha = 0.2))
-    
-    legend("topleft", bty = "n",
-           pt.bg = adjustcolor(c("gold", "cyan3", NA, NA, NA), alpha = 0.2), 
-           col = c(NA, NA, "red", "blue", "black"),
-           pch = c(22, 22, NA, NA, NA), 
-           lty = c(NA, NA, 2, 2, 1),
-           legend = c("Envelope for data", "Envelope for model", "Theoretical (data)", "Theoretical (model)", "Observed"))
-}
-
 plot(envelope(ppp.cb$"160430", Gest, nsim = 99, nrank = 2, verbose = F, fix.n = T))
 plot(envelope(ppp.cb$"160430", Fest, nsim = 99, nrank = 2, verbose = F, fix.n = T))
 plot(envelope(ppp.cb$"160430", Kest, nsim = 99, nrank = 2, verbose = F, fix.n = T, transform = expression(. - pi * r ** 2)))
@@ -484,9 +518,69 @@ lapply(ppp.scmd, nonpara, sig = 80)
 
 # PARAMETRIC MODELLING                                                                          ####
 
-zz <- lapply(ppp.cb, ppm, ~ x + y + I(x^2) + I(y^2) + I(x *y))
+# envelope plotting function
+env.plot <- function(px.ppp, px.ppm, dist.fun, normalise = F, ...) {
+    
+    if (normalise) {
+        trans <- expression(. - pi * r ** 2)
+    } else {
+        trans <- NULL
+    }
+    
+    plot(envelope(px.ppm, dist.fun, nsim = 99, nrank = 2, transform = trans, verbose = F, fix.n = T), 
+         col = "blue", legend = F, shadecol = adjustcolor("cyan3", alpha = 0.2), ...)
+    plot(envelope(px.ppp, dist.fun, nsim = 99, nrank = 2, transform = trans, verbose = F, fix.n = T), 
+         add = T, legend = F, shadecol = adjustcolor("gold", alpha = 0.2))
+    
+    legend("topleft", bty = "n",
+           pt.bg = adjustcolor(c("gold", "cyan3", NA, NA, NA), alpha = 0.2), 
+           col = c(NA, NA, "red", "blue", "black"),
+           pch = c(22, 22, NA, NA, NA), 
+           lty = c(NA, NA, 2, 2, 1),
+           legend = c("Envelope for data", "Envelope for model", "Theoretical (data)", "Theoretical (model)", "Observed"))
+}
 
-lapply(zz, plot, se = F)
+# quadratic trend modelling over CB error points
+{
+    zz <- lapply(ppp.cb, ppm, ~ x + y + I(x^2) + I(y^2) + I(x *y))
+    lapply(zz, plot, se = F, how = "contour")
+    
+    env.plot(ppp.cb$"131122", zz$"131122", Kest, normalise = T)
+    env.plot(ppp.cb$"140128", zz$"140128", Kest, normalise = T)
+    env.plot(ppp.cb$"160430", zz$"160430", Kest, normalise = T)
+    env.plot(ppp.cb$"MCT225", zz$"MCT225", Kest, normalise = T)
+    
+    env.plot(ppp.cb$"131122", zz$"131122", Gest, normalise = F)
+    env.plot(ppp.cb$"140128", zz$"140128", Gest, normalise = F)
+    env.plot(ppp.cb$"160430", zz$"160430", Gest, normalise = F)
+    env.plot(ppp.cb$"MCT225", zz$"MCT225", Gest, normalise = F)
+    
+    env.plot(ppp.cb$"131122", zz$"131122", Fest, normalise = F)
+    env.plot(ppp.cb$"140128", zz$"140128", Fest, normalise = F)
+    env.plot(ppp.cb$"160430", zz$"160430", Fest, normalise = F)
+    env.plot(ppp.cb$"MCT225", zz$"MCT225", Fest, normalise = F)
+}
+
+# quadratic trend modelling over SC-nonuniform points
+{
+    zz.scmd <- lapply(ppp.scmd, ppm, ~ x + y + I(x^2) + I(y^2) + I(x *y))
+    lapply(zz.scmd, plot, se = F, how = "contour")
+    
+    env.plot(ppp.cb$"131122", zz.scmd$"131122", Kest, normalise = T)
+    env.plot(ppp.cb$"140128", zz.scmd$"140128", Kest, normalise = T)
+    env.plot(ppp.cb$"160430", zz.scmd$"160430", Kest, normalise = T)
+    env.plot(ppp.cb$"MCT225", zz.scmd$"MCT225", Kest, normalise = T)
+    
+    env.plot(ppp.cb$"131122", zz$"131122", Gest, normalise = F)
+    env.plot(ppp.cb$"140128", zz$"140128", Gest, normalise = F)
+    env.plot(ppp.cb$"160430", zz$"160430", Gest, normalise = F)
+    env.plot(ppp.cb$"MCT225", zz$"MCT225", Gest, normalise = F)
+    
+    env.plot(ppp.cb$"131122", zz$"131122", Fest, normalise = F)
+    env.plot(ppp.cb$"140128", zz$"140128", Fest, normalise = F)
+    env.plot(ppp.cb$"160430", zz$"160430", Fest, normalise = F)
+    env.plot(ppp.cb$"MCT225", zz$"MCT225", Fest, normalise = F)
+}
 
 lapply(lapply(ppp.nl, ppm, ~ x + y + I(x^2) + I(y^2) + I(x *y)), plot, se = F)
 
