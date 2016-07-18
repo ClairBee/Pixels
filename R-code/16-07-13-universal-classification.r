@@ -1,5 +1,7 @@
 
 # update pixel.plot function to handle ppp objects
+# next step: check quadratic trend model (K-function etc) for each pixel map
+# look at deviations from quadratic trend
 
 library("IO.Pixels"); library("CB.Misc")
 fpath <- "./Notes/Universal-thresholding/fig/"
@@ -291,33 +293,82 @@ bpx.nl <- lapply(bpx.nl, tag.lines)
 bpx.scmd <- lapply(bpx.scmd, tag.lines)
 
 # identify clusters to that they can easily be removed
+tag.clusters <- function(px) {
+    
+    # identify & group all adjacent pixels
+    cc <- clump(m2r(bpx2im(data.frame(px[,1:2], type = 1), im.dim = c(2048, 2048))), dir = 4)
+    xy <- data.frame(xyFromCell(cc, which(!is.na(getValues(cc)))), 
+                     id = getValues(cc)[!is.na(getValues(cc))])
+    
+    # filter out & retain only clusters containing multiple clusters
+    # could use more sophisticated way to tag centres
+    ll <- ddply(xy, .(id), summarise, 
+                xmean = floor(mean(x)), ymean = floor(mean(y)), size = length(x))
+    
+    # check if any clusters actually occur, tag in pixel list 
+    if (nrow(ll) > 0) {
+        xy <- merge(xy, ll[ll$size > 1,], by = "id", all.x = T)
+        
+        xy$cl.type[!is.na(xy$size)] <- "cl.body"
+        xy$cl.type[which(xy$x == xy$xmean & xy$y == xy$ymean)] <- "cl.root"
+ 
+    } else {
+        xt$cl.type <- NA
+    }
+    
+    px <- merge(px, xy[,c("x", "y", "cl.type", "cl.id" = "id")], by = c(1:2), all = T)
+    
+    px$cl.type[!is.na(px$l.id)] <- "line.body"
+    px$cl.type[is.na(px$cl.type)] <- "singleton"
+    return(px)
+}
+
+bpx.off <- lapply(bpx.off, tag.clusters)
+bpx.cb <- lapply(bpx.cb, tag.clusters)
+bpx.nl <- lapply(bpx.nl, tag.clusters)
+bpx.scmd <- lapply(bpx.scmd, tag.clusters)
 
 # convert to list of ppp objects for easier reference
 im.dims <- lapply(df, function(px) list(x = range(px$x[!is.na(px$b)]), y = range(px$y[!is.na(px$b)])))
 
-bpx2ppp <- function(bpx, exclude.lines = T) {
+bpx2ppp <- function(bpx, excl.feat = c("cl.body", "line.body")) {
     sapply(names(bpx), function(nm) {
         px <- bpx[[nm]]
         
         # filter lines if necessary
-        if (exclude.lines) px <- px[is.na(px$l.id),]
+        px <- px[!(px$cl.type %in% excl.feat),]
 
         pp <- ppp(px$x, px$y, im.dims[[nm]]$x, im.dims[[nm]]$y)
     }, simplify = F)
 }
 
-ppp.off <- bpx2ppp(bpx.off, exclude.lines = T)
-ppp.cb <- bpx2ppp(bpx.cb, exclude.lines = T)
-ppp.nl <- bpx2ppp(bpx.nl, exclude.lines = T)
-ppp.scmd <- bpx2ppp(bpx.scmd, exclude.lines = T)
+ppp.off <- bpx2ppp(bpx.off, excl.feat = c("cl.body", "line.body"))
+ppp.cb <- bpx2ppp(bpx.cb, excl.feat = c("cl.body", "line.body"))
+ppp.nl <- bpx2ppp(bpx.nl, excl.feat = c("cl.body", "line.body"))
+ppp.scmd <- bpx2ppp(bpx.scmd, excl.feat = c("cl.body", "line.body"))
+
+                                    #           all pixels                      roots only
+                                    # 131122 140128 MCT225 160430       131122 140128 MCT225 160430
+sapply(ppp.off, "[[", "n")          #     97     81     48   5892           75     57     32   5694
+sapply(ppp.cb, "[[", "n")           #    529    244    118   6862          443    175     75   6557
+sapply(ppp.nl, "[[", "n")           #   1701     81    374   2654         1327     56    305   2545
+sapply(ppp.scmd, "[[", "n")         #    153     77    546   6681          103     55    276   6574
 
 
-                                    # 131122 140128 MCT225 160430
-sapply(ppp.off, "[[", "n")          #     97     81     48   5892
-sapply(ppp.cb, "[[", "n")           #    529    244    118   6862
-sapply(ppp.nl, "[[", "n")           #   1701     81    374   2654
-sapply(ppp.scmd, "[[", "n")         #    153     77    546   6681
+####################################################################################################
 
+# DESCRIBE CLUSTER DISTRIBUTION (SIZE & BRIGHTNESS)                                             ####
+px <- bpx.cb$"160430"
+px <- px[!(px$cl.type %in% c("line.body")), ]
+hh <- ddply(px, .(id), summarise,
+            xm = floor(mean(x)), ym = floor(mean(y)), size = length(x),
+            bmean = mean(b), gmean = mean(g), wmean = mean(w),
+            bsum = sum(b), gsum = sum(g), wsum = sum(w))
+table(hh$size)
+
+plot(hh[,c("xm", "ym")], 
+     pch = c(20, 16, 16)[findInterval(hh$size, c(0, 1.5, 4.5, 999))],
+     col = c("gold", "blue", "red")[findInterval(hh$size, c(0, 1.5, 4.5, 999))])
 
 ####################################################################################################
 
@@ -384,7 +435,12 @@ plot(envelope(ppp.cb$"140128", Kest, nsim = 99, nrank = 2, verbose = F, fix.n = 
 plot(envelope(ppp.cb$"MCT225", Kest, nsim = 99, nrank = 2, verbose = F, fix.n = T, transform = expression(. - pi * r ** 2)))
 
 pixel.plot(bpx.cb$"MCT225")
-pixel.image(pw.m[,,"grey", "MCT225"], xlim = c(1540, 1600), ylim = c(1150, 1200))
+pixel.image(pw.m[,,"grey", "MCT225"], xlim = c(1500, 1600), ylim = c(1150, 1200))
+
+pixel.plot(bpx.cb$"MCT225"[bpx.cb$"MCT225"$cl.type == "cl.root", 1:2], xlim = c(1500,1600), ylim = c(1200,1400))
+points(bpx.cb$"MCT225"[bpx.cb$"MCT225"$cl.type == "singleton", 1:2], pch = 15, col = "red")
+points(ppp.cb$"MCT225"$x, ppp.cb$"MCT225"$y, col = "red", pch = 20)
+pixel.plot(ppp.cb$"MCT225"$x, ppp.cb$"MCT225"$y))
 
 ####################################################################################################
 

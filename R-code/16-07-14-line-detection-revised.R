@@ -191,6 +191,55 @@ overplot <- function(im.array, column, dt, xlim = c(0, 2048), hline = 0, vline =
 
 
 #----------------------------------------------------------------------------
+# ROUTE 1.3: CONVOLUTION WITH VARIABLE-LINE-WIDTH KERNEL
+{
+    k.size <- 5
+    col.width <- 2
+    
+    k <- matrix(c(rep(-1, k.size * floor(k.size / 2)),
+                  rep((k.size - 1) / col.width, k.size * col.width),
+                  rep(-1, k.size * floor(k.size / 2))),
+                nrow = k.size)
+    if (ncol(k) %% 2 == 0) k <- cbind(-1, k)        # pad if necessary
+    
+    conv.sp <- array(apply(md7, 3:4, function(im) r2m(focal(m2r(im), k))),
+                     dim = dim(md7), dimnames = dimnames(md7))
+    
+    pixel.image(conv.sp[,,"black", "MCT225"], xlim = c(400,500), ylim = c(1100, 1200))
+    o.plot(conv.sp[,1160, "grey", "MCT225"], xlim = c(400,500), ylim = c())
+    o.plot(md7[,1160, "grey", "MCT225"], xlim = c(400,500), col = "blue", add = T)
+    abline(h = c(-1,1) * 100000, col = "red")
+    
+    pixel.image(md7[,,"grey", "MCT225"], xlim = c(400,500), ylim = c(1100, 1200))
+    points(which(abs(conv.sp[,,"grey", "MCT225"]) > 100000, arr.ind = T), pch = 0)
+    plot(conv.sp[,1160, "black", "MCT225"], type = "l", xlim = c(400,500))
+    # finds pair of defective columns, with 2-px edge
+    
+    overplot(conv.sp, 449, "MCT225", xlim = c(1024, 2048))
+    overplot(conv.sp, 750, "MCT225", xlim = c(1024, 2048))
+    
+    plot(conv.sp[449,,"black", "MCT225"], xlim = c(1024, 2048), type = "l")
+    
+    pixel.plot(which(abs(conv.sp[,,"grey","MCT225"]) > 100000, arr.ind = T), cex = 0.4)
+    {
+        plot(pw.m[256,,"grey", "MCT225"], type = "l")
+        lines(pw.m[255,,"grey", "MCT225"], col = "blue")
+        lines(pw.m[257,,"grey", "MCT225"], col = "darkred")
+        
+        points(pw.m[256,,"grey", "MCT225"], pch = ".", cex = 2,
+               col = c(NA, "red")[(abs(conv.sp[256,,"grey","MCT225"]) > 100000) + 1])
+        plot(pw.m[257,,"grey", "MCT225"], pch = ".", cex = 2,
+               col = c(NA, "cyan3")[(abs(conv.sp[257,,"grey","MCT225"]) > 100000) + 1])
+        
+        o.plot(conv.sp[255,,"grey", "MCT225"])
+        
+        plot(conv.sp[256,,"grey", "MCT225"], type = "l", ylim = c(-150000, 100000))
+        lines(conv.sp[257,,"grey", "MCT225"], col = "blue")
+    }
+}
+
+
+#----------------------------------------------------------------------------
 # ROUTE 2: DIRECT THRESHOLDING OF MEDIAN DIFFERENCES
 # more intuitive threshold setting
 {
@@ -212,91 +261,168 @@ overplot <- function(im.array, column, dt, xlim = c(0, 2048), hline = 0, vline =
 
 #----------------------------------------------------------------------------
 # ROUTE 3: CHANGEPOINT ANALYSIS OF MEDIAN DIFFERENCES
-vv <- md7[449,1024:2021,,"MCT225"]  # 2 fairly clear changepoints
-dd <- md7[750,1024:2021,,"MCT225"]  # dummy line - no discernable changepionts
-    
-# possible package: ECP
-# advantage: multivariate
+# threshold using median differences first to reduce # candidates (also to detrend data)
+# changepoint analysis to cut columns
+# comparison of mean above and below changepoint 
+
+# test bcp on all columns
+# NB NEED TO REMOVE NA VALUES FIRST
+# struggles when applied to whole column
 {
-    library(ecp)
-    # gives no measure of confidence
-    # not sure how goodness-of-fit measure should be interpreted
+    samp <- md7[c(28:32, 256, 257, 448, 449, 450), 28:2021,,"MCT225"]
+    system.time(bb <- apply(samp, 1, bcp))             # ~ 1105 for whole image
+    unlist(lapply(bb, function(bp) which.max(bp$posterior.prob)))
     
-    overplot(md7, 449, "MCT225", xlim = c(1024, 2048))
-    overplot(md7, 750, "MCT225", xlim = c(1024, 2048))
+    plot(bb[[6]]$data[,3], type = "l")
+    abline(v = 28 + which.max(bb[[6]]$posterior.prob), col = "red")
+ 
+    plot(bb[[7]]$data[,3], type = "l")
+    abline(v = 28 + which.max(bb[[7]]$posterior.prob), col = "red")   
     
-    zz <- e.cp3o(vv, K = 5)
-    abline(v = 1024 + zz$cpLoc[[4]], col = "cyan3")
-    # basically finds 5 points every time
-    
-    qq <- e.agglo(md7[449,1024:2021,,"MCT225"])
-    qq.d <- e.agglo(dd)
-    abline(v = 1024 + qq.d$estimates, col = "magenta3")
-    # more flexible: found start, end & changepoint when there is one.
-    # in flat data, found 800+ changepoints.
-    
-    aa <- e.divisive(vv)
-    abline(v = 1024 + aa$estimates, col = "green", lty = 2)
-    abline(v = 1024 + aa$order.found[3:8], col = "cyan3")
-    # finds far too many changepionts (although gives order found, so can check sequentially)
-    vv[114,] - vv[113,]
-    vv[144,] - vv[143,]
-    vv[176,] - vv[175,]
-    # may be useful if check magnitude of change at each point.
+    plot(bb[[8]]$data[,3], type = "l")
+    abline(v = 28 + which.max(bb[[8]]$posterior.prob), col = "red")   
 }
 
-# possible package: BCP
+# test ecp on all columns
+# very slow (stopped after ~1239 while attempting to do only 10 columns)
+# NB NEED TO REMOVE NA VALUES FIRST
+# struggles when applied to whole column
 {
-    library(bcp)
-    bb <- bcp(vv, p0 = 0.001)
+    samp <- md7[c(28:32, 256, 257, 448, 449, 450), 28:2021,,"MCT225"]
+    ee[["256"]] <- e.divisive(md7[256, 28:2021, ,"MCT225"])
     
-    overplot(md7, 449, "MCT225", xlim = c(1024, 2048))
-    abline(v = 1024 + which(bb$posterior.prob > 0.95), col = "gold")
-    abline(v = 1024 + which(bb$posterior.prob > 0.999), col = "magenta3")
+    tt <- apply(md7[28:2021,,"grey", "MCT225"], 1, function(cc) t.test(cc)$p.value)
     
-    abline(v = 1024 + which.max(bb$posterior.prob), col = "red")
+    t.test(md7[256,,"grey", "MCT225"])
+    tt <- t.test(md7[256, , ,"MCT225"])
+    t.test(md7[750, , ,"MCT225"])$p.value
     
-    overplot(md7, 750, "MCT225", xlim = c(1024, 2048))
+    overplot(md7, 256, "MCT225")
+    abline(v = 28 + ee$"256"$order.found[1:3], col = "red")
     
+    plot(bb[[7]]$data[,3], type = "l")
+    abline(v = 28 + which.max(bb[[7]]$posterior.prob), col = "red")   
     
+    plot(bb[[8]]$data[,3], type = "l")
+    abline(v = 28 + which.max(bb[[8]]$posterior.prob), col = "red")   
 }
 
-# possible package: CPM
+# package comparisons
 {
-    library(cpm)
+    vv <- md7[449,,,"MCT225"][!is.na(md7[449,,,"MCT225"])]  # 2 fairly clear changepoints
+    dd <- md7[750,,,"MCT225"]  # dummy line - no discernable changepionts
     
-    cc <- detectChangePoint(vv, cpmType = "GLR")
-    overplot(md7, 449, "MCT225", xlim = c(1024, 2048))
-    abline(v = 1024 + cc$changePoint, col = "red")
+    # possible package: ECP
+    # advantage: multivariate, more selective than most
+    # doesn't find changepoints where mean is constant; finds many where mean changes (ie. on damaged lines)
+    # quite slow (~ 37s per 2048-column) - don't want to run on all columns if can avoid! (~ 20m per image?)
+    {
+        library(ecp)
+        # gives no measure of confidence (not sure how goodness-of-fit measure should be interpreted)
+        
+        zz <- e.cp3o(vv, K = 5)
+        overplot(md7, 449, "MCT225", xlim = c(1024, 2048))
+        abline(v = 1024 + zz$estimates, col = "cyan3")
+        
+        zz.d <- e.cp3o(dd, K = 5)
+        overplot(md7, 750, "MCT225", xlim = c(1024, 2048))
+        abline(v = 1024 + zz.d$estimates, col = "cyan3") 
+        # found an erroneous breakpoint
+        
+        qq <- e.agglo(md7[449,1024:2021,,"MCT225"])
+        qq.d <- e.agglo(dd)
+        abline(v = 1024 + qq.d$estimates, col = "magenta3")
+        # more flexible: found start, end & changepoint when there is one.
+        
+        # in flat data, found 800+ changepoints.
+        
+        system.time(aa <- e.divisive(md7[256,1024:2021,,"MCT225"]))
+        overplot(md7, 256, "MCT225", xlim = c(1024, 2048))
+        abline(v = 1024 + aa$estimates, col = "green", lty = 2)
+        abline(v = 1024 + aa$order.found[3], col = "red")
+        # finds far too many changepoints (although gives order found, so can check sequentially)
+        aa.d <- e.divisive(dd)
+        overplot(md7, 750, "MCT225", xlim = c(1024, 2048))
+        abline(v = 1024 + aa.d$estimates, col = "cyan3")
+        # found no changepoints in column with no changepoints
+        vv[114,] - vv[113,]
+        vv[144,] - vv[143,]
+        vv[176,] - vv[175,]
+        # may be useful if check magnitude of change at each point.
+    }
     
-    cc2 <- detectChangePoint(vv[cc$changePoint:998,2], cpmType = "Student")
-    abline(v = cc$changePoint + cc2$changePoint, col = "orange")
+    # possible package: BCP
+    # use to get prob. of most likely 
+    {
+        library(bcp)
+        bb <- bcp(vv)
+        
+        overplot(md7, 449, "MCT225", xlim = c(1024, 2048))
+        abline(v = 1024 + which(bb$posterior.prob > 0.95), col = "gold")
+        abline(v = 1024 + which(bb$posterior.prob > 0.999), col = "magenta3")
+        
+        abline(v = 24 + which.max(bb$posterior.prob), col = "red")
+        
+        
+        bb.d <- bcp(dd)
+        overplot(md7, 750, "MCT225", xlim = c(1024, 2048))
+        abline(v = 1024 + which(bb.d$posterior.prob > 0.95), col = "gold")
+        plot(bb.d$posterior.prob)
+    }
     
-    cc3 <- detectChangePoint(vv[cc2$changePoint:998,2], cpmType = "Student")
-    abline(v = cc$changePoint + cc2$changePoint + cc3$changePoint, col = "gold")
-    
-    
-    cm <- processStream(vv[,2], cpmType = "Cramer-von-Mises")
+    # rejected packages
+    {
+        # possible package: CPM
+        # doesn't give posterior probability
+        # also selects a changepoint slightly before the actual change
+        {
+            library(cpm)
+            
+            cc <- detectChangePoint(vv, cpmType = "GLR")
+            overplot(md7, 449, "MCT225", xlim = c(1024, 2048))
+            abline(v = 1024 + cc$changePoint, col = "red")
+            
+            cc2 <- detectChangePoint(vv[cc$changePoint:998,2], cpmType = "Student")
+            abline(v = cc$changePoint + cc2$changePoint, col = "orange")
+            
+            cc3 <- detectChangePoint(vv[cc2$changePoint:998,2], cpmType = "Student")
+            abline(v = cc$changePoint + cc2$changePoint + cc3$changePoint, col = "gold")
+            
+            
+            cm <- processStream(vv[,2], cpmType = "Cramer-von-Mises")
+        }
+        
+        # possible package: changepoint
+        # unable to handle multivariate data. Bleh.
+        {
+            library(changepoint)
+            
+            cp <- cpt.mean(vv)
+            overplot(md7, 449, "MCT225", xlim = c(1024, 2048))
+            abline(v = 1024 + cc$changePoint, col = "red")
+            
+            cc2 <- detectChangePoint(vv[cc$changePoint:998,2], cpmType = "Student")
+            abline(v = cc$changePoint + cc2$changePoint, col = "orange")
+            
+            cc3 <- detectChangePoint(vv[cc2$changePoint:998,2], cpmType = "Student")
+            abline(v = cc$changePoint + cc2$changePoint + cc3$changePoint, col = "gold")
+            
+            
+            cm <- processStream(vv[,2], cpmType = "Cramer-von-Mises")
+        }
+        
+        # possible package: strucchange
+        # picked an arbitrary breakpoint, missed the big one. Rejected.
+        {
+            library(strucchange)
+            ss <- breakpoints(ts(vv[,1]) ~ 1)
+            overplot(md7, 449, "MCT225", xlim = c(1024, 2048))
+            abline(v = 1024 + ss$breakpoints, col = "red")
+        }
+    }
 }
 
-# possible package: changepoint
-# unable to handle multivariate data. Bleh.
-{
-    library(changepoint)
-    
-    cp <- cpt.mean(vv)
-    overplot(md7, 449, "MCT225", xlim = c(1024, 2048))
-    abline(v = 1024 + cc$changePoint, col = "red")
-    
-    cc2 <- detectChangePoint(vv[cc$changePoint:998,2], cpmType = "Student")
-    abline(v = cc$changePoint + cc2$changePoint, col = "orange")
-    
-    cc3 <- detectChangePoint(vv[cc2$changePoint:998,2], cpmType = "Student")
-    abline(v = cc$changePoint + cc2$changePoint + cc3$changePoint, col = "gold")
-    
-    
-    cm <- processStream(vv[,2], cpmType = "Cramer-von-Mises")
-}
+
 #----------------------------------------------------------------------------
 
 
