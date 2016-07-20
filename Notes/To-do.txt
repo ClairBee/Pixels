@@ -1,6 +1,8 @@
 
 TO DO
 
+Use an offset-corrected image to identify screen spots: should stand out more clearly?
+
 ===================================================================================================
 
 IN OLD DATA ESPECIALLY, need to distinguish between a dim line (slightly low) and a non-responsive line (charge blocked). Essentially three types of lines observed: bright, dim and dead. (Try to link to three types of pixel?)

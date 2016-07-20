@@ -8,8 +8,8 @@ fpath <- "./Data-packs/acq-description/fig/"
 
 Cat.cols <- c("purple", "black", "magenta3", "red", "orange", "yellow", NA, "gold", "grey", NA, "blue", "skyblue", "green3")
 
-acq <- readRDS("./02_Objects/images/pwm-140128.rds")
-write("Old data, after refurbishment: images acquired on 14-01-28, main detector", paste0(fpath, "title.txt"))
+acq <- readRDS("./02_Objects/images/pwm-loan.rds")
+write("WMG loan panel: images acquired on 16-07-19", paste0(fpath, "title.txt"))
 
 ####################################################################################################
 
@@ -21,6 +21,7 @@ write("Old data, after refurbishment: images acquired on 14-01-28, main detector
 # "./02_Objects/old-data/pwm-140128.rds"; "Old data after refurbishment: images acquired on 14-01-28, main detector"
 # "./02_Objects/images/pwm-MCT225.rds"; "Images acquired on 16-07-02, Aylesbury detector MCT225"
 # "./02_Objects/images/pwm-160705.rds"; "Images acquired on 16-07-05, main detector"
+# "./02_Objects/images/pwm-loan.rds"; "WMG loan panel: images acquired on 16-07-19"
 
 ####################################################################################################
 

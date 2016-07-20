@@ -46,7 +46,7 @@ overplot <- function(im.array, column, dt, xlim = c(0, 2048), hline = 0, vline =
     
     overplot(md7, 447, "MCT225", xlim = c(1024, 2048))
     overplot(md7, 448, "MCT225", xlim = c(1024, 2048))
-    overplot(md7, 449, "MCT225", xlim = c(1024, 2048))
+    overplot(md7, 449, "MCT225", xlim = c(1024, 2048), ylim = c(-50000, -40000))
     overplot(md7, 450, "MCT225", xlim = c(1024, 2048))
 }
 
