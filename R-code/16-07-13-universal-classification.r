@@ -273,6 +273,13 @@ df <- lapply(df, assign.category)
                        dimnames = list(NULL, NULL, c("l", "u"), c("black", "grey", "white")))
     pixel.image(sp.131122[,, "u", "grey"])
     
+    pdf("./dark-line-736-131122.pdf")
+    plot(pw.m[159,,"white", "131122"], type = "l", col = "gold", xlim = c(0,1024), ylim = c(4800,6000))
+    lines(pw.m[159,,"grey", "131122"], col = "green3")
+    lines(pw.m[159,,"black", "131122"])
+    legend("topleft", col = c("gold", "green3", "black"), lty = 1, legend = c("white", "grey", "black"), bty = "n")
+    dev.off()
+    
     # now use change-point detection (ecp.divisive/bcp) to identify line ends
     
     

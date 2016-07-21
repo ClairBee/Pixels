@@ -162,6 +162,13 @@ le.plot(1926, 1627)
 
 # create bad pixel map manually for now
 
+pdf("./double-column-defect-MCT225.pdf")
+plot(pw.m[256,,"white", "MCT225"], type = "l", col = "gold", xlim = c(1024, 2048), ylim = c(4000,10000))
+lines(pw.m[256,,"grey", "MCT225"], col = "green3")
+lines(pw.m[256,,"black", "MCT225"])
+legend("topleft", col = c("black", "green3", "gold"), lty = 1, bty = "n", legend = c("black", "grey", "white"))
+dev.off()
+
 ####################################################################################################
 
 # LOCALLY BRIGHT/DIM PIXELS                                                                     ####

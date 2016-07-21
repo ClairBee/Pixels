@@ -43,9 +43,11 @@ ddply(px, .(row), summarise, length = length(row))
 
 # 407
 {
+    pdf("./Column-defect-407.pdf")
     plot(acq[407,,"white"], type = "l", xlim = c(0,1024), ylim = c(4500, 5500), col = "gold")
     lines(acq[407,,"grey"], col = "green3")
     lines(acq[407,,"black"])
+    dev.off()
     
     # neighbouring columns
     plot(acq[406,,"white"] - acq[405,,"white"], type = "l", xlim = c(0,1024))   # 406 ok
@@ -115,8 +117,11 @@ abline(h = 0, col = adjustcolor("darkred", alpha = 0.7))
     plot(acq[,77,"black"] - acq[,76,"black"], type = "l")
     lines(acq[,76,"black"] - acq[,75,"black"], col = adjustcolor("blue", alpha = 0.4))
     
+    pdf("./defect-column.pdf", height = 4)
     plot(acq[,77,"black"], type = "l")
     lines(acq[,76, "black"], col = "green3")
+    legend("bottomright", col = c("black", "green"), lty = 1, legend = c("Row 77", "Row 76"), bty = "n")
+    dev.off()
     lines(acq[,78, "black"], col = "cyan3")
     
     plot(acq[,77,"grey"], type = "l")
@@ -204,19 +209,23 @@ o.plot(os.g[,1025])
 
 # grey image - 2d gaussian spot by least squares
 {
-    g2d.ls <- function(gv, par) {
-        gv <- gv[!is.na(gv$z),]
-        c <- par[1]; x0 <- par[2]; y0 <- par[3]
-        sig.x <- par[4]; sig.y <- par[5]
+    g2d.ls <- function(obs, param) {
+        A <- param[1]; x0 <- param[2]; y0 <- param[3]
+        sig <- matrix(c(param[4], param[6], param[6], param[5]), ncol = 2)
         
-        est <- exp(-((gv$x - x0)^2 / (2 * sig.x^2) + (gv$y-y0)^2 / (2*sig.y^2)))
+        est <- dmvnorm(obs[,c("x", "y")], mean = c(x0, y0), sigma = sig)
+            #A * exp(-((x - x0)^2 / (2 * sig.x^2) + (y-y0)^2 / (2*sig.y^2)))
         
         # get square of difference - this is what we minimize
-        sum((est - gv$z)^2)
+        sum((est - obs$z)^2, na.rm = T)
     }
+    # A*exp(-(x-x0)^2/(2*sigmax^2)-(y-y0)^2/(2*sigmay^2))
     
-    # ~211 seconds to complete
-    system.time(zz <- optim(c(c = 1, x0 = 1024.5, y0 = 1024.5, sig.x = 1000, sig.y = 1000), g2d.ls, gv = gv))
+    obs.sig <- cov(gv[, c("x", "y")])
+    
+    # ~211 seconds to complete when covariance is not constrained
+    system.time(zz <- optim(c(A = 1, x0 = 1024.5, y0 = 1024.5, sig.x = var(gv$x), sig.y = var(gv$y), ),
+                            g2d.ls, obs = gv))
     zz$par
     #          c         x0         y0      sig.x      sig.y 
     # 15866.6004   838.2912  3684.1408  2993.5229 10677.9436
@@ -230,6 +239,28 @@ o.plot(os.g[,1025])
     g2d.fitted <- array(g2d.fv$fv, dim = c(2048, 2048))
     pixel.image(g2d.fitted)
     pixel.image(os.g)
+}
+
+# grey image - 2d gaussian spot by least squares, using nls
+{
+    # stopped after 8s: singular gradient
+    g2d.nls <- nls(z ~ A * exp(-(((x-x0)^2 / (2 * sig.x^2)) + ((y-y0)^2 / (2 * sig.y^2)))),
+                   data = gv, start = c(A = 1, x0 = 1024.5, y0 = 1024.5, sig.x = 900, sig.y = 900))
+}
+
+{
+    library("mvtnorm")
+    library(stats4)
+
+    mvn.ls <- function(obs, par) {
+        f.xy <- dmvnorm(obs[,c("x", "y")], c(par$x0, par$y0), par$sig)
+        sum((obs$z - f.xy)^2, na.rm = T)
+    }
+    
+    system.time(zz <- optim(par = list(x0 = 1024.5, y0 = 1024.5, sig = cov(gv[,1:2])), 
+                            mvn.ls, obs = gv, method = "L-BFGS-B",
+                            lower = c(0,0,NA), upper = c(2048, 2048, NA)))
+    
 }
 
 # grey image - ellipse by least squares
