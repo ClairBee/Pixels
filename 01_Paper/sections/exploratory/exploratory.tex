@@ -35,6 +35,8 @@ Unless stated otherwise, image plots are shaded to highlight changes in value cl
 
 Should probably formally limit our analysis to central region of detector (possibly as defined in manual?), since extreme edges are less likely to be of interest. Therefore can use median filtering etc without losing any data, since we are cropping the edge anyway.
 
+\addfigure{May be better to split out theoretical prep vs case studies?}
+
 \subsection{Description of data}
 
 Rather than summarising mean values, we generally prefer the median, which is more robust to extreme values. A single dark pixel in a white image may register 40000 DN lower than their neighbours; when healthy pixels fall within a range of only 7000 or so grey values, a handful of dark pixels can have a significant effect on local mean values, but less so on a median.
@@ -44,6 +46,19 @@ Rather than summarising mean values, we generally prefer the median, which is mo
 \addfigure{Images of quadratic trend model for black, grey \& white (grey \& white with dark image removed)}
 \addfigure{Images of linear gradients across subpanels}
 \addfigure{Boxplots of values in each subpanel?}
+
+\subsection{General detector health: deviations from circular spot}
+
+The grey and white images are obtained by exposing the detector to an x-ray source with nothing in the field of view. X-rays diffuse out from the source in a conical shape until they strike the detector; a `perfect' detector, \nb{get citation - speak to Jay} then, would register a circular spot pattern in the white and grey offset images (that is, white and grey images from which the black image has been subtracted), and the response $z_i$ at each pixel $(x_i, y_i)$ would be well modelled by a two-dimensional Gaussian distribution, centred at the focal point $(x_0, y_0)$ of the x-ray beam and with variances $\sigma_x$ and $\sigma_y$ reflecting the degree of dispersion of the x-rays:
+
+\[ z_i = \frac{1}{2\pi \sigma_x \sigma_y \sqrt{(1-\rho^2)}} \exp \left[ -\frac{1}{2(1-\rho^2)} \left[ \left(\frac{x_i-y_0}{\sigma_x}\right)^2 + \left(\frac{y_i-y_0}{\sigma_y}\right)^2 - 2\rho\left(\frac{x_i-x_0}{\sigma_x} \right) \left(\frac{y_i-y_0}{\sigma_y} \right) \right] \right] \]
+
+\nb{Much easier to assume rho = 0; suspect we can justify this, since difference should be more or less negligible, but check with Jay}
+$\sigma_x$ and $\sigma_y$ are allowed to vary, along with the covariance parameter $\rho$, to allow the shape of the spot to elongate and rotate if necessary, since the angle of intersection between the cone of x-rays and the plane of the panel may vary, possibly producing an elliptical pattern rather than a circular one. Once a spot has been fitted, any deviations from the expected spot shape will indicate pixels with an abnormal response to exposure to an x-ray source, and these individual clusters are then grouped according to their formation (clusters or lines of adjacent pixels, and dense regions of non-contiguous abnormal pixels, for example). As well as the proportion of the screen affected by abnormal pixels, it may also be useful for operators to monitor the mean detector response to a given power setting (or, conversely, the power required to obtain a given mean value), and also the standard deviation of the responses. 
+
+
+
+
 
 \subsection{Other considerations: screen spots and edge effects}
 %----------------------------------------------------

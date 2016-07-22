@@ -2,18 +2,269 @@
 # parametric modelling of expected spot shape
 
 library("IO.Pixels"); library("CB.Misc")
+library(spatial)
+
+fpath <- "./Notes/Parametric-spot/fig/"
 
 acq <- readRDS("./02_Objects/images/pwm-loan.rds")
 os.g <- acq[,,"grey"] - acq[,,"black"]
 gv <- setNames(melt(os.g), nm = c("x", "y", "z"))
 
-pw.m <- abind(sapply(c("131122", "MCT225", "160430"), 
+pw.m <- abind(sapply(c("131122", "140128", "MCT225", "160430", "loan"), 
                      function(nm) readRDS(paste0("./02_Objects/images/pwm-", nm, ".rds")), 
                      simplify = F),
               along = 4)
 
-# should probably normalise panels first - BUT this can assign variation to subpanels erroneously.
-# keep simplest approach: fit circular spot & report deviations
+# fit circular spot to each panel & report deviations
+
+####################################################################################################
+
+# CLEAN COPY OF CODE                                                                            ####
+
+# gaussian elliptical (rho = 0), no constraints on parameters
+{
+    # return vector of fitted values
+    gaussian.ellipse.ls <- function(obs, param) {
+            A <- param["A"]; x0 <- param["x0"]; y0 <- param["y0"]
+            sig.x <- param["sig.x"]; sig.y <- param["sig.y"]
+            
+            est <- A * exp(- 0.5 * ((((obs$x - x0) / sig.x)^2) + ((obs$y - y0) / sig.y)^2))
+            sum((est - obs$z)^2, na.rm = T)
+    }
+    
+    gaussian.ellipse.mat <- function(param, obs) {
+        
+        est <- param["A"] * exp(-0.5 * ((((obs$x - param["x0"])/param["sig.x"])^2) + ((obs$y - param["y0"])/param["sig.y"])^2))
+        
+        array(est, dim = c(2048, 2048))
+    }
+    
+    qq <- apply(pw.m, 4, 
+                function(acq) {
+                    gv <- setNames(melt(acq[,,"grey"] - acq[,,"black"]), nm = c("x", "y", "z"))
+                    
+                    # optimise with no constraints
+                    optim(c(A = 15000, x0 = 1024.5, y0 = 1024.5, sig.x = 500, sig.y = 500),
+                          gaussian.ellipse.ls, obs = gv)
+                    })
+    
+    gaussian.ellipse.fv <- sapply(dimnames(pw.m)[[4]],
+                                  function(dt) {
+                                      gaussian.ellipse.mat(qq[,dt],
+                                                           setNames(melt(pw.m[,,"grey", dt] - pw.m[,,"black", dt]),
+                                                                    nm = c("x", "y", "z")))
+                                  }, simplify = F)
+    
+    plot(pw.m[1024,,"grey", "loan"] - pw.m[1024,,"black", "loan"], type = "l")
+    lines(gaussian.ellipse.fv$"loan"[1024,], col = "cyan3")
+    
+    # produce jpeg plots of all sets
+    lapply(dimnames(pw.m)[[4]], function(dt) {
+        jpeg(paste0(fpath, "surface-ge-unconst-", dt, ".jpg")); {
+            par(mar = c(2,2,1,1))
+            pixel.image(gaussian.ellipse.fv[[dt]][,])
+            dev.off()
+        }
+        jpeg(paste0(fpath, "surface-res-ge-unconst-", dt, ".jpg")); {
+            par(mar = c(2,2,1,1))
+            pixel.image(pw.m[,,"grey", dt] - pw.m[,,"black", dt] - gaussian.ellipse.fv[[dt]][,])
+            dev.off()
+        }
+        jpeg(paste0(fpath, "surface-trans-v-ge-unconst-", dt, ".jpg"), height = 240); {
+            par(mar = c(2,2,1,1))
+            plot((pw.m[,,"grey", dt] - pw.m[,,"black", dt])[1024,], type = "l")
+            lines(gaussian.ellipse.fv[[dt]][1024,], col = "orange", lwd = 2)
+            dev.off()
+        }
+        jpeg(paste0(fpath, "surface-trans-h-ge-unconst-", dt, ".jpg"), height = 240); {
+            par(mar = c(2,2,1,1))
+            plot((pw.m[,,"grey", dt] - pw.m[,,"black", dt])[,1024], type = "l", lwd = 2)
+            lines(gaussian.ellipse.fv[[dt]][,1024], col = "orange", lwd = 2)
+            dev.off()
+        }
+    })
+}
+
+# Gaussian elliptical (rho = 0), midpoints must be in central region
+# tighten constraint: must be in central quarter (768:1280)
+{
+    qq.const <- apply(pw.m, 4, 
+                function(acq) {
+                    gv <- setNames(melt(acq[,,"grey"] - acq[,,"black"]), nm = c("x", "y", "z"))
+                    
+                    # optimise with constraints
+                    # in particular, spot centre must be in central third of panel
+                    optim(c(A = 15000, x0 = 1024.5, y0 = 1024.5, sig.x = 500, sig.y = 500),
+                          gaussian.ellipse.ls, obs = gv, method = "L-BFGS-B",
+                          lower = c(-Inf, 768, 768, 0, 0), upper = c(Inf, 1280, 1280, Inf, Inf))
+                })
+    
+    gaussian.ellipse.const.fv <- sapply(dimnames(pw.m)[[4]],
+                                  function(dt) {
+                                      gaussian.ellipse.mat(qq.const[[dt]]$par,
+                                                           setNames(melt(pw.m[,,"grey", dt] - pw.m[,,"black", dt]),
+                                                                    nm = c("x", "y", "z")))
+                                  }, simplify = F)
+    
+    # produce jpeg plots of all sets
+    lapply(dimnames(pw.m)[[4]], function(dt) {
+        jpeg(paste0(fpath, "surface-ge-const-", dt, ".jpg")); {
+            par(mar = c(2,2,1,1))
+            pixel.image(gaussian.ellipse.const.fv[[dt]][,])
+            dev.off()
+        }
+        jpeg(paste0(fpath, "surface-res-ge-const-", dt, ".jpg")); {
+            par(mar = c(2,2,1,1))
+            pixel.image(pw.m[,,"grey", dt] - pw.m[,,"black", dt] - gaussian.ellipse.const.fv[[dt]][,])
+            dev.off()
+        }
+        jpeg(paste0(fpath, "surface-trans-v-ge-const-", dt, ".jpg"), height = 240); {
+            par(mar = c(2,2,1,1))
+            plot((pw.m[,,"grey", dt] - pw.m[,,"black", dt])[1024,], type = "l")
+            lines(gaussian.ellipse.const.fv[[dt]][1024,], col = "orange", lwd = 2)
+            dev.off()
+        }
+        jpeg(paste0(fpath, "surface-trans-h-ge-const-", dt, ".jpg"), height = 240); {
+            par(mar = c(2,2,1,1))
+            plot((pw.m[,,"grey", dt] - pw.m[,,"black", dt])[,1024], type = "l", lwd = 2)
+            lines(gaussian.ellipse.const.fv[[dt]][,1024], col = "orange", lwd = 2)
+            dev.off()
+        }
+    })
+}
+
+####################################################################################################
+
+# SURFACES FITTED TO ALL GREY IMAGES                                                            ####
+
+# helper function to return surface fitted by least squares
+surface.trend <- function(im, order = 2) {
+    gv <- setNames(melt(im), nm = c("x", "y", "z"))
+    s.ls <- surf.ls(order, gv[!is.na(gv$z),])
+    trmat(s.ls, 1, 2048, 1, 2048, 2047)$z
+}
+
+st.2 <- array(apply(pw.m, 4, function(acq) surface.trend(acq[,,"grey"] - acq[,,"black"], order = 2)),
+              dim = c(2048, 2048, dim(pw.m)[[4]]), dimnames = list(NULL, NULL, dimnames(pw.m)[[4]]))
+
+
+lapply(dimnames(pw.m)[[4]], function(dt) {
+    jpeg(paste0(fpath, "offset-image-", dt, ".jpg")); {
+        par(mar = c(2,2,1,1))
+        pixel.image(pw.m[,,"grey",dt] - pw.m[,,"black",dt])
+        dev.off()
+    }
+    jpeg(paste0(fpath, "surface-o2-", dt, ".jpg")); {
+        par(mar = c(2,2,1,1))
+        pixel.image(st.2[,,dt])
+        dev.off()
+    }
+    jpeg(paste0(fpath, "surface-res-o2-", dt, ".jpg")); {
+        par(mar = c(2,2,1,1))
+        pixel.image(pw.m[,,"grey", dt] - pw.m[,,"black", dt] - st.2[,,dt])
+        dev.off()
+    }
+    jpeg(paste0(fpath, "surface-trans-v-o2-", dt, ".jpg"), height = 240); {
+        par(mar = c(2,2,1,1))
+        plot((pw.m[,,"grey", dt] - pw.m[,,"black", dt])[1024,], type = "l")
+        lines(st.2[1024,,dt], col = "orange", lwd = 2)
+        dev.off()
+    }
+    jpeg(paste0(fpath, "surface-trans-h-o2-", dt, ".jpg"), height = 240); {
+        par(mar = c(2,2,1,1))
+        plot((pw.m[,,"grey", dt] - pw.m[,,"black", dt])[,1024], type = "l", lwd = 2)
+        lines(st.2[,1024,dt], col = "orange", lwd = 2)
+        dev.off()
+    }
+})
+
+st.2.res <- pw.m[,,"grey",] - pw.m[,,"black",] - st.2
+
+pixel.image(st.2.res[,,"131122"])
+hist(st.2.res[,,"131122"], breaks = "fd")
+
+px.131122 <- which
+plot(which(st.2.res[,,"131122"] > 1000, arr.ind = T), pch = 15, cex = 0.5, col = "red", xlim = c(0,2048), ylim = c(0,2048))
+points(which(st.2.res[,,"131122"] < -1000, arr.ind = T), pch = 15, cex = 0.5, col = "blue")
+
+sd(st.2.res[,,"131122"], na.rm = T)
+
+plot(which(st.2.res[,,"160430"] > 1000, arr.ind = T), main = "160430", pch = 15, cex = 0.5, col = "red", xlim = c(0,2048), ylim = c(0,2048))
+points(which(st.2.res[,,"160430"] < -1000, arr.ind = T), pch = 15, cex = 0.5, col = "blue")
+
+# can now identify high-residual areas & identify dense defect regions
+
+plot(which(st.2.res[,,"loan"] > 1000, arr.ind = T), main = "160430", pch = 15, cex = 0.5, col = "red", xlim = c(0,2048), ylim = c(0,2048))
+points(which(st.2.res[,,"loan"] < -1000, arr.ind = T), pch = 15, cex = 0.5, col = "blue")
+
+plot(which(st.2.res[,,"160430"] > 1000, arr.ind = T), main = "160430", pch = 15, cex = 0.5, col = "red", xlim = c(900,1000), ylim = c(900,1000))
+points(which(st.2.res[,,"160430"] < -1000, arr.ind = T), pch = 15, cex = 0.5, col = "blue")
+
+pw.m[,,"grey", "160430"][which(st.2.res[,,"160430"] < -1000, arr.ind = T)]
+
+#----------------------------------------------------------------------------------------------------
+# bivariate Gaussian, no interaction (~6m to run for 5 images)
+xy.gaussian.trend <- function(im) {
+
+}
+
+gt.ind <- apply(pw.m, 4, function(acq) xy.gaussian.trend(acq[,,"grey"] - acq[,,"black"]))
+gt.ind.mat <- function(param, obs) {
+    
+    A <- param["A"]; x0 <- param["x0"]; y0 <- param["y0"]
+    sig.x <- param["sig.x"]; sig.y <- param["sig.y"]
+    
+    est <- A * exp(- 0.5 * ((((obs$x - x0) / sig.x)^2) + ((obs$y - y0) / sig.y)^2))   
+    
+    array(est, dim = c(2048, 2048))
+}
+lapply(dimnames(pw.m)[[4]], function(dt) {
+    jpeg(paste0(fpath, "surface-gt-ind-", dt, ".jpg")); {
+        par(mar = c(2,2,1,1))
+        pixel.image(gt.ind[,,dt])
+        dev.off()
+    }
+    jpeg(paste0(fpath, "surface-res-gt-ind-", dt, ".jpg")); {
+        par(mar = c(2,2,1,1))
+        pixel.image(pw.m[,,"grey", dt] - pw.m[,,"black", dt] - gt.ind[,,dt])
+        dev.off()
+    }
+    jpeg(paste0(fpath, "surface-trans-v-gt-ind-", dt, ".jpg"), height = 240); {
+        par(mar = c(2,2,1,1))
+        plot((pw.m[,,"grey", dt] - pw.m[,,"black", dt])[1024,], type = "l")
+        lines(gt.ind[1024,,dt], col = "orange", lwd = 2)
+        dev.off()
+    }
+    jpeg(paste0(fpath, "surface-trans-h-gt-ind-", dt, ".jpg"), height = 240); {
+        par(mar = c(2,2,1,1))
+        plot((pw.m[,,"grey", dt] - pw.m[,,"black", dt])[,1024], type = "l", lwd = 2)
+        lines(gt.ind[,1024,dt], col = "orange", lwd = 2)
+        dev.off()
+    }
+})
+
+zz <- lapply(models, gt.ind.mat, obs = gv)
+
+lines(zz[[5]][1024,], col = "cyan3")
+
+# split out workhorse function from wrappers
+
+####################################################################################################
+
+# QUADRATIC TREND WITH CENTRE PARAMETER                                                         ####
+
+qt.const <- function(par, x, y, z) {
+    cc <- par["cc"]; a1 <- par["a1"]; a2 <- par["a2"]; b1 <- par["b1"]; b2 <- par["b2"];
+    x0 <- par["x0"]; y0 <- par["y0"]
+    est <- cc + a1 * (x-x0) + a2 * (x - x0)^2 + b1 * (y-y0) + b2 * (y-y0)^2
+    
+    sum((est - z)^2, na.rm = T)
+}
+
+gv.tst <- setNames(melt(pw.m[,,"grey", "160430"] - pw.m[,,"black", "160430"]), nm = c("x", "y", "z"))
+zz <- optim(c(cc = 15000, x0 = 1024.5, y0 = 1024.5, a1 = 1, a2 = 1, b1 = 1, b2 = 1),
+            qt.const, x = gv.tst$x, y = gv.tst$y, z = gv.tst$z, method = "L-BFGS-B",
+            lower = c(-Inf, 683, 683, -Inf, -Inf, -Inf, -Inf), upper = c(Inf, 1365, 1365, Inf, Inf, Inf, Inf))
 
 ####################################################################################################
 
@@ -31,8 +282,8 @@ pw.m <- abind(sapply(c("131122", "MCT225", "160430"),
     }
     
     zz <- optim(c(A = 15000, x0 = 1024.5, y0 = 1024.5, sig.x = 700, sig.y = 700),
-                g2d.ls, obs = gv)
-    gv$fv.g2d.ls <- zz$par["A"] * exp(-((((gv$x - zz$par["x0"]) / zz$par["sig.x"])^2) + ((gv$y - zz$par["y0"]) / zz$par["sig.y"])^2))
+                ellipse.exp.ls, obs = gv, )
+    gv$fv.g2d.ls <- zz$par["A"] / (2 * pi * zz$par["sig.x"] * zz$par["sig.y"]) * exp(-((((gv$x - zz$par["x0"]) / zz$par["sig.x"])^2) + ((gv$y - zz$par["y0"]) / zz$par["sig.y"])^2))
     fv.g2d.ls <- array(gv$fv.g2d.ls, dim = c(2048, 2048))
     res.g2d.ls <- os.g - array(gv$fv.g2d.ls, dim = c(2048, 2048))
     
@@ -103,6 +354,89 @@ pw.m <- abind(sapply(c("131122", "MCT225", "160430"),
     lines(fv.g2d.ls[,1025], col = "blue")
 }
 
+# elliptical, scaled quadratic curve
+{
+    ellipse.ls <- function(obs, param) {
+        A <- param["A"]; x0 <- param["x0"]; y0 <- param["y0"]
+        sig.x <- param["sig.x"]; sig.y <- param["sig.y"]
+        
+        est <- A + ((((obs$x - x0) / sig.x)^2) + ((obs$y - y0) / sig.y)^2)
+        sum((est - obs$z)^2, na.rm = T)
+    }
+    
+    zz <- optim(c(A = 15000, x0 = 1024.5, y0 = 1024.5, sig.x = 700, sig.y = 700),
+                ellipse.ls, obs = gv)
+    fv.ellipse <- array(zz$par["A"] + (((gv$x - zz$par["x0"]) / zz$par["sig.x"])^2) + (((gv$y - zz$par["y0"]) / zz$par["sig.y"])^2),
+                    dim = c(2048, 2048))
+    pixel.image(fv.ellipse)
+        res.g2d.ls <- os.g - array(gv$fv.g2d.ls, dim = c(2048, 2048))
+    
+    # plot fitted model
+    {
+        pixel.image(array(gv$fv.g2d.ls, dim = c(2048, 2048)), title = "Fitted values")
+        pixel.image(os.g - array(gv$fv.g2d.ls, dim = c(2048, 2048)), title = "Residuals")
+        
+        hist((os.g - array(gv$fv.g2d.ls, dim = c(2048, 2048)))[,1:1024], ylim = c(0,1000), breaks = "fd", main = "Residuals after circular spot")
+        hist((os.g - array(gv$fv.g2d.ls, dim = c(2048, 2048)))[,1025:2048], breaks = "fd", 
+             add = T, border = adjustcolor("red", alpha = 0.3))
+        legend("topright", col = c("black", "red"), pch = 15, legend = c("Lower", "Upper"), bty = "n")
+        
+        image(1:2048, 1:2048, os.g - array(gv$fv.g2d.ls, dim = c(2048, 2048)), asp = T,
+              breaks = c(-20000, -500, 500, 20000), col = c("blue", NA, "red"), xlim = c(1900,2048), ylim = c(0,100))
+        
+        plot(os.g[1024,], type = "l")
+        lines(array(gv$fv.g2d.ls, dim = c(2048, 2048))[1024,], col = "blue")
+        
+        plot(os.g[1025,], type = "l")
+        lines(array(gv$fv.g2d.ls, dim = c(2048, 2048))[1025,], col = "green3")
+        
+        plot(os.g[, 1024], type = "l")
+        lines(array(gv$fv.g2d.ls, dim = c(2048, 2048))[, 1024], col = "green3")
+        
+        plot(os.g[,1025], type = "l")
+        lines(array(gv$fv.g2d.ls, dim = c(2048, 2048))[,1025], col = "green3")
+        
+        plot(os.g[512,], type = "l")
+        lines(array(gv$fv.g2d.ls, dim = c(2048, 2048))[512,], col = "green3")
+    }
+    
+    # now fit subpanels to model
+    {
+        panel.os <- lm(fv.g2d.ls ~ tt, data = gv[!is.na(gv$z),])
+        pp <- array(dim = c(2048, 2048))
+        pp[25:2024, 25:2024] <- panel.os$fitted.values - coef(panel.os)[1]
+        pixel.image(pp)
+        pixel.image(res.g2d.ls - pp)
+        pp <- predict(panel.os, newdata = gv$tt)
+    }
+    
+    # function to apply directly to image
+    fit.ellipse <- function(im, A = 15000, x0 = 1024.5, y0 = 1024.5, sig.x = 700, sig.y = 700) {
+        
+        surf.dat <- setNames(melt(im), nm = c("x", "y", "z"))
+        
+        optim(c(A = A, x0 = x0, y0 = y0, sig.x = sig.x, sig.y = sig.y), ellipse.exp.ls, obs = surf.dat)
+    }
+    
+    zz <- fit.ellipse(im = pw.m[,,"grey", "160430"] - pw.m[,,"black", "160430"])
+    fv.g2d.ls <- array(zz$par["A"] * exp(-((((gv$x - zz$par["x0"]) / zz$par["sig.x"])^2) + ((gv$y - zz$par["y0"]) / zz$par["sig.y"])^2)),
+                       dim = c(2048, 2048))
+    
+    pixel.image(fv.g2d.ls)
+    pixel.image(pw.m[,,"grey", "160430"] - pw.m[,,"black", "160430"] - fv.g2d.ls)
+    
+    plot((pw.m[,,"grey", "160430"] - pw.m[,,"black", "160430"])[1024,], type = "l")
+    lines(fv.g2d.ls[1024,], col = "blue")
+    
+    plot((pw.m[,,"grey", "160430"] - pw.m[,,"black", "160430"])[1025,], type = "l")
+    lines(fv.g2d.ls[1025,], col = "blue")
+    
+    plot((pw.m[,,"grey", "160430"] - pw.m[,,"black", "160430"])[,1024], type = "l")
+    lines(fv.g2d.ls[,1024], col = "blue")
+    
+    plot((pw.m[,,"grey", "160430"] - pw.m[,,"black", "160430"])[,1025], type = "l")
+    lines(fv.g2d.ls[,1025], col = "blue")
+}
 
 ####################################################################################################
 
@@ -201,15 +535,29 @@ g2d$par
 
 library(spatial)
 s.ls <- surf.ls(2, gv[!is.na(gv$z), c("x", "y", "z")])
-trsurf <- trmat(s.ls, 1, 2048, 1, 2048, 50)
+trsurf <- trmat(s.ls, 1, 2048, 1, 2048, 2047)
 pixel.image(trsurf$z)
 
+points(which(trsurf$z == max(trsurf$z), arr.ind = T), pch = 3)      # 982, 1105
+
+plot(os.g[982,], type = "l")
+lines(trsurf$z[982,], col = "blue")
+
+plot(os.g[,1105], type = "l")
+lines(trsurf$z[,1105], col = "blue")
+
+
+
 # does my bivariate normal function fit successfully here?
-g2d.ls <- optim(c(A = 15000, x0 = 25, y0 = 25,
-               sig.x = sd(trsurf$z), sig.y = sd(trsurf$z), rho = 0),
-             gauss.2d.ls, obs = setNames(melt(trsurf$z), nm = c("x", "y", "z")), method = "L-BFGS-B",
-             lower = c(-Inf, 1, 1, 0, 0, 0), upper = c(Inf, 25, 25, Inf, Inf, 1))
-g2d.ls$par
+{
+    g2d.ls <- optim(c(A = 15000, x0 = 25, y0 = 25,
+                      sig.x = sd(trsurf$z), sig.y = sd(trsurf$z), rho = 0),
+                    gauss.2d.ls, obs = setNames(melt(trsurf$z), nm = c("x", "y", "z")), method = "L-BFGS-B",
+                    lower = c(-Inf, 1, 1, 0, 0, 0), upper = c(Inf, 25, 25, Inf, Inf, 1))
+    g2d.ls$par
+}
+
+# nope.
 
 hh <- bvn(trsurf$x, trsurf$y, g2d.ls$par["x0"], g2d.ls$par["y0"], g2d.ls$par["sig.x"], g2d.ls$par["sig.y"], g2d.ls$par["rho"])
 pixel.image(array(hh, dim = c(2048, 2048)))
@@ -375,3 +723,83 @@ zz$par
     os.g.pa[25:2024, 25:2024] <- os.g[25:2024, 25:2024] - pp
     pixel.image(os.g.pa)
 }
+
+####################################################################################################
+
+# NLM / NLS / OPTIM: BUILD FUNCTION                                                             ####
+
+ff <- function(param, obs) {
+    
+    est <- (obs$x - param["x0"])^2 + (obs$y - param["y0"])^2
+    sum((est - obs$z)^2, na.rm = T)
+}
+
+ff.optim <- optim(c(x0 = 1000, y0 = 2000), ff, obs = gv)
+{
+    ff.nls <- nls(z ~ (x - x0)^2 + (y - y0)^2, data = gv, start = c(x0 = 1000, y0 = 2000))
+    # repeated failure to converge
+    
+    ff.nlm <- nlm(ff, c(x0 = 1000, y0 = 2000), obs = gv)
+    # failed to converge: gradient too close to 0.
+}
+
+#---------------------------------------------------------------------------------
+# back to optim. Let's try to build up the complexity...
+# 2d gaussian, no interaction
+ff <- function(param, obs) {
+    
+    est <- param["A"] * exp(-0.5 * ((((obs$x - param["x0"])/param["sig.x"])^2) + ((obs$y - param["y0"])/param["sig.y"])^2))
+    sum((est - obs$z)^2, na.rm = T)
+}
+ff.mat <- function(param, obs) {
+    
+    est <- param["A"] * exp(-0.5 * ((((obs$x - param["x0"])/param["sig.x"])^2) + ((obs$y - param["y0"])/param["sig.y"])^2))
+    
+    array(est, dim = c(2048, 2048))
+}
+
+ff.optim <- optim(c(A = 15000, x0 = 1000, y0 = 2000, sig.x = 500, sig.y = 500), ff, obs = gv)
+ff.optim$par
+pixel.image(ff.mat(ff.optim$par, gv))
+
+plot(os.g[1024,], type = "l")
+lines(ff.mat(ff.optim$par, gv)[1024,], col = "orange")
+
+plot(os.g[,1024], type = "l")
+lines(ff.mat(ff.optim$par, gv)[,1024], col = "orange")
+
+#---------------------------------------------------------------------------------
+# circular spot, centre can move
+sp.lm <- function(param, obs) {
+    obs$dd <- sqrt((obs$x - param["x0"])^2 + (obs$y - param["y0"])^2)
+    
+    lm(z ~ poly(dd, 2), obs)
+}
+
+sp <- sp.lm(c(x0 = 1024, y0 = 1024), obs = gv)
+pixel.image(array(sp$fitted.values, dim = c(2000,2000)))
+
+ff <- function(param, obs) {
+    dd <- sqrt((obs$x - param["x0"])^2 + (obs$y - param["y0"])^2)
+    
+    est <- param["a"] + param["b"] * dd + param["c"] * dd^2
+    
+    sum((est - obs$z)^2, na.rm = T)
+}
+
+ff.optim <- optim(c(a = 15000, b = -2000000, c = -40000, x0 = 1024, y0 = 1024), ff, obs = gv)
+ff.optim$par
+
+ff.mat <- function(param, obs) {
+    
+    dd <- sqrt((obs$x - param["x0"])^2 + (obs$y - param["y0"])^2)
+    est <- param["a"] + param["b"] * dd + param["c"] * dd^2    
+    
+    array(est, dim = c(2048, 2048))
+}
+pixel.image(ff.mat(ff.optim$par, gv))
+pixel.image(os.g)
+
+rr <- nlm(ff, c(cc = 15000, x0 = 1024, y0 = 1024, a1 = 50, a2 = 50, b1 = 50, b2 = 50), obs = gv)
+
+qq <- spot.lm(os.g)
