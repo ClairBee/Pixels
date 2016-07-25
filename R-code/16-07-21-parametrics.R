@@ -21,6 +21,15 @@ pw.m <- abind(sapply(c("131122", "140128", "MCT225", "160430", "loan"),
 
 # CLEAN COPY OF CODE                                                                            ####
 
+hh <- gaussian.spot.ls(os.g, c(A = 15000, x0 = 1024.5, y0 = 1024.5, sig.x = 500, sig.y = 500),
+                       x0.target = c(768, 1280), y0.target = c(768, 1280))
+
+hh.fv <- gaussian.spot.mat(hh$par)
+hh.res <- os.g - hh.fv
+pixel.image(hh.res)
+
+# lapply
+
 # gaussian elliptical (rho = 0), no constraints on parameters
 {
     # return vector of fitted values

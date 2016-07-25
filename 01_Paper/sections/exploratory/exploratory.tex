@@ -47,19 +47,77 @@ Rather than summarising mean values, we generally prefer the median, which is mo
 \addfigure{Images of linear gradients across subpanels}
 \addfigure{Boxplots of values in each subpanel?}
 
-\subsection{General detector health: deviations from circular spot}
+\subsection{Assessing general detector health: deviations from circular spot}
 
-The grey and white images are obtained by exposing the detector to an x-ray source with nothing in the field of view. X-rays diffuse out from the source in a conical shape until they strike the detector; a `perfect' detector, \nb{get citation - speak to Jay} then, would register a circular spot pattern in the white and grey offset images (that is, white and grey images from which the black image has been subtracted), and the response $z_i$ at each pixel $(x_i, y_i)$ would be well modelled by a two-dimensional Gaussian distribution, centred at the focal point $(x_0, y_0)$ of the x-ray beam and with variances $\sigma_x$ and $\sigma_y$ reflecting the degree of dispersion of the x-rays:
+The grey and white images are obtained by exposing the detector to an x-ray source with nothing in the field of view. X-rays diffuse out from the source in a conical shape until they strike the detector; a hypothetical `perfect' detector, \nb{get citation - speak to Jay} then, would register a circular spot pattern in the white and grey offset images (that is, white and grey images from which the black image has been subtracted, leaving only the detector's response to the presence of x-rays), and the response $z_i$ at each pixel $(x_i, y_i)$ would be well modelled by a two-dimensional Gaussian distribution, centred at the focal point $(x_0, y_0)$ of the x-ray beam and with variances $\sigma_x$ and $\sigma_y$ reflecting the degree of dispersion of the x-rays:
 
-\[ z_i = \frac{1}{2\pi \sigma_x \sigma_y \sqrt{(1-\rho^2)}} \exp \left[ -\frac{1}{2(1-\rho^2)} \left[ \left(\frac{x_i-y_0}{\sigma_x}\right)^2 + \left(\frac{y_i-y_0}{\sigma_y}\right)^2 - 2\rho\left(\frac{x_i-x_0}{\sigma_x} \right) \left(\frac{y_i-y_0}{\sigma_y} \right) \right] \right] \]
+\[ z_i = \frac{1}{2\pi \sigma_X \sigma_Y \sqrt{(1-\rho^2)}} \exp \left[ -\frac{1}{2(1-\rho^2)} \left[ \left(\frac{x_i-xy_0}{\sigma_X}\right)^2 + \left(\frac{y_i-y_0}{\sigma_Y}\right)^2 - 2\rho\left(\frac{x_i-x_0}{\sigma_X} \right) \left(\frac{y_i-y_0}{\sigma_Y} \right) \right] \right] \]
 
-\nb{Much easier to assume rho = 0; suspect we can justify this, since difference should be more or less negligible, but check with Jay}
-$\sigma_x$ and $\sigma_y$ are allowed to vary, along with the covariance parameter $\rho$, to allow the shape of the spot to elongate and rotate if necessary, since the angle of intersection between the cone of x-rays and the plane of the panel may vary, possibly producing an elliptical pattern rather than a circular one. Once a spot has been fitted, any deviations from the expected spot shape will indicate pixels with an abnormal response to exposure to an x-ray source, and these individual clusters are then grouped according to their formation (clusters or lines of adjacent pixels, and dense regions of non-contiguous abnormal pixels, for example). As well as the proportion of the screen affected by abnormal pixels, it may also be useful for operators to monitor the mean detector response to a given power setting (or, conversely, the power required to obtain a given mean value), and also the standard deviation of the responses. 
+To simplify the model, we assume that the x-ray source is directed at the centre of the panel in oth axes, and that the source is more or less orthogonal to the panel, so that there is minimal stretching or distortion of the spot. We therefore fix $\rho = 0$ - since non-zero covariance would lead to a diagonal stretching of the spot - and constrain $x_0$ and $y_0$ to fall within a square with its centre at the exact midpoint of the panel. The latter constraint may be relaxed where there is good reason to believe that the spot really is off-centre (as in Figure~\ref{fig:spot-constraints-wonky}), and is generally only required when there is a region of non-responsive pixels in the centre of the panel, leading to a response surface with a dip in the centre, as in Figure~\ref{fig:spot-constraints-doughnut}. When this occurs, an unconstrained model will very often centre the spot in the region with the highest output; however, our aim here is to model the most likely location of the spot, not simply to describe the shape of the surface, and since we know that the operator will target the spot in the centre of the panel, it is more useful to force the spot to the most appropriate area. \nb{Of course, need to check with Jay if this really is the case...}
 
+We therefore model the expected response $z$ at each pixel $i$ as
 
+\[ z_i = A \exp \left(-\frac{1}{2} \left\lbrace \left(\frac{x_i - x_0}{\sigma_X}\right)^2 + \left(\frac{y_i - y_0}{\sigma_Y}\right)^2 \right\rbrace \right) , x_0, y_0 \in (768, 1280) \]
 
+\begin{figure}[!ht]
+\caption{Gaussian spot models fitted with (solid line, square) and without (dashed line, triangle) constraints on the possible values of $x_0$ and $y_0$. \\
+\footnotesize{In (a), the spot is centred well within the constrained area, as we might expect, and the same model is fitted with and without the constraint; typical of a healthy panel with a centred spot. However, in (b) and (c), the constrained model has its centre at one of the constraining boundaries. When this occurs, we must decide whether to allow the spot's centre to be placed outside of the constraining area. In (b), the data is unimodal, and well fitted by a model in which the spot is allowed to move outside of the usual area, which gives a significant improvement in RMSE. However, in (c), removing this constraint does not lead to any appreciable improvement in the model, so we conclude that the problem with the fit is not simply one of an off-centre spot, and keep the constraint in place.}}
+\label{fig:spot-constraints}
 
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{16.04.30: constraint not necessary \\RMSE: 186}
+\label{fig:spot-constraints-healthy}
+\includegraphics[scale=0.3]{Gaussian-spot-constraints-160430}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{16.07.05: constraint inappropriate \\RMSE: 501 constrained, 226 free}
+\label{fig:spot-constraints-wonky}
+\includegraphics[scale=0.3]{Gaussian-spot-constraints-160705}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{MCT225: constraint necessary \\RMSE: 574 constrained, 553 free}
+\label{fig:spot-constraints-doughnut}
+\includegraphics[scale=0.3]{Gaussian-spot-constraints-MCT225}
+\end{subfigure}
+%
 
+\end{figure}
+
+\addfigure{Consider more systematic approach to model selection. Likelihood-based methods such as AIC, BIC require a log-likelihood; how do we obtain that for a surface (rather than a sparsely-observed set of points)?}
+
+The model is fitted by minimising the squared residuals; any deviations from the expected spot shape will indicate pixels with an abnormal response to exposure to an x-ray source. Thresholding the model's residuals identifies those pixels with the most extreme responses, and these problematic individuals can then be grouped according to their formation (clusters or lines of adjacent pixels, and dense regions of non-contiguous abnormal pixels, for example). Setting an appropriate threshold is not an exact science; a cutoff based on some scalar multiple of the RMSE of the residuals for each image would be a tempting option, in that if we could reasonably assume the residuals to be normally distributed, we would expect to be able to select a controlled proportion of the most severaly damaged pixels. However, in several panels we expect to find regions with large numbers of high residuals, which will render this assumption untenable. A more controlled approach is to consider the RMSE of all panels together. Of the 21 sets of images obtained so far, 12 had an RMSE less than 300, with the remainder having more than 400 (the 12 are all acquisitions from WMG's main detector post refurbishment, with the pre-refurbishment, loan panel and Nikon images all having higher SDs, along with one post-refurbishment image in which the spot appears somehow distorted, possibly due to a focussing issue). The median of all of these observed RMSEs is 263; taking this as a typical value, and assuming that we only want to find the most extreme 
+
+\addfigure{Use mean/median `healthy' value * 6 to extract only tiny proportion of pixels in healthy image}
+
+\nb{Not particularly convincing, since a few more damaged acquisitions will skew this the other way. May be better to split into healthy vs unhealthy, at least then the arbitrariness is explicit!}
+
+\begin{figure}[!ht]
+\caption{Plots of residuals with absolute value greater than 1000 from the three fitted spot models fitted above. 
+\\ \footnotesize{With a properly fitted spot in (b), (a) and (b) are very similar; these are images taken from the same detector, several weeks apart. There is evidence of damage along the left-hand edge of the panel, extending some way along the top border, but the extreme-valued pixels are otherwise scattered throughout the panel. In the Nikon detector labelled MCT225, on the other hand, there is a very large, dense region of abnormal pixels in the centre of the screen}}
+
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{16.04.30: healthy panel,\\ centred spot (2932 px)}
+\includegraphics[scale=0.3]{spot-residuals-160430}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{16.07.05: non-centred spot fitted without constraint (3370 px)}
+\includegraphics[scale=0.3]{spot-residuals-160705}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.32\textwidth}
+\caption{MCT225: dim patch in centre of panel (122681 px)}
+\includegraphics[scale=0.3]{spot-residuals-MCT225}
+\end{subfigure}
+%
+
+\end{figure}
+
+As well as the proportion of the screen affected by abnormal pixels, it may also be useful for operators to monitor the mean detector response to a given power setting (or, conversely, the power required to obtain a given mean value), and also the standard deviation of the responses. 
+
+\FloatBarrier
 \subsection{Other considerations: screen spots and edge effects}
 %----------------------------------------------------
 % screen spots in shading correction & shifting in successive images
