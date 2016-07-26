@@ -53,7 +53,7 @@ The grey and white images are obtained by exposing the detector to an x-ray sour
 
 \[ z_i = \frac{1}{2\pi \sigma_X \sigma_Y \sqrt{(1-\rho^2)}} \exp \left[ -\frac{1}{2(1-\rho^2)} \left[ \left(\frac{x_i-xy_0}{\sigma_X}\right)^2 + \left(\frac{y_i-y_0}{\sigma_Y}\right)^2 - 2\rho\left(\frac{x_i-x_0}{\sigma_X} \right) \left(\frac{y_i-y_0}{\sigma_Y} \right) \right] \right] \]
 
-To simplify the model, we assume that the x-ray source is directed at the centre of the panel in oth axes, and that the source is more or less orthogonal to the panel, so that there is minimal stretching or distortion of the spot. We therefore fix $\rho = 0$ - since non-zero covariance would lead to a diagonal stretching of the spot - and constrain $x_0$ and $y_0$ to fall within a square with its centre at the exact midpoint of the panel. The latter constraint may be relaxed where there is good reason to believe that the spot really is off-centre (as in Figure~\ref{fig:spot-constraints-wonky}), and is generally only required when there is a region of non-responsive pixels in the centre of the panel, leading to a response surface with a dip in the centre, as in Figure~\ref{fig:spot-constraints-doughnut}. When this occurs, an unconstrained model will very often centre the spot in the region with the highest output; however, our aim here is to model the most likely location of the spot, not simply to describe the shape of the surface, and since we know that the operator will target the spot in the centre of the panel, it is more useful to force the spot to the most appropriate area. \nb{Of course, need to check with Jay if this really is the case...}
+To simplify the model, we assume that the x-ray source is directed at the centre of the panel in both axes, and that the source is more or less orthogonal to the panel, so that there is minimal stretching or distortion of the spot. We therefore fix $\rho = 0$ - since non-zero covariance would lead to a diagonal stretching of the spot - and constrain $x_0$ and $y_0$ to fall within a square with its centre at the exact midpoint of the panel. The latter constraint may be relaxed where there is good reason to believe that the spot really is off-centre (as in Figure~\ref{fig:spot-constraints-wonky}), and is generally only required when there is a region of non-responsive pixels in the centre of the panel, leading to a response surface with a dip in the centre, as in Figure~\ref{fig:spot-constraints-doughnut}. When this occurs, an unconstrained model will very often centre the spot in the region with the highest output; however, our aim here is to model the most likely location of the spot, not simply to describe the shape of the surface, and since we know that the operator will target the spot in the centre of the panel, it is more useful to force the spot to the most appropriate area. \nb{Of course, need to check with Jay if this really is the case...}
 
 We therefore model the expected response $z$ at each pixel $i$ as
 
@@ -87,28 +87,26 @@ We therefore model the expected response $z$ at each pixel $i$ as
 
 \addfigure{Consider more systematic approach to model selection. Likelihood-based methods such as AIC, BIC require a log-likelihood; how do we obtain that for a surface (rather than a sparsely-observed set of points)?}
 
-The model is fitted by minimising the squared residuals; any deviations from the expected spot shape will indicate pixels with an abnormal response to exposure to an x-ray source. Thresholding the model's residuals identifies those pixels with the most extreme responses, and these problematic individuals can then be grouped according to their formation (clusters or lines of adjacent pixels, and dense regions of non-contiguous abnormal pixels, for example). Setting an appropriate threshold is not an exact science; a cutoff based on some scalar multiple of the RMSE of the residuals for each image would be a tempting option, in that if we could reasonably assume the residuals to be normally distributed, we would expect to be able to select a controlled proportion of the most severaly damaged pixels. However, in several panels we expect to find regions with large numbers of high residuals, which will render this assumption untenable. A more controlled approach is to consider the RMSE of all panels together. Of the 21 sets of images obtained so far, 12 had an RMSE less than 300, with the remainder having more than 400 (the 12 are all acquisitions from WMG's main detector post refurbishment, with the pre-refurbishment, loan panel and Nikon images all having higher SDs, along with one post-refurbishment image in which the spot appears somehow distorted, possibly due to a focussing issue). The median of all of these observed RMSEs is 263; taking this as a typical value, and assuming that we only want to find the most extreme 
+The model is fitted by minimising the squared residuals; any deviations from the expected spot shape will indicate pixels with an abnormal response to exposure to an x-ray source. Thresholding the model's residuals identifies those pixels with the most extreme responses, and these problematic individuals can then be grouped according to their formation (clusters or lines of adjacent pixels, and dense regions of non-contiguous abnormal pixels, for example). Setting an appropriate threshold is not an exact science; a cutoff based on some scalar multiple of the RMSE of the residuals for each image would be a tempting option, in that if we could reasonably assume the residuals to be normally distributed, we would expect to be able to select a controlled proportion of the most severaly damaged pixels. However, in several panels we expect to find regions with large numbers of high residuals, which will render this assumption untenable. In addition, taking a simple mean/median RMSE across all of the images acquired in the study is not really reasonable, since we have 12 images from a single fairly `healthy' detector, 6 from a known damaged detector, and two others, so simple averaging would be assuming a misleading degree of population-representativeness. Ideally, we want a measure of the variability of the residuals of healthy pixels.
 
-\addfigure{Use mean/median `healthy' value * 6 to extract only tiny proportion of pixels in healthy image}
-
-\nb{Not particularly convincing, since a few more damaged acquisitions will skew this the other way. May be better to split into healthy vs unhealthy, at least then the arbitrariness is explicit!}
+A number of the panels included in this study have very obvious column defects, which will be discussed further in Section~\ref{sec:column-defects}. These column defects comprise relatively large numbers of pixels with an offset-corrected value close to zero, and when they occur, are the most significant contributor to the non-normality of the residuals. Furthermore, they can be very easily and unequivocally identified. Excluding those panels that exhibit this clear sign of damage, we take the mean RMSE of the remaining panels (242) as an approximate measure of the typical variability of less severely-affected pixels. Using a threshold of 5 times the mean RMSE would, if the residuals were normally distributed with this standard deviation, pick up around 1000 defective pixels in a 2048-square panel: a reasonable minimum sample size with which to assess whether the residuals are clustered in a particular area, or scattered across the entire detector surface. In the data collected to date, the 12 images from the WMG post-refurbishment panel contain no dark lines; taking their mean RMSE gives a limit of 1204, beyond which a residual will be considered abnormally large.
 
 \begin{figure}[!ht]
-\caption{Plots of residuals with absolute value greater than 1000 from the three fitted spot models fitted above. 
-\\ \footnotesize{With a properly fitted spot in (b), (a) and (b) are very similar; these are images taken from the same detector, several weeks apart. There is evidence of damage along the left-hand edge of the panel, extending some way along the top border, but the extreme-valued pixels are otherwise scattered throughout the panel. In the Nikon detector labelled MCT225, on the other hand, there is a very large, dense region of abnormal pixels in the centre of the screen}}
+\caption{Plots of residuals with absolute value greater than 1204 from the three fitted spot models fitted above. 
+\\ \footnotesize{With a properly fitted spot in (b), (a) and (b) are very similar; these are images taken from the same detector, several weeks apart. There is evidence of damage along the left-hand edge of the panel, extending some way along the top border, but the extreme-valued pixels are otherwise scattered throughout the panel. In the Nikon detector labelled MCT225, on the other hand, there is a very large, dense region of abnormal pixels in the centre of the screen, and several dark lines can clearly be seen.}}
 
 \begin{subfigure}[t]{0.32\textwidth}
-\caption{16.04.30: healthy panel,\\ centred spot (2932 px)}
+\caption{16.04.30: healthy panel,\\ centred spot (2611 px)}
 \includegraphics[scale=0.3]{spot-residuals-160430}
 \end{subfigure}
 %
 \begin{subfigure}[t]{0.32\textwidth}
-\caption{16.07.05: non-centred spot fitted without constraint (3370 px)}
+\caption{16.07.05: non-centred spot fitted without constraint (2737 px)}
 \includegraphics[scale=0.3]{spot-residuals-160705}
 \end{subfigure}
 %
 \begin{subfigure}[t]{0.32\textwidth}
-\caption{MCT225: dim patch in centre of panel (122681 px)}
+\caption{MCT225: dim patch in centre of panel (49425 px)}
 \includegraphics[scale=0.3]{spot-residuals-MCT225}
 \end{subfigure}
 %
@@ -157,6 +155,8 @@ Need to consider \& justify the local thresholding limit. Currently using 2x SD 
 \subsection{Larger features}
 
 \subsubsection{Column defects}
+
+\label{sec:column-defects}
 
 \addfigure{Linear defects detected by subtracting a median-filtered image from the original, then convolution \& thresholding over the residuals. Since linear defects may be 2 or 3 pixels wide (4 pixels is possible, according to the manual, but not yet observed), the smoothing kernel should be at least 7 pixels wide (5 pixels and a 3-pixel line cannot be smoothed out, 3 pixels wide and a 2-pixel line cannot be smoothed out) \nb{Actually, with a square kernel (as in edge detection in traditional image processing), we lose detail where there are multiple adjacent columns. Could try linear kernel, or omit linear convolution step altogether?}}
 

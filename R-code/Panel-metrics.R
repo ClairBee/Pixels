@@ -66,6 +66,10 @@ px <- which(abs(res[,,"MCT225"]) > 2 * sd(res[,,"MCT225"], na.rm = T), arr.ind =
 models$gt.2rmse <- apply(res, 3, function(r) length(which(abs(r) > 2 * sd(r, na.rm = T))))
 models$gt.1000 <- apply(res, 3, function(r) length(which(abs(r) > 1000)))
 models$gt.1500 <- apply(res, 3, function(r) length(which(abs(r) > 1500)))
+models$gt.1204 <- apply(res, 3, function(r) length(which(abs(r) > 1204)))
+
+plot(models$rmse, models$gt.1204)
+mean(models$rmse[7:18])
 
 ####################################################################################################
 
@@ -99,22 +103,24 @@ for (dt in row.names(models)) {
     jpeg(paste0(fpath, "large-residuals-", dt, ".jpg")); {
         par(mar = c(2,2,1,1))
         plot(which(abs(res[,,dt]) > 1000, arr.ind = T),
-             xlim = c(0,2048), ylim = c(0,2048), col = "gold", pch = 15, cex = 0.6)
-        plot(which(abs(res[,,dt]) > 1500, arr.ind = T),
-             xlim = c(0,2048), ylim = c(0,2048), col = "red", pch = 15, cex = 0.6)
+             xlim = c(0,2048), ylim = c(0,2048), col = "cyan3", pch = 15, cex = 0.6)
+        points(which(abs(res[,,dt]) > 1204, arr.ind = T),
+             xlim = c(0,2048), ylim = c(0,2048), col = "black", pch = 15, cex = 0.6)
         contour(1:2048, 1:2048, fv[,,dt], add = T, drawlabels = F)
         dev.off()
     }
 }
 
-# try refitting 16-07-05 without x0, y0 constraint (spot genuinely looks high)
+# refit 16-07-05 without x0, y0 constraint (spot genuinely looks off-centre)
 {
     gs.u <- gaussian.spot.ls(pw.m[,,"grey", "160705"] - pw.m[,,"black", "160705"],
                              c(A = 15000, x0 = 1024.5, y0 = 1024.5, sig.x = 500, sig.y = 500))
     gs.160705 <- gaussian.spot.mat(gs.u$par)
     pixel.image(pw.m[,,"grey", "160705"] - pw.m[,,"black", "160705"])
     contour(1:2048, 1:2048, gs.160705, add = T, drawlabels = F)
+    
     gs.u$par
+    models["160705",1:5] <- gs.u$par
 }
 
 

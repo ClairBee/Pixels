@@ -3,6 +3,7 @@ library("IO.Pixels"); library("CB.Misc")
 fpath <- "./01_Paper/fig/exploratory/"
 
 load.pixel.means.2048()
+models <- read.csv("./Other-data/Gaussian-spots.csv", row.names = 1)
 
 ####################################################################################################
 
@@ -32,10 +33,10 @@ load.pixel.means.2048()
     jpeg(paste0(fpath, "spot-residuals-160705.jpg")); {
         par(mar = c(2,2,1,1))
         #pixel.image(res.160705.u)
-        plot(which(abs(res.160705.u) > 1000, arr.ind = T), pch = 15, cex = 0.6)
+        plot(which(abs(res.160705.u) > 1204, arr.ind = T), pch = 15, cex = 0.6)
         dev.off()
     }
-    length(which(abs(res.160705.u) > 1000))     # 3370
+    length(which(abs(res.160705.u) > 1204))     # 3370
 }
 
 # Gaussian spot with constraint unnecessary: 16-04-30
@@ -61,10 +62,10 @@ load.pixel.means.2048()
     jpeg(paste0(fpath, "spot-residuals-160430.jpg")); {
         par(mar = c(2,2,1,1))
         #pixel.image(res.160430.u)
-        plot(which(abs(res.160430.u) > 1000, arr.ind = T), pch = 15, cex = 0.6)
+        plot(which(abs(res.160430.u) > 1204, arr.ind = T), pch = 15, cex = 0.6)
         dev.off()
     }
-    length(which(abs(res.160430) > 1000))     # 2932
+    length(which(abs(res.160430) > 1204))     # 2932
 }
 
 # Gaussian spot with constraint required: MCT225
@@ -90,18 +91,11 @@ load.pixel.means.2048()
     jpeg(paste0(fpath, "spot-residuals-MCT225.jpg")); {
         par(mar = c(2,2,1,1))
         #pixel.image(res.MCT225)
-        plot(which(abs(res.MCT225) > 1000, arr.ind = T), pch = 15, cex = 0.6)
+        plot(which(abs(res.MCT225) > 1204, arr.ind = T), pch = 15, cex = 0.6)
         dev.off()
     }
-    length(which(abs(res.MCT225) > 1000))     # 122681
+    length(which(abs(res.MCT225) > 1204))     # 122681
 }
-
-####################################################################################################
-# TEMPORARY BLOCK - SETTING THRESHOLDING LEVELS                                                 ####
-
-.smoothScatter(which(abs(res.MCT225.u) > 2 * sd(res.MCT225.u, na.rm = T), arr.ind = T), main = "MCT225")
-.smoothScatter(which(abs(res.160430.u) > 2 * sd(res.160430.u, na.rm = T), arr.ind = T), main = "160430")
-.smoothScatter(which(abs(res.160705.u) > 2 * sd(res.160705.u, na.rm = T), arr.ind = T), main = "160705")
 
 ####################################################################################################
 
