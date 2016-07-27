@@ -47,6 +47,63 @@ env.plot <- function(px.ppp, px.ppm, dist.fun, normalise = F, ...) {
 
 ####################################################################################################
 
+# QUADRAT TEST - INDEPENDENCE WITHIN SUBPANELS                                                  ####
+
+# use 'step-up' approach: if any quadrat rejects CSR (after p-value adjustment), reject for whole panel
+# could also use distance between kernel density & model as measure of GOF?
+
+# test CSR across all quadrats
+quadrat.test(bp.ppp, xbreaks = c(0:16) * 128 + 0.5, ybreaks = c(0:2) * 1024 + 0.5)
+quadratcount(bp.ppp, xbreaks = c(0:16) * 128 + 0.5, ybreaks = c(0:2) * 1024 + 0.5)
+
+quadrat.test(bp.ppp[owin(c(0,128) + 1 * 128, c(0,1024))], nx = 1, ny = 8)
+hh <- quadrat.test(bp.ppp[owin(c(0,128) + 1 * 128, c(1024,2048))], nx = 1, ny = 8)
+
+res <- array(dim = c(16, 2, 2), dimnames = list(NULL, c("l", "u"), c("statistic", "p.val")))
+
+# expected values < 5, so use Monte Carlo test
+for (ul in 0:1) {
+    for (p in 0:15) {
+        tmp <- quadrat.test(bp.ppp[owin(c(1,128) + p * 128, c(1,1024) + ul * 1024)], 
+                            nx = 1, ny = 8, method = "MonteCarlo")
+        res[p+1,ul+1,"statistic"] = tmp$statistic
+        res[p+1,ul+1,"p.val"] = tmp$p.value
+    }
+}
+
+plot(bp.ppp[owin(c(1,128) + 15 * 128, c(1,1024) + 0 * 1024)], pch = 20)
+quadrat.test(bp.ppp[owin(c(1,128) + 1 * 128, c(1,1024) + 1 * 1024)], nx = 1, ny = 8)
+
+plot(bp.ppp, pch = 20, main = "Raw p-values"); {
+    rect(c(0:15) * 128 + 0.5, rep(1024.5, 16), c(1:16) * 128 + 0.5, rep(2048.5, 16), border = NA, 
+         col = c(NA, adjustcolor("red", alpha = 0.4))[(res[,"u","p.val"] < 0.05) + 1])
+    rect(c(0:15) * 128 + 0.5, rep(0.5, 16), c(1:16) * 128 + 0.5, rep(1024.5, 16), border = NA, 
+         col = c(NA, adjustcolor("red", alpha = 0.4))[(res[,"l","p.val"] < 0.05) + 1])
+}
+
+plot(bp.ppp, pch = 20, main = "Holm correction"); {
+    rect(c(0:15) * 128 + 0.5, rep(1024.5, 16), c(1:16) * 128 + 0.5, rep(2048.5, 16), border = NA, 
+         col = c(NA, adjustcolor("red", alpha = 0.4))[(p.adjust(res[,,"p.val"])[17:32] < 0.05) + 1])
+    rect(c(0:15) * 128 + 0.5, rep(0.5, 16), c(1:16) * 128 + 0.5, rep(1024.5, 16), border = NA, 
+         col = c(NA, adjustcolor("red", alpha = 0.4))[(p.adjust(res[,"l","p.val"])[1:16] < 0.05) + 1])
+}
+
+plot(bp.ppp, pch = 20, main = "FDR correction"); {
+    rect(c(0:15) * 128 + 0.5, rep(1024.5, 16), c(1:16) * 128 + 0.5, rep(2048.5, 16), border = NA, 
+         col = c(NA, adjustcolor("red", alpha = 0.4))[(p.adjust(res[,,"p.val"], method = "fdr")[17:32] < 0.05) + 1])
+    rect(c(0:15) * 128 + 0.5, rep(0.5, 16), c(1:16) * 128 + 0.5, rep(1024.5, 16), border = NA, 
+         col = c(NA, adjustcolor("red", alpha = 0.4))[(p.adjust(res[,"l","p.val"], method = "fdr")[1:16] < 0.05) + 1])
+}
+
+plot(bp.ppp, pch = 20, main = "Hochberg correction"); {
+    rect(c(0:15) * 128 + 0.5, rep(1024.5, 16), c(1:16) * 128 + 0.5, rep(2048.5, 16), border = NA, 
+         col = c(NA, adjustcolor("red", alpha = 0.4))[(p.adjust(res[,,"p.val"], method = "hochberg")[17:32] < 0.05) + 1])
+    rect(c(0:15) * 128 + 0.5, rep(0.5, 16), c(1:16) * 128 + 0.5, rep(1024.5, 16), border = NA, 
+         col = c(NA, adjustcolor("red", alpha = 0.4))[(p.adjust(res[,"l","p.val"], method = "hochberg")[1:16] < 0.05) + 1])
+}
+
+####################################################################################################
+
 # NONPARAMETRIC - QUARTIC SMOOTHING                                                             ####
 
 nonpara <- density(bp.ppp, sigma = bw.diggle(bp.ppp))    # bandwidth est using MSE approach
@@ -115,6 +172,15 @@ plot(vv)
 
 ####################################################################################################
 
+# QUADRAT TEST OF FITTED MODELS                                                                 ####
+
+# CSR (raw data)
+quadrat.test(bp.ppp, xbreaks = c(0:16) * 128 + 0.5, ybreaks = c(0:2) * 1024 + 0.5)
+quadrat.test(qt.ppm, xbreaks = c(0:16) * 128 + 0.5, ybreaks = c(0:2) * 1024 + 0.5)
+# does not reject fitted model. Hooray!
+
+####################################################################################################
+
 # SUBPANELS                                                                                     ####
 
 # plot using only subpanels as covariates
@@ -147,6 +213,30 @@ pdf(paste0(fpath, "subpanel-flat-trend-K.pdf"), width = 7, height = 4); {
 vv <- nonpara
 vv$v <- (predict(sp.ppm)$v * 128 * 1024 - vv$v) 
 plot(vv)
+
+####################################################################################################
+
+# DISTANCE BETWEEN FITTED MODEL AND NONPARAMETRIC DENSITY                                       ####
+
+nonpara <- density(bp.ppp, sigma = bw.diggle(bp.ppp))    # bandwidth est using MSE approach
+qt.ppm <- ppm(bp.ppp ~ x + y + I(x^2) + I(y^2) + I(x *y))
+qt.pred <- predict(qt.ppm)
+diff <- qt.pred; diff$v <- qt.pred$v - nonpara$v
+plot(diff)
+
+log(sqrt(mean(diff$v^2)))
+
+sp.pred <- predict(sp.ppm)
+diff.sp <- sp.pred; diff.sp$v <- sp.pred$v - nonpara$v
+
+log(sqrt(mean(diff.sp$v^2)))
+
+fv.diff <- qt.pred; fv.diff$v <- qt.pred$v - sp.pred$v
+plot(fv.diff)
+plot(diff.sp)
+plot(diff)
+log(sqrt(mean(fv.diff$v^2)))
+
 
 ####################################################################################################
 

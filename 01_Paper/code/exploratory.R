@@ -30,10 +30,13 @@ models <- read.csv("./Other-data/Gaussian-spots.csv", row.names = 1)
     
     # create array containing residuals from final fitted spot
     res.160705.u <- pw.m[,,"grey", "160705"] - pw.m[,,"black", "160705"] - gaussian.spot.mat(gs.160705.u$par)
+    hr.dens.160705 <- r2m(focal(m2r(bpx2im(data.frame(which(abs(res.160705.u) > 1204, arr.ind = T), type = 1), im.dim = c(2048, 2048))),
+                                matrix(1/51^2, ncol = 51, nrow = 51)))
     jpeg(paste0(fpath, "spot-residuals-160705.jpg")); {
         par(mar = c(2,2,1,1))
         #pixel.image(res.160705.u)
         plot(which(abs(res.160705.u) > 1204, arr.ind = T), pch = 15, cex = 0.6)
+        points(which(hr.dens.160705 > 0.1, arr.ind = T), pch = 15, cex = 0.6, col = adjustcolor("red", alpha = 0.4))
         dev.off()
     }
     length(which(abs(res.160705.u) > 1204))     # 3370
@@ -59,10 +62,17 @@ models <- read.csv("./Other-data/Gaussian-spots.csv", row.names = 1)
     
     # create array containing residuals from final fitted spot
     res.160430 <- pw.m[,,"grey", "160430"] - pw.m[,,"black", "160430"] - gaussian.spot.mat(gs.160430$par)
+    
+    # get local density
+    hr.dens.160430 <- r2m(focal(m2r(bpx2im(data.frame(which(abs(res.160430) > 1204, arr.ind = T), type = 1), im.dim = c(2048, 2048))),
+                         matrix(1/51^2, ncol = 51, nrow = 51)))
+    
     jpeg(paste0(fpath, "spot-residuals-160430.jpg")); {
         par(mar = c(2,2,1,1))
         #pixel.image(res.160430.u)
-        plot(which(abs(res.160430.u) > 1204, arr.ind = T), pch = 15, cex = 0.6)
+        plot(which(abs(res.160430) > 1204, arr.ind = T), pch = 15, cex = 0.6)
+        points(which(hr.dens.160430 > 0.1, arr.ind = T), pch = 15, cex = 0.6, col = adjustcolor("cyan3", alpha = 0.4))
+        points()
         dev.off()
     }
     length(which(abs(res.160430) > 1204))     # 2932
@@ -88,10 +98,13 @@ models <- read.csv("./Other-data/Gaussian-spots.csv", row.names = 1)
     
     # create array containing residuals from final fitted spot
     res.MCT225 <- pw.m[,,"grey", "MCT225"] - pw.m[,,"black", "MCT225"] - gaussian.spot.mat(gs.MCT225$par)
+    hr.dens.MCT225 <- r2m(focal(m2r(bpx2im(data.frame(which(abs(res.MCT225) > 1204, arr.ind = T), type = 1), im.dim = c(2048, 2048))),
+                                matrix(1/51^2, ncol = 51, nrow = 51)))
     jpeg(paste0(fpath, "spot-residuals-MCT225.jpg")); {
         par(mar = c(2,2,1,1))
         #pixel.image(res.MCT225)
         plot(which(abs(res.MCT225) > 1204, arr.ind = T), pch = 15, cex = 0.6)
+        points(which(hr.dens.MCT225 > 0.1, arr.ind = T), pch = ".", col = adjustcolor("red", alpha = 0.1))
         dev.off()
     }
     length(which(abs(res.MCT225) > 1204))     # 122681

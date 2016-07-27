@@ -1,0 +1,70 @@
+
+INVESTIGATION PLAN
+
+####################################################################################################
+
+FIND DEFECTIVE PIXELS
+    - extreme values
+    - median-differencing (small features)
+    - distance from circular spot (large areas of non-standard response)
+    - screen spots
+    - column/row defects
+    
+COMPARE DEFECTS FOUND TO 'OFFICIAL' BAD PIXEL MAP
+    
+####################################################################################################
+
+LABEL FEATURES ACCORDING TO TYPE
+    - dense region
+    - cluster (root/body)
+    - line (root/body)
+    - single pixel
+    - include doubles as separate category?
+
+WHICH FEATURES NEED TO REMAIN ON BAD PIXEL MAP, WHICH ARE CLEARED BY SHADING CORRECTION?
+    - check behaviour of each pixel type in SC image
+    - how does this relate to behaviour in offset image/spot model?
+    - users may wish to retain only SC-problematic pixels. We should retain all, to track development.
+    
+GENERAL DETECTOR HEALTH
+    - power required to obtain appropriate nominal value
+    - signal-to-noise ratio across all subpanels (also across whole panel?) - bgw & sc
+    - proportion of screen covered by spots, clusters, lines, dense regions
+        (compare to official permitted thresholds in manual)
+    
+####################################################################################################
+
+SPATIAL DISTRIBUTION OF FEATURE ROOTS
+    - quadrat test for CSR (quadrats = subpanels)
+    - quadrat test for CSR within subpanels (step-up rejection)
+    - G-, F- and K- functions for CRS
+    - fit IPP (quadratic trend & spot model, if possible): G-, F- & K-functions
+    - repeat quadrat tests for fitted PPMs
+    - calculate distance between
+    - decompose into separate bad pixel types. Can we distinguish behaviour?
+        (try to separate qualititavely, not only by degree of defect)
+    
+CLUSTER PROCESS MODEL FOR MODELLING CLUSTERS/FEATURES
+    - Neyman-Scott to model dispersion
+    - Or a marked Poisson process model: singles vs clusters vs lines
+    
+####################################################################################################
+
+TEMPORAL ANALYSIS
+    - produce matrix of observed transitions
+    - discuss difficulty of fitting a model to the unobserved, instantaneous transitions
+    - how persistent are individual defective pixels?
+    - how persistent are features?
+    - development/degradation of individual pixels (transitions to more severe states or recovery)
+    
+! Remember to look at both acquisition series for changes over time
+
+####################################################################################################
+
+SPATIAL-TEMPORAL
+    - is rate of change constant over all subpanels, or does it appear to be higher at edges/in centre?
+
+####################################################################################################
+
+# SENSITIVITY ANALYSIS  
+    - how do spatial/temporal models change when thresholds are changed?

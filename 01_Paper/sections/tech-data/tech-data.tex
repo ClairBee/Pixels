@@ -1,7 +1,7 @@
 \providecommand{\main}{../..}					% fix bibliography path
 \documentclass[../../IO-Pixels.tex]{subfiles}
     
-   
+\graphicspath{{\main/fig/tech-data/}}			% fix graphics path
 %======================================================================
 
 \begin{document}
@@ -24,5 +24,16 @@ Details on data collections:
 All of the detector images used in the study were cropped to some degree. However, all images are taken from a panel of the same dimensions (2048 pixels square, consisting of two rows of 16 subpanels, each of 128 $\times$ 1024 pixels). For ease of visual comparison, all images have been padded to a $2048 \times 2048$ square so that they all occupy their true position, relative to the detector edges, within the plot area.
   
 \addfigure{Describe shading correction. For our purposes, to explore the effect of defective pixels on the shading-corrected, we will treat the grey image as the `true' image \nb{Check with Jay: is this reasonable to do?}}
+
+\newcommand*{\OptionalHline}{\edef\myflag{\hlflag}\ifdefvoid{\myflag}{}{\vspace{-10pt}\\\hline}}
+
+\begin{footnotesize}
+	\csvreader[tabular=cc|c|c|c cc|c|ccc|c|l, head to column names=true, before line = \OptionalHline,
+	table head = Image & 	   &			  &		  & \multicolumn{4}{c|}{Grey} & \multicolumn{4}{c|}{White} & \\
+				  ref  & Panel & Timestamp & Model & \multicolumn{4}{c|}{kV $\cdot$ uA $\cdot$ exp. $=$ power} & \multicolumn{4}{c|}{kV $\cdot$ uA $\cdot$ exp. $=$ power}  & Comments\\\hline]%
+		{\main/fig/tech-data/Detector-details.csv}{}%
+		{\code & \panelid & \timestamp & \model & \gkV & \guA & \gexp & \gpower & \wkV & \wuA & \wexp & \wpower & \notes}%
+	\end{footnotesize}
+
 
 \end{document}

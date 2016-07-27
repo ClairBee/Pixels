@@ -49,6 +49,8 @@ Rather than summarising mean values, we generally prefer the median, which is mo
 
 \subsection{Assessing general detector health: deviations from circular spot}
 
+% essentially: find defects using the same thresholding approach, but over different images. General problems with panel response are found as deviations from a circular spot, while pixel deviations are better identified as deviations from local (median-smoothed) image. Still need to decide best order in which to carry out these two classifications.
+
 The grey and white images are obtained by exposing the detector to an x-ray source with nothing in the field of view. X-rays diffuse out from the source in a conical shape until they strike the detector; a hypothetical `perfect' detector, \nb{get citation - speak to Jay} then, would register a circular spot pattern in the white and grey offset images (that is, white and grey images from which the black image has been subtracted, leaving only the detector's response to the presence of x-rays), and the response $z_i$ at each pixel $(x_i, y_i)$ would be well modelled by a two-dimensional Gaussian distribution, centred at the focal point $(x_0, y_0)$ of the x-ray beam and with variances $\sigma_x$ and $\sigma_y$ reflecting the degree of dispersion of the x-rays:
 
 \[ z_i = \frac{1}{2\pi \sigma_X \sigma_Y \sqrt{(1-\rho^2)}} \exp \left[ -\frac{1}{2(1-\rho^2)} \left[ \left(\frac{x_i-xy_0}{\sigma_X}\right)^2 + \left(\frac{y_i-y_0}{\sigma_Y}\right)^2 - 2\rho\left(\frac{x_i-x_0}{\sigma_X} \right) \left(\frac{y_i-y_0}{\sigma_Y} \right) \right] \right] \]
@@ -91,8 +93,11 @@ The model is fitted by minimising the squared residuals; any deviations from the
 
 A number of the panels included in this study have very obvious column defects, which will be discussed further in Section~\ref{sec:column-defects}. These column defects comprise relatively large numbers of pixels with an offset-corrected value close to zero, and when they occur, are the most significant contributor to the non-normality of the residuals. Furthermore, they can be very easily and unequivocally identified. Excluding those panels that exhibit this clear sign of damage, we take the mean RMSE of the remaining panels (242) as an approximate measure of the typical variability of less severely-affected pixels. Using a threshold of 5 times the mean RMSE would, if the residuals were normally distributed with this standard deviation, pick up around 1000 defective pixels in a 2048-square panel: a reasonable minimum sample size with which to assess whether the residuals are clustered in a particular area, or scattered across the entire detector surface. In the data collected to date, the 12 images from the WMG post-refurbishment panel contain no dark lines; taking their mean RMSE gives a limit of 1204, beyond which a residual will be considered abnormally large.
 
+The detector manual defines the defect-density of a region of pixels as the proportion of defects in the surrounding $51 \times 51$ square. Any pixel in which more than 10\% of the pixels in the surrounding block are found to be defective is said to lie in a high-defect-density region. We can apply this same definition to identify any regions of particularly high density in the residuals.
+\nb{how are edges handled?}
+
 \begin{figure}[!ht]
-\caption{Plots of residuals with absolute value greater than 1204 from the three fitted spot models fitted above. 
+\caption{Plots of residuals with absolute value greater than 1204 from the three fitted spot models fitted above. Regions of high density are shaded red.
 \\ \footnotesize{With a properly fitted spot in (b), (a) and (b) are very similar; these are images taken from the same detector, several weeks apart. There is evidence of damage along the left-hand edge of the panel, extending some way along the top border, but the extreme-valued pixels are otherwise scattered throughout the panel. In the Nikon detector labelled MCT225, on the other hand, there is a very large, dense region of abnormal pixels in the centre of the screen, and several dark lines can clearly be seen.}}
 
 \begin{subfigure}[t]{0.32\textwidth}
@@ -112,6 +117,8 @@ A number of the panels included in this study have very obvious column defects, 
 %
 
 \end{figure}
+
+
 
 As well as the proportion of the screen affected by abnormal pixels, it may also be useful for operators to monitor the mean detector response to a given power setting (or, conversely, the power required to obtain a given mean value), and also the standard deviation of the responses. 
 
