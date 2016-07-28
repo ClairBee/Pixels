@@ -1,39 +1,25 @@
 \documentclass[10pt,fleqn]{article}
-\usepackage{/home/clair/Documents/mystyle}
+\usepackage{mystyle}
 
 \usepackage{subfiles}
 \usetikzlibrary{automata, positioning, shapes.multipart, arrows}
+\usepackage[utf8]{inputenc}
 
 %----------------------------------------------------------------------
-% file locations
 
-\providecommand{\main}{.}					% set folder head, relative to which files can be located
+\title{The Life \& Death of Pixels}
+\author{}
+\date{July 2016}
 
-
-%----------------------------------------------------------------------
-% reformat section headers to be smaller \& left-aligned
-\titleformat{\section}
-	{\normalfont\bfseries}
-	{\thesection}{1em}{}
-	
-\titleformat{\subsection}
-	{\normalfont\bfseries}
-	{\thesubsection}{1em}{}
-	
-%----------------------------------------------------------------------
-% SPECIFY BIBLIOGRAPHY FILE & FIELDS TO EXCLUDE
+\providecommand{\main}{.}           % set folder head, relative to which files can be located
 \addbibresource{\main/Pixel-refs.bib}
-%\AtEveryBibitem{\clearfield{url}}
-%\AtEveryBibitem{\clearfield{doi}}
-%\AtEveryBibitem{\clearfield{isbn}}
-%\AtEveryBibitem{\clearfield{issn}}
 
 %----------------------------------------------------------------------
     
 % UPDATE TO SWITCH ON & OFF USING BOOLEAN FLAG
 
 % temporary environment to add outline of paper structure
-\newenvironment{outline}
+ \newenvironment{outline}
 %    {\comment}				# uncomment & comment everything else out to hide outline structure
     {\ttfamily
     \color{MidnightBlue}
@@ -48,7 +34,6 @@
     \end{center}
     }
     
-
 %----------------------------------------------------------------------
 
 % temporary command: note to self to insert figure
@@ -65,8 +50,10 @@
 	\vspace{-10pt}
 }
 
+
 %----------------------------------------------------------------------
 
+% temporary command: notes from Julia
 \newcommand{\JB}[1]{
 	\textcolor{ForestGreen}{\emph{JB: #1}}
 }
@@ -75,18 +62,27 @@
 
 \begin{document}
 
-\subfile{./sections/intro/intro.tex}
-\subfile{./sections/tech-data/tech-data.tex}
-\subfile{./sections/pilot/pilot.tex}
-\subfile{./sections/exploratory/exploratory.tex}
-\subfile{./sections/spatial/spatial.tex}
-\subfile{./sections/temporal/temporal.tex}
-\subfile{./sections/discussion/discussion.tex}
+\maketitle
+
+\subfile{./sections/intro.tex}
+\subfile{./sections/tech-data.tex}
+\subfile{./sections/pilot.tex}
+\subfile{./sections/exploratory.tex}
+\subfile{./sections/spatial.tex}
+\subfile{./sections/temporal.tex}
+\subfile{./sections/discussion.tex}
+
+%======================================================================
+
+\newpage
 
 \begin{appendix}
-\subfile{./sections/glossary/glossary.tex}
+\subfile{./sections/glossary.tex}
+\subfile{./sections/bpx-definitions.tex}
 \end{appendix}
 
-%\newpage
-%\printbibliography
+%======================================================================
+
+\newpage
+\printbibliography
 \end{document}

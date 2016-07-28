@@ -1,0 +1,21 @@
+\providecommand{\main}{..}					% fix bibliography path
+\documentclass[\main/IO-Pixels.tex]{subfiles}
+    
+   
+%======================================================================
+
+\begin{document}
+
+\section{Manufacturer definitions of underperforming pixels}
+\label{app:bpx-defn}
+
+\addfigure{Change convention: stop using bar notation for pixelwise mean images. Too messy once medians etc start being calculated}
+
+\subsection{Signal sensitivity}
+Tests are performed on bright offset-corrected images $\bar{W}_O = \bar{W} - \bar{B}$ and $\bar{G}_O = \bar{G} - \bar{B}$, averaged over 100 frames \nb{check this - manual just says `at different x-ray energies'}. Then for pixel $i$, 
+
+\begin{description}
+\item[Underperforming bright pixel: ] value is greater than 150\% of median value $(\bar{W}_{O_i} \ge 1.5 $
+\end{description}
+
+\end{document}

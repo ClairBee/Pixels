@@ -54,7 +54,9 @@ TEMPORAL ANALYSIS
     - produce matrix of observed transitions
     - discuss difficulty of fitting a model to the unobserved, instantaneous transitions
     - how persistent are individual defective pixels?
-    - how persistent are features?
+    - how persistent are features? Track development of new clusters in particular
+        - do they simply appear (suggesting event/physical damage)
+        - do they spread/worsen gradually (suggesting infection)
     - development/degradation of individual pixels (transitions to more severe states or recovery)
     
 ! Remember to look at both acquisition series for changes over time

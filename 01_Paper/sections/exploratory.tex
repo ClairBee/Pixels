@@ -1,4 +1,4 @@
-\providecommand{\main}{../..}					% fix bibliography path
+\providecommand{\main}{..}					% fix bibliography path
 \documentclass[\main/IO-Pixels.tex]{subfiles}
    
 \graphicspath{{\main/fig/exploratory/}}			% fix graphics path
@@ -49,6 +49,7 @@ Rather than summarising mean values, we generally prefer the median, which is mo
 
 \subsection{Assessing general detector health: deviations from circular spot}
 
+\nb{Probably shouldn't introduce this first, since not an appropriate way to classify individual bad pixels (since bad model fitting could cause high residuals). Maybe could include this after general thresholding approach, and just add regional damage into bad pixels already classified?}
 % essentially: find defects using the same thresholding approach, but over different images. General problems with panel response are found as deviations from a circular spot, while pixel deviations are better identified as deviations from local (median-smoothed) image. Still need to decide best order in which to carry out these two classifications.
 
 The grey and white images are obtained by exposing the detector to an x-ray source with nothing in the field of view. X-rays diffuse out from the source in a conical shape until they strike the detector; a hypothetical `perfect' detector, \nb{get citation - speak to Jay} then, would register a circular spot pattern in the white and grey offset images (that is, white and grey images from which the black image has been subtracted, leaving only the detector's response to the presence of x-rays), and the response $z_i$ at each pixel $(x_i, y_i)$ would be well modelled by a two-dimensional Gaussian distribution, centred at the focal point $(x_0, y_0)$ of the x-ray beam and with variances $\sigma_x$ and $\sigma_y$ reflecting the degree of dispersion of the x-rays:
@@ -66,19 +67,19 @@ We therefore model the expected response $z$ at each pixel $i$ as
 \footnotesize{In (a), the spot is centred well within the constrained area, as we might expect, and the same model is fitted with and without the constraint; typical of a healthy panel with a centred spot. However, in (b) and (c), the constrained model has its centre at one of the constraining boundaries. When this occurs, we must decide whether to allow the spot's centre to be placed outside of the constraining area. In (b), the data is unimodal, and well fitted by a model in which the spot is allowed to move outside of the usual area, which gives a significant improvement in RMSE. However, in (c), removing this constraint does not lead to any appreciable improvement in the model, so we conclude that the problem with the fit is not simply one of an off-centre spot, and keep the constraint in place.}}
 \label{fig:spot-constraints}
 
-\begin{subfigure}[t]{0.32\textwidth}
+\begin{subfigure}[t]{0.328\textwidth}
 \caption{16.04.30: constraint not necessary \\RMSE: 186}
 \label{fig:spot-constraints-healthy}
 \includegraphics[scale=0.3]{Gaussian-spot-constraints-160430}
 \end{subfigure}
 %
-\begin{subfigure}[t]{0.32\textwidth}
+\begin{subfigure}[t]{0.328\textwidth}
 \caption{16.07.05: constraint inappropriate \\RMSE: 501 constrained, 226 free}
 \label{fig:spot-constraints-wonky}
 \includegraphics[scale=0.3]{Gaussian-spot-constraints-160705}
 \end{subfigure}
 %
-\begin{subfigure}[t]{0.32\textwidth}
+\begin{subfigure}[t]{0.328\textwidth}
 \caption{MCT225: constraint necessary \\RMSE: 574 constrained, 553 free}
 \label{fig:spot-constraints-doughnut}
 \includegraphics[scale=0.3]{Gaussian-spot-constraints-MCT225}
@@ -100,25 +101,23 @@ The detector manual defines the defect-density of a region of pixels as the prop
 \caption{Plots of residuals with absolute value greater than 1204 from the three fitted spot models fitted above. Regions of high density are shaded red.
 \\ \footnotesize{With a properly fitted spot in (b), (a) and (b) are very similar; these are images taken from the same detector, several weeks apart. There is evidence of damage along the left-hand edge of the panel, extending some way along the top border, but the extreme-valued pixels are otherwise scattered throughout the panel. In the Nikon detector labelled MCT225, on the other hand, there is a very large, dense region of abnormal pixels in the centre of the screen, and several dark lines can clearly be seen.}}
 
-\begin{subfigure}[t]{0.32\textwidth}
+\begin{subfigure}[t]{0.328\textwidth}
 \caption{16.04.30: healthy panel,\\ centred spot (2611 px)}
 \includegraphics[scale=0.3]{spot-residuals-160430}
 \end{subfigure}
 %
-\begin{subfigure}[t]{0.32\textwidth}
+\begin{subfigure}[t]{0.328\textwidth}
 \caption{16.07.05: non-centred spot fitted without constraint (2737 px)}
 \includegraphics[scale=0.3]{spot-residuals-160705}
 \end{subfigure}
 %
-\begin{subfigure}[t]{0.32\textwidth}
+\begin{subfigure}[t]{0.328\textwidth}
 \caption{MCT225: dim patch in centre of panel (49425 px)}
 \includegraphics[scale=0.3]{spot-residuals-MCT225}
 \end{subfigure}
 %
 
 \end{figure}
-
-
 
 As well as the proportion of the screen affected by abnormal pixels, it may also be useful for operators to monitor the mean detector response to a given power setting (or, conversely, the power required to obtain a given mean value), and also the standard deviation of the responses. 
 
@@ -130,17 +129,17 @@ As well as the proportion of the screen affected by abnormal pixels, it may also
 \caption{Screen spots visible in the images acquired on 14-10-09 and successive dates (spots are circled for ease of identification)}
 \centering
 
-\begin{subfigure}[t]{0.32\textwidth}
+\begin{subfigure}[t]{0.328\textwidth}
 \caption{White pixelwise mean image}
 \includegraphics[scale=0.3]{pwm-image-141009-white}
 \end{subfigure}
 %
-\begin{subfigure}[t]{0.32\textwidth}
+\begin{subfigure}[t]{0.328\textwidth}
 \caption{White shading-corrected image}
 \includegraphics[scale=0.3]{sc-image-141009-white}
 \end{subfigure}
 %
-\begin{subfigure}[t]{0.32\textwidth}
+\begin{subfigure}[t]{0.328\textwidth}
 \caption{Shift in apparent position}
 \includegraphics[scale=0.3]{spots-overplotted}
 \end{subfigure}
