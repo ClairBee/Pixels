@@ -1,7 +1,7 @@
 \providecommand{\main}{../..}					% fix bibliography path
-\documentclass[../../IO-Pixels.tex]{subfiles}
+\documentclass[\main/IO-Pixels.tex]{subfiles}
     
-\graphicspath{{\main/fig/tech-data/}}			% fix graphics path
+   
 %======================================================================
 
 \begin{document}
@@ -25,15 +25,20 @@ All of the detector images used in the study were cropped to some degree. Howeve
   
 \addfigure{Describe shading correction. For our purposes, to explore the effect of defective pixels on the shading-corrected, we will treat the grey image as the `true' image \nb{Check with Jay: is this reasonable to do?}}
 
-\newcommand*{\OptionalHline}{\edef\myflag{\hlflag}\ifdefvoid{\myflag}{}{\vspace{-10pt}\\\hline}}
+\begin{table}[!ht]
+\caption{\nb{Table works fine in TeX, but can't read CSV here - need to find out why} Summary of images in data set, with date/time acquired, panel model, and power settings applied when obtaining each image (kV = voltage, uA = current; exp. = exposure time in $\mu s$ \nb{?}) The total power input is also calculated (in arbitrary units \nb{?}) for ease of comparison. \\ \footnotesize{The first 6 image sets comprise the `pilot data' set, the 14 sets acquired between October 2014 and July 2016 the `main data' set. All of these images were acquired from the same detector panel, which was refurbished on the dates indicated, and was replaced with the `loan' panel after this date due to a malfunctioning readout sensor affecting a whole subpanel. The remaining images were acquired singly from detectors kindly loaned from other institutions. All images were acquired with a Reflection 225 source and tungsten source target. \nb{different gain settings were used in obaining some of the images - check with Jay if this should be included - also, should we mention the different operators?}}}
 
-\begin{footnotesize}
-	\csvreader[tabular=cc|c|c|c cc|c|ccc|c|l, head to column names=true, before line = \OptionalHline,
-	table head = Image & 	   &			  &		  & \multicolumn{4}{c|}{Grey} & \multicolumn{4}{c|}{White} & \\
-				  ref  & Panel & Timestamp & Model & \multicolumn{4}{c|}{kV $\cdot$ uA $\cdot$ exp. $=$ power} & \multicolumn{4}{c|}{kV $\cdot$ uA $\cdot$ exp. $=$ power}  & Comments\\\hline]%
+\resizebox{\textwidth}{!}{%
+	\csvreader[tabular = cc|c|c|c cc|c|ccc|c|l, head to column names, late after line =, 
+				before line = \ifthenelse{\equal{\hlflag}{}}{\\}{\\\hline}, before first line =,
+				table head = Image & Panel & &	 & \multicolumn{4}{c|}{Grey} & \multicolumn{4}{c|}{White} & \\
+				  ref  & ref & Timestamp & Model & \multicolumn{4}{c|}{\footnotesize{kV $\cdot$ uA $\cdot$ exp.} $=$ power} & \multicolumn{4}{c|}
+				  {\footnotesize{kV $\cdot$ uA $\cdot$ exp.} $=$ power}  & Comments\\\hline]%
 		{\main/fig/tech-data/Detector-details.csv}{}%
-		{\code & \panelid & \timestamp & \model & \gkV & \guA & \gexp & \gpower & \wkV & \wuA & \wexp & \wpower & \notes}%
-	\end{footnotesize}
+		{\code & \panelid & \footnotesize{\timestamp} & \model & \footnotesize{\gkV} & \footnotesize{\guA} & \footnotesize{\gexp} & \gpower & 
+			\footnotesize{\wkV} & \footnotesize{\wuA} & \footnotesize{\wexp} & \wpower & \footnotesize{\notes}}%
+	}
+\end{table}
 
 
 \end{document}
