@@ -2,8 +2,117 @@
 library("IO.Pixels"); library("CB.Misc")
 fpath <- "./01_Paper/fig/exploratory/"
 
-load.pixel.means.2048()
+pw.m <- load.pixel.means()
 models <- read.csv("./Other-data/Gaussian-spots.csv", row.names = 1)
+
+####################################################################################################
+
+# SUMMARY STATISTICS                                                                            ####
+
+df <- data.frame("acq" = sort(rep(dimnames(pw.m)[[4]], 3)),
+                 "im" = rep(dimnames(pw.m)[[3]], dim(pw.m)[[4]]),
+                 "mean" = c(apply(pw.m, 3:4, mean, na.rm = T)),
+                 "median" = c(apply(pw.m, 3:4, median, na.rm = T)),
+                 "sd" = c(apply(pw.m, 3:4, sd, na.rm = T)),
+                 "mad" = c(apply(pw.m, 3:4, mad, na.rm = T)))
+
+write.csv(df, paste0(fpath, "image-summary.csv"), quote = F, row.names = F)
+
+df <- read.csv(paste0(fpath, "image-summary.csv"), as.is = T)
+
+# convert to .csv format for export
+qq <- do.call("rbind", lapply(unique(df$acq), function(dt) unlist(df[df$acq == dt, 3:5])))
+
+write.csv(qq, paste0(fpath, "summary-statistics.csv"), quote = F, row.names = F)
+
+####################################################################################################
+
+# DESCRIPTIVE                                                                                   ####
+
+# plot colour scale
+{
+    jpeg(paste0(fpath, "image-scale.jpg"), height = 100); {
+        par(mar = c(4, 1, 1, 1))
+        image.scale(-9:9, c(-9,9), col = sd.colours(), breaks = c(-9,-6,-3,-2,-1,-0.5, 0, 0.5, 1,2,3,6,9))
+        title(xlab = expression(paste("Mean value + ", x * sigma), collapse = ""))
+        abline(v = 0, lty = 2)
+        dev.off()
+    }
+
+}
+
+# pixelwise mean images
+{
+    # 'healthy' detector: 14-10-09 (first images after refurbishment)
+    jpeg(paste0(fpath, "pwm-black-141009.jpg")); {
+        par(mar = c(2,2,1,1))
+        pixel.image(pw.m[,,"black", "141009"])
+        draw.panels(lty = 3)
+        dev.off()
+    }
+    jpeg(paste0(fpath, "pwm-grey-141009.jpg")); {
+        par(mar = c(2,2,1,1))
+        pixel.image(pw.m[,,"grey", "141009"])
+        draw.panels(lty = 3)
+        dev.off()
+    }
+    jpeg(paste0(fpath, "pwm-white-141009.jpg")); {
+        par(mar = c(2,2,1,1))
+        pixel.image(pw.m[,,"white", "141009"])
+        draw.panels(lty = 3)
+        dev.off()
+    }
+    
+    # detector with dark lines: 
+    {
+        
+    }
+}
+
+hist.scale <- function(data, sc.offset = -100, xlim = c(min(data, na.rm = T), max(data, na.rm = T)), scale.colours = sd.colours(), scale = sd.levels(data), pch = 15, ...) {
+    cl <- cut(xlim[1]:xlim[2], scale)
+    points(xlim[1]:xlim[2], rep(sc.offset, length(xlim[1]:xlim[2])), pch = pch, col = scale.colours[cl], ...)
+}
+
+# pixelwise mean histograms
+{
+    jpeg(paste0(fpath, "pwm-black-141009-hist.jpg"), height = 240); {
+        par(mar = c(2,2,1,1))
+        hist(pw.m[,,"black", "141009"], breaks = "fd", xlim = c(0,65535), xlab = "", ylab = "", main = "")
+        #hist.scale(pw.m[,,"black", "141009"], sc.offset = -800)
+        dev.off()
+    }
+    
+    jpeg(paste0(fpath, "pwm-black-141009-hist-cropped.jpg"), height = 240); {
+        par(mar = c(2,2,1,1))
+        hist(pw.m[,,"black", "141009"], breaks = "fd", xlim = c(0,65535), ylim = c(0,30), xlab = "Grey Value observed", ylab = "Frequency", main = "")
+        dev.off()
+    }
+    
+    jpeg(paste0(fpath, "pwm-grey-141009-hist.jpg"), height = 240); {
+        par(mar = c(2,2,1,1))
+        hist(pw.m[,,"grey", "141009"], breaks = "fd", xlim = c(0,65535), xlab = "Grey Value observed", ylab = "Frequency", main = "")
+        dev.off()
+    }
+    jpeg(paste0(fpath, "pwm-grey-141009-hist-cropped.jpg"), height = 240); {
+        par(mar = c(2,2,1,1))
+        hist(pw.m[,,"grey", "141009"], breaks = "fd", xlim = c(0,65535), ylim = c(0,30), xlab = "Grey Value observed", ylab = "Frequency", main = "")
+        dev.off()
+    }
+    
+    jpeg(paste0(fpath, "pwm-white-141009-hist.jpg"), height = 240); {
+        par(mar = c(2,2,1,1))
+        hist(pw.m[,,"white", "141009"], breaks = "fd", xlim = c(0,65535), xlab = "Grey Value observed", ylab = "Frequency", main = "")
+        dev.off()
+    }
+    jpeg(paste0(fpath, "pwm-white-141009-hist-cropped.jpg"), height = 240); {
+        par(mar = c(2,2,1,1))
+        hist(pw.m[,,"white", "141009"], breaks = "fd", xlim = c(0,65535), ylim = c(0,30), xlab = "Grey Value observed", ylab = "Frequency", main = "")
+        dev.off()
+    }
+}
+
+
 
 ####################################################################################################
 

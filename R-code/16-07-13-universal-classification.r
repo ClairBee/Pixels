@@ -591,3 +591,53 @@ env.plot <- function(px.ppp, px.ppm, dist.fun, normalise = F, ...) {
 
 lapply(lapply(ppp.nl, ppm, ~ x + y + I(x^2) + I(y^2) + I(x *y)), plot, se = F)
 
+####################################################################################################
+
+# LOCAL NON-UNIFORMITY                                                                          ####
+
+# think this is actually supposed to be carried out on median-differenced SC image
+load.pixel.means.2048()
+
+sc <- shading.corrected(pw.m[,,,"160430"])
+sc.md.9.9 <- r2m(focal(m2r(sc), matrix(rep(1, 81), ncol = 9), fun = median))
+
+# works much better: 15656 bright, 12216 dim.
+px.b <- which(sc > 1.01 * sc.md.9.9, arr.ind = T)
+px.d <- which(sc < 0.99 * sc.md.9.9, arr.ind = T)
+
+# probably still picking up too many points, though
+
+hist(sc.md.9.9, breaks = "fd", prob = T)
+nm <- normalmixEM(sc.md.9.9[!is.na(sc.md.9.9)], lambda = c(0.5, 0.5), mu = c(17800, 17750), sigma = c(100,100))
+
+jf <- JohnsonFit(sc.md.9.9[!is.na(sc.md.9.9)])
+lines(17000:20000, dJohnson(17000:20000, jf), lwd = 2, col = "red")
+jf
+
+####################################################################################################
+
+# BLACK OSCILLATIONS                                                                            ####
+
+o.plot(pw.m[1000,,"black", "160430"], xlim = c(0,1024), ylim = c(4500,6000))
+s1 <- pw.m[1000,1:2047,"black", "160430"] - pw.m[1000,2:2048,"black", "160430"]
+s2 <- pw.m[1000,1:2046,"black", "160430"] - pw.m[1000,3:2048,"black", "160430"]
+
+o.plot(s1, xlim = c(0,1024))
+lines(s2, col = "blue")
+
+lines(abs(s1 - s2), col = "red", lwd = 2)
+mean(abs(s1-s2), na.rm = T) / 2
+mean(abs(s1), na.rm = T)
+
+osc <- rep(c(-1,1), 1024) * mean(abs(s1-s2), na.rm = T) / 2
+
+o.plot(pw.m[1000,,"black", "160430"] - osc, xlim = c(0,1024))
+
+sm <- apply(pw.m[,,"black", "160430"], 1, 
+            function(cc) {
+                cc - rep(c(-1,1), 1024) * mean(abs(cc[1:2047]-cc[2:2048]), na.rm = T) / 2
+})
+pixel.image(sm)
+
+o.plot(sm[1000,])
+sc <- shading.corrected

@@ -5,6 +5,8 @@
 \usetikzlibrary{automata, positioning, shapes.multipart, arrows}
 \usepackage[utf8]{inputenc}
 
+
+
 %----------------------------------------------------------------------
 
 \title{The Life \& Death of Pixels}
@@ -56,6 +58,13 @@
 % temporary command: notes from Julia
 \newcommand{\JB}[1]{
 	\textcolor{ForestGreen}{\emph{JB: #1}}
+}
+
+\newcommand{\sftriple}[2]{
+    \begin{subfigure}[t]{0.32\textwidth}
+    \caption{#2}
+    \includegraphics[scale = 0.3]{#1}
+    \end{subfigure}
 }
 
 %======================================================================

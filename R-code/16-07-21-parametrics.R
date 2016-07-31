@@ -812,3 +812,38 @@ pixel.image(os.g)
 rr <- nlm(ff, c(cc = 15000, x0 = 1024, y0 = 1024, a1 = 50, a2 = 50, b1 = 50, b2 = 50), obs = gv)
 
 qq <- spot.lm(os.g)
+
+####################################################################################################
+
+# BIVARIATE GAUSSIAN MODEL FITTED TO BLACK IMAGES                                               ####
+
+pixel.image(pw.m[,,"black", "160705"])
+
+# suppose no particular reason to assume circularity, so stick with quadratic spot (more flexible)
+library(spatial)
+
+gv <- setNames(melt(pw.m[,,"black", "160705"]), nm = c("x", "y", "z"))
+s.ls <- surf.ls(2, gv[!is.na(gv$z), c("x", "y", "z")])
+trsurf <- trmat(s.ls, 1, 2048, 1, 2048, 2047)
+pixel.image(trsurf$z)
+
+qs.res <- pw.m[,,"black", "160705"] - trsurf$z
+pixel.image(qs.res)
+rect(60,60,1988,1988, lty = 3)
+
+matplot(pw.m[1:128, c(c(0:15) * 128 + 1, 2048), "black", "160705"], type = "l", ylim = c(5000,8000))
+
+gv.res <- setNames(melt(qs.res), nm = c("x", "y", "z"))
+click()
+
+sp <- array(qs.res, dim = c(128, 16, 1024, 2))
+pixel.image(sp[,1,,2])
+
+####################################################################################################
+
+# MEAN IMAGES                                                                                   ####
+
+wmg <- apply(pw.m[,,,7:19], 3, apply, c(1:2), mean, na.rm = T)
+wmg <- array(wmg, dim = c(2048, 2048, 3), dimnames = list(NULL, NULL, c("black", "grey", "white")))
+
+pixel.image(wmg[,,"white"])

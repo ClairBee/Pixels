@@ -61,7 +61,7 @@ A rim of 6 pixels around the edges of the detector is treated as an inactive are
 \end{table}
 %----------------------------------------------------
 
-\subsection{Data}
+\subsection{Data format}
 
 
 Each \textbf{acquisition} referred to in Table~\ref{tab:xml-summ} consists of sets of images taken at three different power settings, with no objects in the field of view:
@@ -72,16 +72,16 @@ Each \textbf{acquisition} referred to in Table~\ref{tab:xml-summ} consists of se
 \item[White (flood) images:] These images have a nominal mean GV of \nb{?}. Again, the operator may manually adjust the power settings in order to obtain this nominal value. The difference between the flood image and the offset image is the \textbf{gain}.
 \end{description}
 
-Where possible, an acquisition consists of 20 black, 20 grey and 20 white frames, taken consecutively in a short time period (typically, around 7 minutes for all 60 frames). We obtain a single averaged image of each type by taking the mean of 20 values from each pixel; unless stated otherwise, the subsequent analysis will be carried out on these black, grey and white pixelwise-mean images, which will be labelled $\bar{B}$, $\bar{G}$ and $\bar{W}$ respectively. In the pilot data sets (rows 1-6 of the table), the raw frames were not available, and only summarised black, grey and white images produced by the detector software were provided, with the power settings used to obtain the grey images not recorded.
+Where possible, an acquisition consists of 20 black, 20 grey and 20 white frames, taken consecutively in a short time period (typically, around 7 minutes for all 60 frames). We obtain a single averaged image of each type by taking the mean of 20 values from each pixel; unless stated otherwise, the subsequent analysis will be carried out on these black, grey and white pixelwise-mean images, which will be labelled $B$, $G$ and $W$ respectively. In the pilot data sets (rows 1-6 of the table), the raw frames were not available, and only summarised black, grey and white images produced by the detector software were provided, with the power settings used to obtain the grey images not recorded.
 
-In real-world usage, the offset and flood images are used to correct the target image, accounting for differences in dark current and gain between pixels. Given an image $X$ of interest, a black offset image $\bar{B}$, and a white flood image $\bar{W}$, we obtain the \textbf{shading-corrected image}
+In real-world usage, the offset and flood images are used to correct the target image, accounting for differences in dark current and gain between pixels. Given an image $X$ of interest, a black offset image $B$, and a white flood image $W$, we obtain the \textbf{shading-corrected image}
 
 \begin{equation}
-	X_c = \frac{X -\bar{B}}{\bar{W} -\bar{B}} \times 60000
+	X_c = \frac{X -B}{W - B} \times 60000
 \end{equation}
 \nb{Do we really use 60000? or do we use mean gain value? - would be closer to 40k}
 
-To explore the effect of defective pixels on the shading-corrected image, we will substitute the grey mid-range image $\bar{G}$ for the `true' image $X$. If there are no defects in the panel, we should obtain a smooth grey image, with a low variance of pixel values.
+To explore the effect of defective pixels on the shading-corrected image, we will substitute the grey mid-range image $G$ for the `true' image $X$. If there are no defects in the panel, we should obtain a smooth grey image, with a low variance of pixel values.
 
 \subsection{Defective pixels}
 
@@ -90,11 +90,11 @@ Over time, individual pixels (or, sometimes, whole regions of the detector) may 
 An underperforming pixel map is provided by the panel's manufacturer, with bad pixels classified according to a number of criteria based on pixel sensitivity, noise, and uniformity with its neighours - see Appendix~\ref{app:bpx-defn} for details. This pixel map can be produced at any time by the operator; usually after the installation of a new or refurbished detector, or if the operator is concerned that the detector is not operating as it should. The map actually consists of a set of 10 data files, summarised over 100 frames at each power setting \nb{who sets the power for these calibration images? If automatic, could it over-saturate?}:
 
 \begin{itemize}
-    \item mean black image $\bar{B}$, along with corresponding pixelwise SDs, minima and maxima
+    \item mean black image $B$, along with corresponding pixelwise SDs, minima and maxima
     \vspace{- .8\baselineskip}
-    \item mean grey image $\bar{G}$
+    \item mean grey image $G$
     \vspace{- .8\baselineskip}
-    \item mean white image $\bar{W}$, along with corresponding pixelwise SDs, minima and maxima
+    \item mean white image $W$, along with corresponding pixelwise SDs, minima and maxima
     \vspace{- .8\baselineskip}
     \item list of coordinates of identified bad pixel locations
 \end{itemize}

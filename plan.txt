@@ -2,6 +2,13 @@
 INVESTIGATION PLAN
 
 ####################################################################################################
+EXPLORATION OF DATA
+    - shape of black vs grey/white images (flat field vs spot response)
+    - variability of data (transects: regular oscillation in black images)
+        - model & remove oscillation to see what's left over?
+    - pixelwise mean/standard deviation vs input power
+
+####################################################################################################
 
 FIND DEFECTIVE PIXELS
     - extreme values
@@ -9,6 +16,10 @@ FIND DEFECTIVE PIXELS
     - distance from circular spot (large areas of non-standard response)
     - screen spots
     - column/row defects
+    - median-differencing over SC image: single-step approach to finding problematic pixels
+        - defects: found in med-diff SC
+        - classify type using brightness in black/grey/white
+        - add offset pixels: bright in all images, but cleared by SC (for assessment of detector health)
     
 COMPARE DEFECTS FOUND TO 'OFFICIAL' BAD PIXEL MAP
     
@@ -68,5 +79,20 @@ SPATIAL-TEMPORAL
 
 ####################################################################################################
 
-# SENSITIVITY ANALYSIS  
+SENSITIVITY ANALYSIS  
     - how do spatial/temporal models change when thresholds are changed?
+    
+    
+####################################################################################################
+####################################################################################################
+
+
+QUESTIONS FOR NIKON TECHNICAL EXPERT
+
+    - check understanding of direction of charge readout
+    
+    - check understanding of bad pixel classification
+    - specifically: is initial classification done on G-B, W-B?
+        If this is the case, nearly impossible to have underperforming bright pixel
+        (pixels are usually bright b/c offset in black image - not b/c oversensitive to spot)
+    

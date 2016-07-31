@@ -1,14 +1,9 @@
 
 library("IO.Pixels"); library("CB.Misc")
 
-load.pixel.means()
+pw.m <- load.pixel.means(c("loan", "MCT225"))
 
-pw.m <- abind(sapply(c("130613", "130701", "131002", "131122", "140128", "MCT225"), 
-                     function(nm) readRDS(paste0("./02_Objects/images/pwm-", nm, ".rds")), 
-                     simplify = F),
-              along = 4)
-
-setwd("~/Documents/Pixels/Image-plots/")
+fpath <- "./Image-plots/"
 
 ####################################################################################################
 
@@ -30,13 +25,37 @@ for (col in dimnames(diff)[[3]]) {
 
 # RAW IMAGES                                                                                    ####
 
-for (col in dimnames(pw.m)[[3]]) {
-    for (dt in dimnames(pw.m)[[4]]) {
-        bmp(paste0("./Pixelwise-means/pw-mean-", col, "-", dt, ".bmp"), width = 2048, height = 2048)
-        pixel.image(pw.m[ , , col, dt], title = paste0(col, " - ", dt))
-        dev.off()
-    }
+# pixelwise mean images
+{
+    lapply(dimnames(pw.m)[[4]],
+           function(acq) {
+               lapply(dimnames(pw.m)[[3]], 
+                      function(cc) {
+                          bmp(paste0(fpath, "Pixelwise-means/pw-mean-", cc, "-", acq, ".bmp"), width = 2048, height = 2048)
+                          pixel.image(pw.m[ , , cc, acq], title = paste0(cc, " - ", acq))
+                          dev.off()
+                      })
+           })
 }
+
+# histograms of raw images
+{
+    lapply(dimnames(pw.m)[[4]],
+           function(acq) {
+               lapply(dimnames(pw.m)[[3]], 
+                      function(cc) {
+                          cb.out("bmp", paste0(fpath, "Pixelwise-means/pw-mean-hist-", cc, "-", acq), width = 2048, height = 1024)
+                          hist(pw.m[ , , cc, acq], breaks = "fd", title = paste0(cc, " - ", acq), main = "", col = "black", xlab = "", ylab = "", xlim = c(0,65535))
+                          dev.off()
+                          cb.out("bmp", paste0(fpath, "Pixelwise-means/pw-mean-hist-cropped-", cc, "-", acq), width = 2048, height = 1024)
+                          hist(pw.m[ , , cc, acq], breaks = "fd", title = paste0(cc, " - ", acq), col = "black", ylim = c(0,30), main = "", xlab = "", ylab = "", xlim = c(0,65535))
+                          dev.off()
+                      })
+           })
+}
+
+
+
 
 ####################################################################################################
 

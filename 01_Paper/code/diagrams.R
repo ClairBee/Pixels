@@ -119,13 +119,10 @@ colnames(xml.summ) <- gsub("\\.", "", colnames(xml.summ))
 
 # flag to add horizontal lines in table
 xml.summ$hlflag <- ""
-xml.summ[c("140128", "141009", "loan", "MCT225"), "hlflag"] <- "x"
-
+xml.summ[c("141009", "loan", "MCT225"), "hlflag"] <- "x"
 
 xml.summ$head <- ""
-xml.summ[c("131122", "140128"), "head"] <- "\\cellcolor{white}"
-xml.summ["140129", "head"] <- "\\multirow{-6}{1em}{\\rotatebox{90}{\\centering{\\setlength{\\fboxsep}{2pt}\\colorbox{white}{Pilot data}}}}"
-
+xml.summ["140129", "head"] <- "\\multirow{-6}{1em}{\\rotatebox{90}{\\centering{Pilot data}}}"
 xml.summ["160705", "head"] <- "\\multirow{-14}{1em}{\\rotatebox{90}{\\centering{Main data}}}"
 
 write.csv(xml.summ, "./01_Paper/fig/tech-data/Detector-details.csv", quote = F, row.names = F)
