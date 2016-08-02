@@ -1,7 +1,7 @@
 
 # change image import so that each acquisition is stored as 3-layer array with dimensions
 
-import.acq <- function(acq.folder, subfolders = c("black", "grey", "white"), panel.dim = c(2048, 2048)) {
+import.acq <- function(acq.folder, subfolders = c("black", "grey", "white"), fn = "mean", panel.dim = c(2048, 2048)) {
     
     acq <- array(dim = c(panel.dim, length(subfolders)),
                  dimnames = list(NULL, NULL, subfolders))
@@ -40,7 +40,7 @@ import.acq <- function(acq.folder, subfolders = c("black", "grey", "white"), pan
         ims <- apply(cbind(acq.folder, "/", sf, "/", df$filenm), 1, paste, collapse = "")
         
         # get pixelwise mean of image
-        tmp <- apply(abind(lapply(ims, readTIFF, as.is = T), along = 3), 1:2, mean)
+        tmp <- apply(abind(lapply(ims, readTIFF, as.is = T), along = 3), 1:2, eval(parse(text = fn)))
         tmp <- t(tmp[nrow(tmp):1, , drop = FALSE])
 
         # position correctly in array
@@ -61,6 +61,12 @@ saveRDS(im.MCT225, "./02_Objects/stdevs/pwm-MCT225.rds")
 
 im.160705 <-  import.acq("/home/clair/Documents/Pixels/Image-data/160705")
 saveRDS(im.160705, "./02_Objects/images/pwm-160705.rds")
+
+im.loan <-  import.acq("/home/clair/Documents/Pixels/Image-data/loan", fn = "sd")
+saveRDS(im.MCT225, "./02_Objects/stdevs/pwsd-loan.rds")
+
+sd.160705 <-  import.acq("/home/clair/Documents/Pixels/Image-data/160705", fn = "sd")
+saveRDS(sd.160705, "./02_Objects/stdevs/pwsd-160705.rds")
 
 ####################################################################################################
 

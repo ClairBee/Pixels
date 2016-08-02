@@ -3,6 +3,8 @@ library("IO.Pixels"); library("CB.Misc")
 fpath <- "./01_Paper/fig/exploratory/"
 
 pw.m <- load.pixel.means()
+pw.sd <- load.pixel.sds()
+
 models <- read.csv("./Other-data/Gaussian-spots.csv", row.names = 1)
 
 ####################################################################################################
@@ -14,7 +16,9 @@ df <- data.frame("acq" = sort(rep(dimnames(pw.m)[[4]], 3)),
                  "mean" = c(apply(pw.m, 3:4, mean, na.rm = T)),
                  "median" = c(apply(pw.m, 3:4, median, na.rm = T)),
                  "sd" = c(apply(pw.m, 3:4, sd, na.rm = T)),
-                 "mad" = c(apply(pw.m, 3:4, mad, na.rm = T)))
+                 "mad" = c(apply(pw.m, 3:4, mad, na.rm = T)),
+                 "skew" = c(apply(pw.m, 3:4, function(im) skewness(c(im), na.rm = T))))
+                 
 
 write.csv(df, paste0(fpath, "image-summary.csv"), quote = F, row.names = F)
 
@@ -24,6 +28,8 @@ df <- read.csv(paste0(fpath, "image-summary.csv"), as.is = T)
 qq <- do.call("rbind", lapply(unique(df$acq), function(dt) unlist(df[df$acq == dt, 3:5])))
 
 write.csv(qq, paste0(fpath, "summary-statistics.csv"), quote = F, row.names = F)
+
+df$median <- c(apply(pw.m, 3:4, median, na.rm = T))
 
 ####################################################################################################
 
@@ -112,7 +118,31 @@ hist.scale <- function(data, sc.offset = -100, xlim = c(min(data, na.rm = T), ma
     }
 }
 
+# histograms of different spot shapes
+{
+    pdf(paste0(fpath, "white-spot-hist-160430.pdf"), height = 4); {
+        par(mar = c(2,2,1,1))
+        hist(pw.m[,,"white", "160430"], breaks = "fd", main = "", xlab = "", ylab = "")
+        dev.off()
+    }
+    pdf(paste0(fpath, "white-spot-hist-160705.pdf"), height = 4); {
+        par(mar = c(2,2,1,1))
+        hist(pw.m[,,"white", "160705"], breaks = "fd", main = "", xlab = "", ylab = "")
+        dev.off()
+    }
+    pdf(paste0(fpath, "white-spot-hist-MCT225.pdf"), height = 4); {
+        par(mar = c(2,2,1,1))
+        hist(pw.m[,,"white", "MCT225"], breaks = "fd", main = "", xlab = "", ylab = "")
+        dev.off()
+    }
+}
 
+# pixelwise SD
+{
+    pixel.image(pw.sd[,,"grey","141009"])
+    draw.panels(lty = 3)
+    .smoothScatter(pw.sd[,,"grey", "141009"], pw.m[,,"grey", "141009"])
+}
 
 ####################################################################################################
 
@@ -234,18 +264,25 @@ clump.centres <- function(px) {
     
     df <- ddply(xy, .(id), summarise,
                 xm = mean(x), ym = mean(y),
-                r = ceiling(max(max(x) - min(x), max(y) - min(y)) / 2))
+                r = ceiling(max(max(x) - min(x), max(y) - min(y)) / 2),
+                size = length(id))
     df
 }
+
+spots <- apply(pw.m[,,"white", ], 3, screen.spots, enlarge = T, ignore.edges = 40)
 
 # get centres of screen spots
 spots <- screen.spots(pw.m[,,"white", "141009"], enlarge = T, ignore.edges = 40)
 ss <- clump.centres(spots)
 
+# "131002" "131122" "140128" "140129" "141009" "141118" "141217" "150108" "150113" "150126" "150529" "150730" "150828" "151015" "160314" "160430" "160705" "loan"   "MCT225"
+spots[["131002"]] <- screen.spots(pw.m[,,"white", "131002"], enlarge = T, ignore.edges = 40)
+
+
 # white image with screen spots manually marked
 jpeg(paste0(fpath, "pwm-image-141009-white.jpg")); {
     par(mar = c(2,2,1,1))
-    pixel.image(pw.m[,,"white", "141009"])
+    pixel.image(pw.m[,,"white", "141009"], xlim = c(0,1024), ylim = c(0,1024))
     symbols(ss$x, ss$y, circles = 2 * ss$r, add = T, inches = F)
     dev.off()
 }
@@ -253,7 +290,7 @@ jpeg(paste0(fpath, "pwm-image-141009-white.jpg")); {
 # shading-corrected image with screen spots manually marked
 jpeg(paste0(fpath, "sc-image-141009-white.jpg")); {
     par(mar = c(2,2,1,1))
-    pixel.image(shading.corrected(pw.m[,,,"141009"]))
+    pixel.image(shading.corrected(pw.m[,,,"141009"]), xlim = c(0,1024), ylim = c(0,1024))
     symbols(ss$x, ss$y, circles = 2 * ss$r, add = T, inches = F)
     dev.off()
 }
@@ -262,12 +299,12 @@ jpeg(paste0(fpath, "sc-image-141009-white.jpg")); {
 jpeg(paste0(fpath, "spots-overplotted.jpg")); {
     par(mar = c(2,2,1,1))
     plot(screen.spots(pw.m[,,"white", "141009"], enlarge = T, ignore.edges = 40),
-         col = "cyan3", pch = ".", xlab = "", ylab = "")
+         col = "cyan3", pch = ".", xlab = "", ylab = "", xlim = c(0,1024), ylim = c(0,1024))
     points(screen.spots(pw.m[,,"white", "141118"], enlarge = T, ignore.edges = 40),
            col = adjustcolor("gold", alpha = 0.4), pch = ".")
     points(screen.spots(pw.m[,,"white", "141217"], enlarge = T, ignore.edges = 40),
            col = adjustcolor("magenta3", alpha = 0.4), pch = ".")
-    legend("topright", pch = 15, col = c("cyan3", "gold", "magenta3"), bty = "n",
+    legend("bottomleft", pch = 15, col = c("cyan3", "gold", "magenta3"), bty = "n",
            legend = sapply(dimnames(pw.m)[[4]][1:3], fancy.date))
     dev.off()
 }
