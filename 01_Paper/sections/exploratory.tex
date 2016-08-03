@@ -203,13 +203,15 @@ As well as the proportion of the screen affected by abnormal pixels, it may also
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \FloatBarrier
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Other considerations: screen spots, defective channels, and edge effects}
+\subsection{External issues: screen spots, defective channels, and edge effects}
 %----------------------------------------------------
+The main focus of this paper is on defective pixels within the detector panel. However, a number of other issues were observed during the course of the study.
+\addfigure{Could also mention the defective subpanel here}
 
-\subsubsection{Spots on the scintillator window}
+\subsubsection{Spots on the detector window}
 \label{sec:screen-spots}
 
-A problem not related to defects in the detector panels itself, but nonetheless one that an operator should be aware of, is the problem of spots appearing on the beryllium window that isolates the x-ray source from the scintillator. These spots occur when the tungsten target is heated by the electron beam to such a degree that flecks of tungsten ping off \nb{find better phrase}, and attach themselves to the beryllium window. Once this occurs, the flecks remain permanently attached to the window until the window is replaced. Figure~\ref{fig:screen-spots} shows the effect of the screen spots in the set of images acquired on 14-10-09.
+A problem not related to defects in the detector panel itself, but nonetheless one that an operator should be aware of, is the problem of spots appearing on the beryllium window that isolates the x-ray source from the scintillator. These spots occur when the tungsten target is heated by the electron beam to such a degree that flecks of tungsten ping off \nb{find better phrase}, and attach themselves to the beryllium window. Once this occurs, the flecks remain permanently attached to the window until the window is replaced. Figure~\ref{fig:screen-spots} shows the effect of the screen spots in the set of images acquired on 14-10-09.
 
 Screen spots can be particularly problematic for two reasons. Firstly, because they appear only in the presence of an x-ray source and not in the black images, they are not removed by the shading correction (\ref{fig:screen-spots:sc}); and secondly, because their position may appear to shift slightly between separate acquisitions, as the x-ray source is moved and refocused  (\ref{fig:screen-spots:shift}). This means that even if pixels covered by screen spots were added to the bad pixel map for correction, the locations would most likely be invalid for all successive acquisitions. \nb{Is there anything in the image processing to allow screen spots to be corrected, save by switching values?}
 
@@ -239,7 +241,7 @@ Screen spots can be particularly problematic for two reasons. Firstly, because t
 \end{figure}
 %----------------------------------------------------
 
-Screen spots are generally not detected in their entirety by the internal software because of their relatively low intensity difference from their surroundings. However, when looking for small features in a processed image (such as defects in objects produced by additive layer manufacturing), these differences may prove large enough to obscure a defect of a millimetre or two \nb{back up}; so a robust method for identifying such defects is required. One approach to this problem is outlined in \autoref{proc:screen-spots}.
+Screen spots are generally not detected in their entirety by the internal software because of their relatively low intensity difference from their surroundings. However, when looking for small features in a processed image (such as defects in objects produced by additive layer manufacturing), these differences may prove large enough to obscure a defect of a millimetre or two \nb{back up}; so a robust method for identifying such defects is required. Our solution to this problem is outlined in \autoref{proc:screen-spots}.
 
 %----------------------------------------------------
 % procedure to identify screen spots
@@ -251,11 +253,11 @@ Screen spots are generally not detected in their entirety by the internal softwa
     \SetKwInOut{Parameters}{Parameters}
 
     \Input{Bright image without offset correction $W$}
-    \Parameters{Minimum spot diameter, $d$ \\ Loess smoothing span, $f$ \\ y-coordinate of midline (if any), $\lambda$}
+    \Parameters{Minimum spot diameter, $d$ \\ Lowess smoothing span, $f$ \\ y-coordinate of midline (if any), $\lambda$}
 
 Adjust offset of columns in upper panel (if midline exists)
 
-Detrend each column by subtracting Loess-smoothed value with span $f$ from offset-adjusted value
+Detrend each column by subtracting Lowess-smoothed value with span $f$ from offset-adjusted value
 
 Truncate values by setting all pixel values above median value to median value
 
@@ -263,27 +265,98 @@ Apply morphological closing with disc-shaped structuring element, diameter $d$, 
 
 Threshold resulting image to give binary classification for each pixel
 
-Filter spots, using 75th quantile of detrended residuals to assess `depth'
+%Filter spots, using 75th quantile of detrended residuals to assess `depth'
 
 Dilate identified spots to approximately reconstruct edges lost in thresholding
 
 \end{algorithm}
 %----------------------------------------------------
 
-Our aim is to fit a smooth spline to each column of the image array, to use this spline to de-trend each column's data, and to identify large, round-edged dips in the detrended residuals. Detrending in both directions at once is theoretically possible, but two-dimensional spline fitting is extremely time-consuming, whereas the implementation suggested here can be applied in a matter of minutes \nb{benchmark final process}. We use columns rather than rows to minimise the number of subpanels crossed by each spline, since the response surface is usually discontinuous at buondaries between subpanels.
+%If we were to plot the pixel values from a single column of a white image without screen spots, we would expect to observe a smooth curve, with its highest point at the focal point of the x-ray source. Where a spot falls on the  \nb{add figure? Already a lot of figures...}
+Our aim is to fit a smooth spline to each column of the image array, to use this spline to de-trend each column's data, and to identify large, round-edged dips in the detrended residuals. Detrending in both directions at once is theoretically possible, but two-dimensional spline fitting is extremely time-consuming, whereas the implementation suggested here can be applied in a matter of minutes \nb{benchmark final process}. We use columns rather than rows to minimise the number of subpanels crossed by each spline, since the response surface is usually discontinuous at boundaries between subpanels. 
 
+Rather than fit a separate spline to the upper and lower segment of each column - which would result in a horizontal strip of unfitted pixels across the critical central region of the panel at the end of each spline - we first apply an offset correction to smooth the join between the upper and lower columns. Since the absolute values are currently of no real interest, for each column we calculate the median value of the 100 pixels above and below the midline, and subtract the difference from the values of the upper column, resulting in a smooth gradient across the midline in each column (Figure \ref{fig:screen-spots:offset}). 
 
-The results of this procedure can be tested by comparing the results from two successive acquisitions (unless, of course, the screen has been replaced in the interim). % assess results on consecutive acquisitions: what appears/disappears?
+The overall trend of the pixel responses in each column is modelled by fitting a nonparametric Lowess curve to the offset-adjusted values. The function is controlled by a smoothing parameter $\alpha$, denoting the proportion of the available data to be used in fitting each point. This smoothing span must be sufficiently large that the fitted curve does not follow the short dips in value caused by the presence of contaminants on the screen, but small enough that we don't lose too many pixels at the upper and lower edges of the panel. On the data sets available, smoothing spans using anything between 1/5 and 1/35 of the points produced reasonably similar results. The former requires 410 data points to fit each value, so is unable to fit a smoothed curve within 205 pixels of the upper and lower edges of the panel; the latter uses 59 points to fit each value, so loses only 30 pixels at the panel edges, but may fail to identify the smallest and faintest spots due to over-fitting of the data. Over the available data, consistently good results were obtained using a smoothing span of 1/15, leaving a border of 68 pixels (13.6mm) at the top and bottom edges of the panel that cannot be checked; in normal operation, objects are not generally placed this close to the edges of the panel, so this is a reasonable compromise. \nb{add something on sensitivity to smoothing span after proper investigation: also on minimum discoverable defect size?}. 
 
+%----------------------------------------------------
+% screen spots - procedure
+\begin{figure}
+\caption{Stages of screen spot detection, illustrated on a section of the white image acquired on 14-10-09. The section contains 4 dim spots, and also crosses the midline of the panel. \\
+\footnotesize{All pixel values are shaded to reflect their distance from the median value in multiples of the SD. The residual images (c), (d) and (e) all have the same absolute scale applied for easier comparison.}}
 
+\newcommand{\sfwidth}{0.24\textwidth}
+\newcommand{\sfscaleIV}{0.2}
 
+\centering
+\begin{subfigure}[t]{\sfwidth}
+\caption{Raw image}
+\includegraphics[scale=\sfscaleIV]{screen-spots/ss-raw-image}
+\end{subfigure}
+%
+\begin{subfigure}[t]{\sfwidth}
+\caption{Offset adjusted}
+\label{fig:screen-spots:offset}
+\includegraphics[scale=\sfscaleIV]{screen-spots/ss-offset-adj}
+\end{subfigure}
+%
+\begin{subfigure}[t]{\sfwidth}
+\caption{Lowess residuals}
+\label{fig:screen-spots:lowess-res}
+\includegraphics[scale=\sfscaleIV]{screen-spots/ss-loess-res}
+\end{subfigure}
+%
+\begin{subfigure}[t]{\sfwidth}
+\caption{Truncated residuals}
+\includegraphics[scale=\sfscaleIV]{screen-spots/ss-loess-res-trunc}
+\end{subfigure}
+%
+
+\vspace*{\baselineskip}
+
+\begin{subfigure}[t]{\sfwidth}
+\caption{Closing applied}
+\includegraphics[scale=\sfscaleIV]{screen-spots/ss-closing}
+\end{subfigure}
+%
+\begin{subfigure}[t]{\sfwidth}
+\caption{Thresholded}
+\includegraphics[scale=\sfscaleIV]{screen-spots/ss-thresholded}
+\end{subfigure}
+%
+\begin{subfigure}[t]{\sfwidth}
+\caption{Spots dilated}
+\includegraphics[scale=\sfscaleIV]{screen-spots/ss-enlarged}
+\end{subfigure}
+%
+\begin{subfigure}[t]{\sfwidth}
+\caption{Final identification}
+\label{fig:screen-spots:overlay}
+\includegraphics[scale=\sfscaleIV]{screen-spots/ss-overlaid}
+\end{subfigure}
+
+\end{figure}
+%----------------------------------------------------
+
+The fitted trend is removed by subtracting each columnwise fitted curve from the column's values and, since we are looking specifically for dim patches in this case, we ignore any deviations above the fitted trend, truncating the data at the median value (\ref{fig:screen-spots:lowess-res}). To identify only those dim pixels that form large, rounded-edged clusters (as opposed to single pixels, lines or small clusters), we perform a morphological closing \cite{Vincent1997} over the resulting residual image, using a disc-shaped structuring element. Any size of structuring element may be used, with the diameter determining the minimum size of defect that will be retained; the analysis above uses a disc of diameter 5 pixels, retaining defects of 1mm or greater diameter. 
+
+A threshold of -1 standard deviation of the untruncated Lowess residuals is used to binarise the data into spots and healthy pixels; smaller residual differences than this are generally the result of poor spline fitting, rather than of screen contamination. Finally, to approximately reconstruct the edges of each spot, which are trimmed away by the spline fitting process, we perform a morphological dilation of the spots, using the same structuring element. Figure~\ref{fig:screen-spots:overlay} shows the pixels selected by this method.
+
+The results of this procedure can be assessed by comparing the results from two successive acquisitions (unless, of course, the screen has been replaced in the interim). \nb{assess results on consecutive acquisitions: what appears/disappears? Need to perfect spot-matching algorithm first}
 
 \addfigure{Need to decide how to handle screen spots. Do they need to be removed from shading-corrected image (as suggested by plot above) or is the shading correction still effective enough that we can afford to ignore them (as suggested by the actual approach taken)? In SC image for 141009, 99.9\% of values lie between 19624 and 20225 (range of 600px)}
 
-\addfigure{Track \% of screen covered by spots at each acquisition}
+The approach above is easily tuned by adjusting the minimum defect diameter and smoothing span; the algorithm can be applied to any bright image (grey or white), but the clearest results were generally found to be obtained from the white images.
+
+It should be noted that not all of the pixels identified as affected by screen spots will have problematic values after the shading correction is applied; generally, only pixels under the thickest part of the spot will still appear as a dark patch in the corrected image. However, identification of screen spots allows the operator to  quantify the area affected by such spots, and so to make an objective judgement of whether the beryllium window needs to be replaced. In the current data set, the highest observed affected proportion of the detector was 0.3\% (in the images acquired on 16-03-14), after which the window was replaced at the operator's request.
+
+A further benefit of identifying pixels affected by spots on the screen is that we can avoid classifying the pixels as individually problematic.
+
+\subsubsection{Full-column and full-row defects}
+
+Because of the way in which data is read out in these CCDs (first passing along each column to a sensor at the detector edge, then row-by-row to a charge amplifier \nb{?}, as shown in Figure~\ref{fig:charge-transfer-direction}), it is possible for whole columns of a subpanel to become non-responsive to the presence of a spot. This phenomenon can be observed in the WMG's `loan' panel; columns 407 and 2007 in the lower half of the panel, and column 413 in the lower, are not only 
 
 
-Screen spots that have appeared since the previous acquisition can be easily identified by subtracting the new grey or white image from the previous acquisition. However, the `shadow' cast by the spots on the detector will shift slightly in different acquisitions due to small differences in the position or angle of the x-ray source, so spots should ideally be identified and corrected for at each acquisition.
 
 \subsection{Thresholding \& definitions of bad pixels}
 
