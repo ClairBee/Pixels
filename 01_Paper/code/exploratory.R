@@ -310,3 +310,43 @@ jpeg(paste0(fpath, "spots-overplotted.jpg")); {
 }
 
 ####################################################################################################
+
+####################################################################################################
+
+# FULL-COLUMN DEFECTS                                                                           ####
+
+jpeg(paste0(fpath, "Column-defect-407.jpg"), height = 240); {
+    par(mar = c(2,2,1,1))
+    plot(pw.m[407,,"white", "loan"], type = "l", xlim = c(0,1024), ylim = c(4500, 5500), col = "gold", xlab = "", ylab = "")
+    lines(pw.m[407,,"grey", "loan"], col = "green3")
+    lines(pw.m[407,,"black", "loan"])
+    abline(v = 1024.5, col = "red")
+    
+    legend("bottomleft", col = c("black", "green", "gold", "red"), legend = c("Black", "Grey", "White", "Panel midline"), lty = 1, bty = "n")
+    dev.off()
+}
+apply(pw.m[407,200:1024,, "loan"], 2, sd)
+apply(pw.m[408,200:1024,, "loan"], 2, sd)
+
+jpeg(paste0(fpath, "Column-defect-1766.jpg"), height = 240); {
+    par(mar = c(2,2,1,1))
+    plot(pw.m[1302,,"white", "130613"], type = "l", xlim = c(1025, 2048), ylim = c(4500, 5500), col = "gold", xlab = "", ylab = "")
+    lines(pw.m[1302,,"grey", "130613"], col = "green3")
+    lines(pw.m[1302,,"black", "130613"])
+    abline(v = 1024.5, col = "red")
+    
+    legend("bottomleft", col = c("black", "green", "gold", "red"), legend = c("Black", "Grey", "White", "Panel midline"), lty = 1, bty = "n")
+    dev.off()
+}
+
+apply(pw.m[1766,200:1024,, "131122"], 2, sd, na.rm = T)
+apply(pw.m[1767,200:1024,, "131122"], 2, sd, na.rm = T)
+
+apply(pw.m[1302,1025:1848,, "130613"], 2, sd, na.rm = T)
+apply(pw.m[1303,1025:1848,, "130613"], 2, sd, na.rm = T)
+
+o.plot(pw.m[1100:1500,1600,"white","130613"])
+
+o.plot(pw.m[1302,,"white","130613"])
+
+####################################################################################################
