@@ -283,7 +283,7 @@ The overall trend of the pixel responses in each column is modelled by fitting a
 % screen spots - procedure
 \begin{figure}
 \caption{Stages of screen spot detection, illustrated on a section of the white image acquired on 14-10-09. The section contains 4 dim spots, and also crosses the midline of the panel. \\
-\footnotesize{All pixel values are shaded to reflect their distance from the median value in multiples of the SD. The residual images (c), (d) and (e) all have the same absolute scale applied for easier comparison.}}
+\footnotesize{All pixel values are shaded to reflect their distance from the median value in multiples of the SD. \\ To allow clearer comparison, the residual images (c), (d) and (e) are all coloured according to the same absolute scale.}}
 
 \newcommand{\sfwidth}{0.24\textwidth}
 \newcommand{\sfscaleIV}{0.2}
@@ -342,21 +342,32 @@ The fitted trend is removed by subtracting each columnwise fitted curve from the
 
 A threshold of -1 standard deviation of the untruncated Lowess residuals is used to binarise the data into spots and healthy pixels; smaller residual differences than this are generally the result of poor spline fitting, rather than of screen contamination. Finally, to approximately reconstruct the edges of each spot, which are trimmed away by the spline fitting process, we perform a morphological dilation of the spots, using the same structuring element. Figure~\ref{fig:screen-spots:overlay} shows the pixels selected by this method.
 
-The results of this procedure can be assessed by comparing the results from two successive acquisitions (unless, of course, the screen has been replaced in the interim). \nb{assess results on consecutive acquisitions: what appears/disappears? Need to perfect spot-matching algorithm first}
-
-\addfigure{Need to decide how to handle screen spots. Do they need to be removed from shading-corrected image (as suggested by plot above) or is the shading correction still effective enough that we can afford to ignore them (as suggested by the actual approach taken)? In SC image for 141009, 99.9\% of values lie between 19624 and 20225 (range of 600px)}
+The results of this procedure can be assessed by comparing the results from two successive acquisitions (unless, of course, the screen has been replaced in the interim). \nb{assess results on consecutive acquisitions: what appears/disappears? Need to perfect spot-matching algorithm to check this!}
 
 The approach above is easily tuned by adjusting the minimum defect diameter and smoothing span; the algorithm can be applied to any bright image (grey or white), but the clearest results were generally found to be obtained from the white images.
 
-It should be noted that not all of the pixels identified as affected by screen spots will have problematic values after the shading correction is applied; generally, only pixels under the thickest part of the spot will still appear as a dark patch in the corrected image. However, identification of screen spots allows the operator to  quantify the area affected by such spots, and so to make an objective judgement of whether the beryllium window needs to be replaced. In the current data set, the highest observed affected proportion of the detector was 0.3\% (in the images acquired on 16-03-14), after which the window was replaced at the operator's request.
-
-A further benefit of identifying pixels affected by spots on the screen is that we can avoid classifying the pixels as individually problematic.
+It should be noted that many of the pixels identified as covered by screen spots will appear normal after the shading correction is applied; generally, only pixels under the thickest part of the spot will still appear as a dark patch in the corrected image, so adding the the whole spot to the bad pixel map would remove a relatively large number of useable pixels along with the genuinely problematic. Those pixels that should be added to the bad pixel map can be identified using the criteria listed in section \nb{ref}; however, separate identification of screen spots will ensure that the affected pixels are not misclassified as independently underperforming. Identification also allows the operator to  quantify the area affected by such spots, and so to make an objective judgement of whether the beryllium window needs to be replaced. In the current data set, the highest observed affected proportion of the detector was 0.3\% (in the images acquired on 16-03-14), after which the window was replaced at the operator's request.
 
 \subsubsection{Full-column and full-row defects}
 
-Because of the way in which data is read out in these CCDs (first passing along each column to a sensor at the detector edge, then row-by-row to a charge amplifier \nb{?}, as shown in Figure~\ref{fig:charge-transfer-direction}), it is possible for whole columns of a subpanel to become non-responsive to the presence of a spot. This phenomenon can be observed in the WMG's `loan' panel; columns 407 and 2007 in the lower half of the panel, and column 413 in the lower, are not only 
+Because of the way in which data is read out in these CCDs (first passing along each column to a sensor at the detector edge, then row-by-row to a charge amplifier \nb{?}, as shown in Figure~\ref{fig:charge-transfer-direction}), it is possible for whole columns of a subpanel to become non-responsive to the presence of a spot. 
 
+None of the images obtained in the study cover the full 2048-pixel span of the detector, so it is impossible to state categorically whether the problem originates in the channel's readout sensor, or in a specific pixel on the panel's unobserved border. Of the 17 unique cases where a dark line terminates in the observed region of the detector, 16 show a slight upturn before normal readout resumes, with only 1 dark line showing a drop before returning to normal levels. Of the 5 unique cases where a dark line runs the full length of a subpanel, all show a slight decrease in value at the edge of the panel at all three power settings. These are very small sample sizes from which it is impossible to draw any firm conclusions, but the indications are that those dark columns that extend the full distance from the panel's midline to its edge are of a different type to those that terminate at a specific pixel. As such, our analysis will assume that these are defects in a whole readout panel, rather than caused by a specific pixel, and will treat the pixels in these columns as unreadable.
 
+An even less common defect - one that has been observed only once in this study, and to which we have found no other references in the literature \nb{although should have a proper search!} occurs in the `loan' panel, where a defect affects a whole row of the detector Figure~\ref{fig:row-defect}. Given that data is only transferred from row to row after the columns have been transferred to the panel edges, we must assume that this defect lies in one of the readout sensors, and so does not form part of our investigation of pixel behaviour. In this case, the defect manifests as a relatively small offset against the neighbouring rows, almost identical at all three observed power settings, so is removed by the shading correction. Unfortunately, the images containing this defect were acquired at the end of the study period, so no data is available on the progression (or otherwise) of the problem. However, an informal comparison of the row with its neighbour in an uncorrected image provided by the operator one month later shows.... \nb{(Jay to send over single frame so that we can check status)}
+
+\addfigure{image showing dark row; transect along one power setting; neighbour-offset transect}
+
+\begin{figure}
+\caption{Transects along defective row 77 of the `loan' panel. The observed values of the affected row and its neighbours show the same characteristic sawtooth pattern, caused by the increasing gradient from right to left over each subpanel; the overall decreasing trend of row 77 can be seen more clearly when we consider only the offset between each pixel and its upper or lower neighbours along the row, as in (b). The offset is the same at all observed power settings (c), so will be removed by the shading correction.}
+\label{fig:row-defect}
+
+%\sfquad{row-defects/row-defect-image}{Subset of black image \\}%
+\sftriple{row-defects/row-defect-transect}{Transect along row 77\\ and adjacent rows}%
+\sftriple{row-defects/row-defect-diffs}{Difference between row 77\\ and adjacent rows}%
+\sftriple{row-defects/row-defect-powers}{Difference between rows 77\\ and 76 at each power setting}%
+
+\end{figure}
 
 \subsection{Thresholding \& definitions of bad pixels}
 
