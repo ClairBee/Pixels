@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FullImageProfile xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" FileName="black_171214_11.tif" ImageNotesOnlyValid="false">
+  <ImageNotes>17 December 2014 11:31:33</ImageNotes>
+  <ImageNotes>The X-ray conditions for this image were 0kV, 0.0uA.</ImageNotes>
+  <ManipulatorPosition>
+    <AxisPosition>0</AxisPosition>
+    <AxisPosition>413.4632</AxisPosition>
+    <AxisPosition>-46.44</AxisPosition>
+    <AxisPosition>0.0649</AxisPosition>
+    <AxisPosition>0</AxisPosition>
+  </ManipulatorPosition>
+  <XAxis>0</XAxis>
+  <YAxis>1</YAxis>
+  <MagnificationAxis>2</MagnificationAxis>
+  <RotateAxis>3</RotateAxis>
+  <TiltAxis>4</TiltAxis>
+  <SampleHeight>0</SampleHeight>
+  <MeasurementCalibrationH>0.0867671750477684</MeasurementCalibrationH>
+  <MeasurementCalibrationV>0.0867671750477684</MeasurementCalibrationV>
+  <MeasurementCalibrationValid>true</MeasurementCalibrationValid>
+  <kV>0</kV>
+  <uA>0</uA>
+  <Power>0</Power>
+  <XrayCurrentUsed>true</XrayCurrentUsed>
+  <ExposureTime>1000</ExposureTime>
+  <FramesAveraged>0</FramesAveraged>
+  <CameraProperties exposure="1000" gain="5" brightness="0" digitalGain="0" binning="0" WhiteToBlackLatency="20000" BlackToWhiteLatency="10000" WhiteToWhiteLatency="1000" lines="0" accumulation="0">
+    <transform>1</transform>
+    <imageOffsetX>2</imageOffsetX>
+    <imageOffsetY>20</imageOffsetY>
+    <imageSizeX>1996</imageSizeX>
+    <imageSizeY>1996</imageSizeY>
+    <defaultImagingMode>Histogram</defaultImagingMode>
+  </CameraProperties>
+  <IntensifierField>0</IntensifierField>
+  <IrisDemand>100</IrisDemand>
+  <TimeAcquired>2014-12-17T11:31:33.4306999+00:00</TimeAcquired>
+  <Time>11:31:33</Time>
+  <Date>17 December 2014</Date>
+  <MapImage>
+    <Width>0</Width>
+    <Height>0</Height>
+  </MapImage>
+  <EditActions>
+    <PadArrayVoidAction FlattenCount="0" VoidThreshold="32768" PadVoiding="20" MaxSingleVoiding="5">
+      <ImageSize>
+        <Width>1996</Width>
+        <Height>1996</Height>
+      </ImageSize>
+      <Version>2</Version>
+    </PadArrayVoidAction>
+  </EditActions>
+  <WireSweep>
+    <Active>false</Active>
+    <SweepPercentage>0</SweepPercentage>
+  </WireSweep>
+</FullImageProfile>
