@@ -21,6 +21,30 @@ md7 <- abind(sapply(c("131122", "140128", "MCT225", "160430"),
 
 ####################################################################################################
 
+# FINAL SETUP?                                                                                  ####
+
+zz <- apply(md7[,1025:2048,"grey", "131122"], 1, mad, na.rm = T)
+which(zz > 175)
+
+o.plot(md7[232,, "grey", "131122"], xlim = c(1025, 2048))
+o.plot(md7[1302,, "grey", "131122"], xlim = c(1025, 2048))
+
+library(segmented)
+
+df <-  data.frame(x = 1025:2048, y = md7[232, 1025:2048, "grey", "131122"])
+c.lm <- lm(y ~ x, data = df[!is.na(df$y),])
+c.seg <- segmented(c.lm, seg.Z = ~ x, psi = NA, control = seg.control(display = F, K = 2))
+plot.segmented(c.seg)
+plot(df, type = "l")
+
+library(changepoint)
+c.cpt <- cpt.mean(md7[232,1025:2048, "grey", "131122"][!is.na(md7[232,1025:2048, "grey", "131122"])])
+c.cpt
+
+plot(md7[232,1025:2048, "grey", "131122"]
+     
+####################################################################################################
+
 # VERBOSE PROCEDURE                                                                             ####
 
 overplot <- function(im.array, column, dt, xlim = c(0, 2048), hline = 0, vline = 1024.5, ...) {
@@ -735,3 +759,129 @@ pixel.image(tst)
 rr <- r2m(focal(m2r(tst), k))
 pixel.image(rr)
     
+
+# DIM VS DARK PIXELS                                                                            ####
+
+# remove dark lines
+# are remaining singletons no-gain dark, or some other dim behaviour?
+ms7 <- pw.m - md7
+
+dl <- apply(pw.m[,,"white",], 3, dark.lines)
+
+
+adj <- invisible(lapply(dimnames(pw.m)[[4]],
+                        function(dt) {
+                            abind(lapply(dimnames(pw.m)[[3]],
+                                         function(cc) {
+                                             replace(pw.m[,,cc, dt], dl[[dt]], ms7[,,cc,dt][dl[[dt]]])
+                                         }), along = 3)
+                        }))
+
+adj <- abind(adj, along = 4, new.names = dimnames(pw.m))
+
+gain.diff <- adj[,,"white",] - adj[,,"grey",]
+pdf("./Image-plots/Misc/Gain-histogram-no-lines.pdf"); {
+    hist(gain.diff, breaks = "fd", ylim = c(0,200), main = "W-G, dark lines removed (21 images)")
+    dev.off()
+}
+pdf("./Image-plots/Misc/White-histogram-no-lines.pdf"); {
+    hist(adj[,,"white",], breaks = "fd", ylim = c(0,200), main = "White, dark lines removed (21 images)")
+    abline(v = c(10000,20000), col = "red")
+    dev.off()
+}
+pdf("./Image-plots/Misc/Black-histogram-no-lines.pdf"); {
+    hist(adj[,,"black",], breaks = "fd", ylim = c(0,200), main = "Black, dark lines removed (21 images)")
+    abline(v = c(10000,20000), col = "red")
+    dev.off()
+}
+
+hist(pw.m[,,"white", ], breaks = "fd")
+hist(pw.m[,,"white", 1], breaks = "fd", add = T, border = adjustcolor("cyan3", alpha = 0.4))
+hist(pw.m[,,"white", 2], breaks = "fd", add = T, border = adjustcolor("red", alpha = 0.4))
+hist(pw.m[,,"white", 3], breaks = "fd", add = F, border = adjustcolor("green3", alpha = 0.4))
+hist(pw.m[,,"white", 4], breaks = "fd", add = T, border = adjustcolor("gold", alpha = 0.4))
+
+saveRDS(adj, "./tmp-dark-lines-removed.rds")
+
+apply(adj[,,"white",], 3, sd, na.rm = T)
+apply(gain.diff, 3, sd, na.rm = T)
+
+pixel.plot(which(pw.m[,,"white", "loan"] > 57000, arr.ind = T), col = "orange")
+
+pixel.image(pw.m[,,"white", "loan"], xlim = c(500,1500), ylim = c(500, 1500), break.levels = sd.levels(pw.m[500:1500,500:1500,"white", "loan"]))
+ss <- screen.spots(pw.m[,,"white", "loan"])
+draw.outlines(ss)
+
+sp <- array(pw.m[,,"white", "loan"], dim = c(128, 16, 1024, 2))
+
+cc <- rep(c("red", "blue", "gold", "magenta3", "green3", "orange", "cyan3", "purple"), 4)
+
+par(mfrow = c(4,4), mar = c(2,2,1,1))
+invisible(apply(sp[,,,1], 2, hist, breaks = "fd", xlim = c(0,65535), main = ""))
+invisible(apply(sp[,,,2], 2, hist, breaks = "fd", xlim = c(0,65535), main = ""))
+par(mfrow = c(1,1))
+
+quantile(c(pw.m[,,"black", ]), 0.999, na.rm = T)
+quantile(c(pw.m[,,"white", ]), 1 - 0.999, na.rm = T)
+
+JF <- JohnsonFit(pw.m[,,"white",][!is.na(pw.m[,,"white",])])
+
+hist(pw.m[,,"white",], breaks = "fd", prob = T)
+lines(1:65535, dJohnson(1:65535, JF), col = "red", lwd = 2)
+
+pJohnson(10000, JF)
+
+df <- data.frame(mean = apply(pw.m, 3, mean, na.rm = T),
+                 median = apply(pw.m, 3, median, na.rm = T),
+                 sd = apply(pw.m, 3, sd, na.rm = T))
+
+####################################################################################################
+
+# GUBBINS                                                                                       ####
+
+n.plot <- function(im, colm, offset.by = -1, type = "o", pch = 20, add = F, xlab = "", ylab = "", ...) {
+    
+    if (add) {
+        points(im[colm,] - im[colm + offset.by,], type = type, pch = pch, xlab = xlab, ylab = ylab, ...)
+    } else {
+        plot(im[colm,] - im[colm + offset.by,], type = type, pch = pch, xlab = xlab, ylab = ylab, ...)
+    }
+    abline(h = 0, col = "red")
+}
+
+# line 1396: dim & bright (upper panel)
+
+md7.diff <- md7.adj[,,"grey"] - md7.adj[,,"black"]
+md7.diff[232, 1024 + c(1:248)] <- 0
+md7.diff[1396, 1024 + c(1:71)] <- 0
+md7.diff[1012, 1025 - c(1:797)] <- 0
+
+pixel.image(md7.diff)
+hist(md7.diff, breaks = "fd")
+
+pixel.plot(which(md7.diff < -500, arr.ind = T))
+
+
+
+plot(0, type = "n", xlim = c(-10000, 60000), ylim = c(0,300))
+hist(pw.m[,,"white", "130613"] - pw.m[,,"black", "130613"], breaks = "fd", border = adjustcolor("skyblue", alpha = 0.4), add = T)
+hist(pw.m[,,"white", "131122"] - pw.m[,,"black", "131122"], breaks = "fd", border = adjustcolor("blue", alpha = 0.4), add = T)
+hist(pw.m[,,"white", "141009"] - pw.m[,,"black", "141009"], breaks = "fd", border = adjustcolor("orange", alpha = 0.4), add = T)
+hist(pw.m[,,"white", "160430"] - pw.m[,,"black", "160430"], breaks = "fd", border = adjustcolor("red", alpha = 0.4), add = T)
+hist(pw.m[,,"white", "loan"] - pw.m[,,"black", "loan"], breaks = "fd", border = adjustcolor("green3", alpha = 0.4), add = T)
+hist(pw.m[,,"white", "MCT225"] - pw.m[,,"black", "MCT225"], breaks = "fd", border = adjustcolor("magenta3", alpha = 0.4), add = T)
+
+pixel.plot(which(pw.m[,,"white", "131122"] - pw.m[,,"grey", "131122"] < 20000, arr.ind = T), col = "cyan3")
+points(which(pw.m[,,"white", "131122"] - pw.m[,,"black", "131122"] < 10000, arr.ind = T), pch = 15, cex = 0.4)
+
+hist(pw.m[,,"white", ] - pw.m[,,"grey",], breaks = "fd", ylim = c(0,300))
+
+gain.gw <- pw.m[,,"white", ] - pw.m[,,"grey",]
+ll <- data.frame(px.1000 = apply(gain.gw, 3, function(g) sum(g < 1000, na.rm = T)),
+                 px.5000 = apply(gain.gw, 3, function(g) sum(g < 5000, na.rm = T)),
+                 px.10000 = apply(gain.gw, 3, function(g) sum(g < 10000, na.rm = T)),
+                 w.25000 = apply(pw.m[,,"white",], 3, function(im) sum(im < 25000, na.rm = T)))
+
+pixel.plot(which(gain.gw[,,"MCT225"] < 10000, arr.ind = T), col = "cyan3")
+points(which(gain.gw[,,"MCT225"] < 5000, arr.ind = T), pch = 15, cex = 0.4)
+points(which(gain.gw[,,"MCT225"] < 1000, arr.ind = T), pch = 15, cex = 0.4, col = "red")

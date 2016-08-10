@@ -219,8 +219,20 @@ df <- df[order(rownames(df)),]
  
  # need to write function to add single image batch to summary files                     ####
  
- ############################################################################################
+############################################################################################
  
  # IMPORT NON-STANDARD DATA                                                             ####
  
+############################################################################################
+ 
+# MEDIAN DIFFERENCES                                                                   ####
+ ff <- gsub(".rds", "", gsub("md7-", "", 
+                             list.files("./02_Objects/med-diffs",
+                                        pattern = "md7-[a-z, A-Z, 0-9]+\\.rds$", full.names = F)))
+ to.add <- dimnames(pw.m)[[4]][!(dimnames(pw.m)[[4]] %in% ff)]
+ 
+ md <- apply(pw.m[,,,to.add[1]], 3, 
+             function (im) r2m(focal(m2r(im), matrix(rep(1, 49), ncol = 7), fun = median)))
+ md <- array(md, dim = c(2048, 2048, 3))
+ saveRDS(pw.m[,,,to.add[1]] - md, paste0("./02_Objects/med-diffs/md7-", to.add[1], ".rds"))
  

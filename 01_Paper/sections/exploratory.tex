@@ -29,22 +29,24 @@ Refined definition of states in the experimental data; thresholds
 + Parametric description of panel (esp. black images)
 
 + Comparison of images from several detectors
+
+% Many approaches to defect identification have been proposed (PCA, ANNs etc) - our main focus here is to identify all defects (even minor ones) \& evaluate their distribution, NOT simply to provide a new way of identifying defects. As such, our approach will classify as defective any pixel with an abnormal response (maybe should call them abnormal rather than defective, then?), so that we can assess whether minor abnormalities are likely to develop into significant problems or not.
+
 \end{outline}
 %----------------------------------------------------
 \addfigure{May be better to split out theoretical prep vs case studies?}
 
 Should probably formally limit our analysis to central region of detector (possibly as defined in manual?), since extreme edges are less likely to be of interest. Therefore can use median filtering etc without losing any data, since we are cropping the edge anyway.
 
-\subsection{Description of data}
-
-One of the main problems in a systematic investigation of defects within a detector panel is the absence of an objectively defined `gold standard', a model for the expected behaviour of the panel under normal operating conditions. Ideally, alongside the images acquired as part of the study, we would also examine a brand-new detector, in order to gain a more complete and accurate understanding of how the panel `should' behave. Unfortunately, images from a new detector were not available during the study period; however, we have a sequence of 14 acquisitions taken from the same detector over a period of 21 months, the first of which was obtained 10 months after a refurishment \nb{confirm dates with Jay/Mark - when exactly was refurbishment? And how old was the panel at the time?}. No issues were reported by the operator until the end of the 21-month period, when the panel was replaced due to a problem with a readout sensor that affected a whole subpanel. Of the four distinct data sets included here (pilot data, main data, loan data, and Nikon/MCT225 data), the main data sequence is also the only one in which columns of dark pixels do not appear. We therefore take the earliest of this sequence of images as our closest available approximation to the behaviour of a new, undamaged detector.
+One of the main problems in a systematic investigation of defects within a detector panel is the absence of an objectively defined `gold standard', a model for the expected behaviour of the panel under normal operating conditions. Ideally, alongside the images acquired as part of the study, we would also examine a brand-new detector, in order to gain a more complete and accurate understanding of how the panel `should' behave. Unfortunately, images from a new detector were not available during the study period; however, we have a sequence of 14 acquisitions taken from the same detector over a period of 21 months, the first of which was obtained 10 months after a refurbishment \nb{confirm dates with Jay/Mark - when exactly was refurbishment? And how old was the panel at the time?}. No issues were reported by the operator until the end of the 21-month period, when the panel was replaced due to a problem with a readout sensor that affected a whole subpanel. Of the four distinct data sets included here (pilot data, main data, loan data, and Nikon/MCT225 data), the main data sequence is also the only one in which columns of dark pixels do not appear. We therefore take the earliest of this sequence of images as our closest available approximation to the behaviour of a new, undamaged detector.
 
 %Could report this as MAD from mean, instead of SD - more robust measure (may be particularly useful when dealing with images with lots of dead lines?
 
 \begin{figure}
-\caption{For ease of comparison, all pixel images will be shaded not according to their absolute values, but according to their spread from the image's mean value. Areas of extreme values can still be easily identified, while fine detail within the central range of the data can be seen clearly.}
+\caption{For ease of comparison, all pixel images will be shaded not according to their absolute values, but on this normalised scale, according to their spread from the image's mean value. Areas of extreme values can still be easily identified, while fine detail within the central range of the data can be seen clearly.}
 
-    \includegraphics[scale = 0.4]{pwm-images/image-scale}
+\centering
+    \includegraphics[scale = 0.5]{pwm-images/image-scale}
 
 \end{figure}
 
@@ -55,367 +57,45 @@ One of the main problems in a systematic investigation of defects within a detec
 \addfigure{Images of linear gradients across subpanels}
 \addfigure{Boxplots of values in each subpanel?}
 
+\addfigure{Compare mean black images: 131122, loan, 160705, loan, MCT225. Give mean \& SD for each}
+\addfigure{Compare mean white/grey images: 131122, loan, 160705, loan, MCT225. Give mean \& SD for each}
+
+\addfigure{histogram of all observed black/grey/white values (all images or single representative of each set?}
+\subsection{Dark images}
+
+The black images, taken without exposure to an x-ray source, capture the base level of current within the detector. Many of the defects and features visible in an illuminated image are also present in the black images, indicating a localised offset from the normal base current.
+
+Readout dark has been found to increase over time in space-based detectors \nb{cite Hubble papers}, where it is attributed to constant radiation damage; we might therefore reasonably expect to see the same effect here.
+
 %----------------------------------------------------
-% pixelwise mean images 14-10-09
+% black pixelwise mean images 14-10-09
 \begin{figure}
-\caption{\nb{add legend} Pixelwise mean images from 14-10-09. This is the first acquisition taken from the main WMG panel after refurbishment, and is presented as an example of a panel that shows no significant local damage.\\
-\footnotesize{The black image shows a convex, roughly circular shape across the whole panel, with values lower than the mean in the centre, and higher at the edges of the panel. The grey and white images show a concave, roughly circular shape, having higher values in the centre and lower at the edges; there are a number of large dim flecks in the lower half of the panel, which are the shadows of specks of tungsten on the detector's beryllium window (see Section~\ref{sec:screen-spots}). In all three images, discontinuities across the edges of the 32 subpanels can be discerned quite clearly.}}
-%\\ This pattern is typical of the other acquisitions observed, with the exception of the images taken from the `loan' panel, which has no discernible convexity in the black images. This difference may be related to the fact that the loan panel is a high-sensitivity model, or may be specific to that particular detector panel; without further examples, we cannot draw any conclusions.}}
-\label{fig:pwm-images}
-    %
-    \sftriple{pwm-images/pwm-black-141009}{Mean black image}
-    %
-    \sftriple{pwm-images/pwm-grey-141009}{Mean grey image}
-    %
-    \sftriple{pwm-images/pwm-white-141009}{Mean white image}
-    
+\caption{Black pixelwise mean images from various detectors. A similar pattern of diagonal gradients across the subpanels can be discerned in all detectors, with higher values in the bottom-right corners of the upper row, and the top-left corners of the bottom row. Panel MCT225, having only one row of subpanels, also has its higher values of the top-left corner, resembling an elongated version of the lower row of panels in the other detectors. The gradient is the result of accumulating current during pixel readout, with the highest extra charge added to the pixels furthest from the readout sensor, which are last to be read out.}
+
+\sfquad{pwm-images/pwm-black-131122}{131122: \\ \footnotesize{just prior to first refurbishment}}%
+\sfquad{pwm-images/pwm-black-141009}{141009: \\ \footnotesize{several months after second refurbishment}}%
+\sfquad{pwm-images/pwm-black-loan}{Loan panel: \\ \footnotesize{\nb{recently refurbished?}}}%
+\sfquad{pwm-images/pwm-black-MCT225}{MCT225: \\ \footnotesize{not recently refurbished}}%
+
 \end{figure}
 %----------------------------------------------------
+
+\subsection{Illuminated images}
 
 The grey and white images are dominated by the pixels' response to the light generated by the x-rays hitting the scintillator.
+
+ The grey and white images show a concave, roughly circular shape, having higher values in the centre and lower at the edges; there are a number of large dim flecks in the lower half of the panel, which are the shadows of specks of tungsten on the detector's beryllium window (see Section~\ref{sec:screen-spots}). In all three images, discontinuities across the edges of the 32 subpanels can be discerned quite clearly.
 %----------------------------------------------------
-% pixelwise mean histograms 14-10-09
+% grey pixelwise mean images
 \begin{figure}
-    \centering
-    \caption{Histograms of observed pixelwise mean values in the images shown in Figure~\ref{fig:pwm-images}. The upper plot shows histograms of all observed pixel values; the lower has been cropped to show only the very bottom part of the frequency scale, to better show the spread of pixel values.
-    \\ \footnotesize{The small cluster of values in the cropped images of (b) and (c) would represent normal behaviour in a black image; these `dark pixels' show no gain in response to exposure to an x-ray source. In images where there are whole lines of such dark pixels, this peak would be much higher.}}
-    \label{fig:pwm-hists}
-    
-    \begin{subfigure}[t]{0.32\textwidth}
-        \caption{Mean black image}
-        \includegraphics[scale = 0.3]{pwm-images/pwm-black-141009-hist}
-        \includegraphics[scale = 0.3]{pwm-images/pwm-black-141009-hist-cropped}
-    \end{subfigure}
-    % 
-    \begin{subfigure}[t]{0.32\textwidth}
-        \caption{Mean grey image}
-        \includegraphics[scale = 0.3]{pwm-images/pwm-grey-141009-hist}
-        \includegraphics[scale = 0.3]{pwm-images/pwm-grey-141009-hist-cropped}
-    \end{subfigure}
-    % 
-    \begin{subfigure}[t]{0.32\textwidth}
-        \caption{Mean white image}
-        \includegraphics[scale = 0.3]{pwm-images/pwm-white-141009-hist}
-        \includegraphics[scale = 0.3]{pwm-images/pwm-white-141009-hist-cropped}
-    \end{subfigure}
-    % 
-    
-\end{figure}
-%----------------------------------------------------
+\caption{White pixelwise mean images from various detectors. The images show a concave, roughly circular shape, having higher values in the centre and lower at the edges.}
 
-
-\FloatBarrier
-\subsection{Identification of defects}
-
-The approach to defect finding used by the manufacturer relies on identification of extreme values in offset-corrected images ($W-B, G-B$), and sometimes also gain-corrected images. In defining an official dead pixel map, precise classification of pixel behaviour is not necessary;  a pixel either does or does not need further correction, and so either should or should not be included in the bad pixel map. For a more detailed investigation of the progression of pixel defects, a more subtle classification is required. The manufacturer's software relies on identification of abnormal values in offset-corrected images ($W-B, G-B$), but in order to more fully track and describe the development of defects, we also search for abnormal values in the uncorrected pixelwise mean images. This broader approach allows for the identification of defects not yet severe enough to persist into a shading-corrected image, but which may in time develop into a more severe defect.
-
-The approach as given in the manual can be a little vague; a `no gain' pixel is simply defined as `dark pixel with no light response', but no indication is given of how this should be classified. In practice, a pixel with no gain response will return very similar values in the black, grey and white images; depening on the spread of the remainder of the image, these will almost all fall below the threshold for an underperforming dark pixel.  
-
-\addfigure{Note that we want to track development of pixels, \& to identify any abnormal behaviour, even if only in one image. So use black/grey/white median-differencing to identify local defects; do we still need extreme-value identification? Can be unreliable if data is more spread than expected, but this defect is more to do with a problem across the detector than with individual pixels (eg. in doughnut-shaped image). Also separate identification of screen spots; this should be done every time, to avoid misclassification, because this issue only occurs in grey \& white images: no corresponding offset in black images. Identify pixel defects using each method (`official', SC median-diff (`gold standard'), bgw median-diff, extreme-value); initially simply classify as defective, but can later split into degrees of defect depending on values.}
-
-\subsection{Assessing general detector health: deviations from circular spot}
-
-\nb{Probably shouldn't introduce this first, since not an appropriate way to classify individual bad pixels (since bad model fitting could cause high residuals). Maybe could include this after general thresholding approach, and just add regional damage into bad pixels already classified?}
-% essentially: find defects using the same thresholding approach, but over different images. General problems with panel response are found as deviations from a circular spot, while pixel deviations are better identified as deviations from local (median-smoothed) image. Still need to decide best order in which to carry out these two classifications.
-
-The grey and white images are obtained by exposing the detector to an x-ray source with nothing in the field of view. X-rays diffuse out from the source in a conical shape until they strike the detector; a hypothetical `perfect' detector, \nb{get citation - speak to Jay} then, would register a circular spot pattern in the white and grey offset images (that is, white and grey images from which the black image has been subtracted, leaving only the detector's response to the presence of x-rays), and the response $z_i$ at each pixel $(x_i, y_i)$ would be well modelled by a two-dimensional Gaussian distribution, centred at the focal point $(x_0, y_0)$ of the x-ray beam and with variances $\sigma_x$ and $\sigma_y$ reflecting the degree of dispersion of the x-rays:
-
-\[ z_i = \frac{1}{2\pi \sigma_X \sigma_Y \sqrt{(1-\rho^2)}} \exp \left[ -\frac{1}{2(1-\rho^2)} \left[ \left(\frac{x_i-xy_0}{\sigma_X}\right)^2 + \left(\frac{y_i-y_0}{\sigma_Y}\right)^2 - 2\rho\left(\frac{x_i-x_0}{\sigma_X} \right) \left(\frac{y_i-y_0}{\sigma_Y} \right) \right] \right] \]
-
-To simplify the model, we assume that the x-ray source is directed at the centre of the panel in both axes, and that the source is more or less orthogonal to the panel, so that there is minimal stretching or distortion of the spot. We therefore fix $\rho = 0$ - since non-zero covariance would lead to a diagonal stretching of the spot - and constrain $x_0$ and $y_0$ to fall within a square with its centre at the exact midpoint of the panel. The latter constraint may be relaxed where there is good reason to believe that the spot really is off-centre (as in Figure~\ref{fig:spot-constraints-wonky}), and is generally only required when there is a region of non-responsive pixels in the centre of the panel, leading to a response surface with a dip in the centre, as in Figure~\ref{fig:spot-constraints-doughnut}. When this occurs, an unconstrained model will very often centre the spot in the region with the highest output; however, our aim here is to model the most likely location of the spot, not simply to describe the shape of the surface, and since we know that the operator will target the spot in the centre of the panel, it is more useful to force the spot to the most appropriate area. \nb{Of course, need to check with Jay if this really is the case...}
-
-We therefore model the expected response $z$ at each pixel $i$ as
-
-\[ z_i = A \exp \left(-\frac{1}{2} \left\lbrace \left(\frac{x_i - x_0}{\sigma_X}\right)^2 + \left(\frac{y_i - y_0}{\sigma_Y}\right)^2 \right\rbrace \right) , x_0, y_0 \in (768, 1280) \]
-
-\begin{figure}[!ht]
-\caption{Gaussian spot models fitted to the uncorrected grey images, both with (solid line, square) and without (dashed line, triangle) constraints on the possible values of $x_0$ and $y_0$. \\
-\footnotesize{In (a), the spot is centred well within the constrained area, as we might expect, and the same model is fitted with and without the constraint; typical of a healthy panel with a centred spot. However, in (b) and (c), the constrained model has its centre at one of the constraining boundaries. When this occurs, we must decide whether to allow the spot's centre to be placed outside of the constraining area. In (b), the data is unimodal, and well fitted by a model in which the spot is allowed to move outside of the usual area, which gives a significant improvement in RMSE. However, in (c), removing this constraint does not lead to any appreciable improvement in the model, so we conclude that the problem with the fit is not simply one of an off-centre spot, and keep the constraint in place.}}
-\label{fig:spot-constraints}
-
-\begin{subfigure}[t]{0.328\textwidth}
-\caption{16.04.30: constraint not necessary \\RMSE: 186}
-\label{fig:spot-constraints-healthy}
-\includegraphics[scale=0.3]{Gaussian-spot-constraints-160430}
-\end{subfigure}
-%
-\begin{subfigure}[t]{0.328\textwidth}
-\caption{16.07.05: constraint inappropriate \\RMSE: 501 constrained, 226 free}
-\label{fig:spot-constraints-wonky}
-\includegraphics[scale=0.3]{Gaussian-spot-constraints-160705}
-\end{subfigure}
-%
-\begin{subfigure}[t]{0.328\textwidth}
-\caption{MCT225: constraint necessary \\RMSE: 574 constrained, 553 free}
-\label{fig:spot-constraints-doughnut}
-\includegraphics[scale=0.3]{Gaussian-spot-constraints-MCT225}
-\end{subfigure}
-%
-
-\end{figure}
-
-\addfigure{Consider more systematic approach to model selection. Likelihood-based methods such as AIC, BIC require a log-likelihood; how do we obtain that for a surface (rather than a sparsely-observed set of points)?}
-
-The model is fitted by minimising the squared residuals; any deviations from the expected spot shape will indicate pixels with an abnormal response to exposure to an x-ray source. Thresholding the model's residuals identifies those pixels with the most extreme responses, and these problematic individuals can then be grouped according to their formation (clusters or lines of adjacent pixels, and dense regions of non-contiguous abnormal pixels, for example). Setting an appropriate threshold is not an exact science; a cutoff based on some scalar multiple of the RMSE of the residuals for each image would be a tempting option, in that if we could reasonably assume the residuals to be normally distributed, we would expect to be able to select a controlled proportion of the most severely damaged pixels. However, in several panels we expect to find regions with large numbers of high residuals, which will render this assumption untenable. In addition, taking a simple mean/median RMSE across all of the images acquired in the study is not really reasonable, since we have 12 images from a single fairly `healthy' detector, 6 from a known damaged detector, and two others, so simple averaging would be assuming a misleading degree of population-representativeness. Ideally, we want a measure of the variability of the residuals of healthy pixels.
-
-A number of the panels included in this study have very obvious column defects, which will be discussed further in Section~\ref{sec:column-defects}. These column defects comprise relatively large numbers of pixels with an offset-corrected value close to zero, and when they occur, are the most significant contributor to the non-normality of the residuals. Furthermore, they can be very easily and unequivocally identified. Excluding those panels that exhibit this clear sign of damage, we take the mean RMSE of the remaining panels (242) as an approximate measure of the typical variability of less severely-affected pixels. Using a threshold of 5 times the mean RMSE would, if the residuals were normally distributed with this standard deviation, pick up around 1000 defective pixels in a 2048-square panel: a reasonable minimum sample size with which to assess whether the residuals are clustered in a particular area, or scattered across the entire detector surface. In the data collected to date, the 12 images from the WMG post-refurbishment panel contain no dark lines; taking their mean RMSE gives a limit of 1204, beyond which a residual will be considered abnormally large.
-
-The detector manual defines the defect-density of a region of pixels as the proportion of defects in the surrounding $51 \times 51$ square. Any pixel in which more than 10\% of the pixels in the surrounding block are found to be defective is said to lie in a high-defect-density region. We can apply this same definition to identify any regions of particularly high density in the residuals.
-\nb{how are edges handled?}
-
-\begin{figure}[!ht]
-\caption{Plots of residuals with absolute value greater than 1204 from the three fitted spot models fitted above. Regions of high density are shaded red.
-\\ \footnotesize{With a properly fitted spot in (b), (a) and (b) are very similar; these are images taken from the same detector, several weeks apart. There is evidence of damage along the left-hand edge of the panel, extending some way along the top border, but the extreme-valued pixels are otherwise scattered throughout the panel. In the Nikon detector labelled MCT225, on the other hand, there is a very large, dense region of abnormal pixels in the centre of the screen, and several dark lines can clearly be seen.}}
-
-\begin{subfigure}[t]{0.328\textwidth}
-\caption{16.04.30: healthy panel,\\ centred spot (2611 px)}
-\includegraphics[scale=0.3]{spot-residuals-160430}
-\end{subfigure}
-%
-\begin{subfigure}[t]{0.328\textwidth}
-\caption{16.07.05: non-centred spot fitted without constraint (2737 px)}
-\includegraphics[scale=0.3]{spot-residuals-160705}
-\end{subfigure}
-%
-\begin{subfigure}[t]{0.328\textwidth}
-\caption{MCT225: dim patch in centre of panel (49425 px)}
-\includegraphics[scale=0.3]{spot-residuals-MCT225}
-\end{subfigure}
-%
-
-\end{figure}
-
-The positioning of the x-ray spot, and the panel's response to the exposure, are important not only in identifying potentially underperforming regions of the detector. The thresholding approach applied within the detector manual is rather reliant on the assumption that the pixel values are approximately normally distributed
-
-\begin{figure}
-    \caption{Histograms of offset-values observed in white images}
-    
-    \sftriple{white-spot-hist-160430}{16.04.30: centred spot. \\ Lightly skewed}
-    %
-    \sftriple{white-spot-hist-160705}{16.07.05: off-centre spot. \\ Heavily skewed}
-    %
-    \sftriple{white-spot-hist-MCT225}{MCT225: dim patch in panel centre. \\ Multi-modal distribution}
-
-\end{figure}
-
-As well as the proportion of the screen affected by abnormal pixels, it may also be useful for operators to monitor the mean detector response to a given power setting (or, conversely, the power required to obtain a given mean value), and also the standard deviation of the responses. 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\FloatBarrier
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{External issues: screen spots, defective channels, and edge effects}
-%----------------------------------------------------
-The main focus of this paper is on defective pixels within the detector panel. However, a number of other issues were observed during the course of the study.
-\addfigure{Could also mention the defective subpanel here}
-
-\subsubsection{Spots on the detector window}
-\label{sec:screen-spots}
-
-A problem not related to defects in the detector panel itself, but nonetheless one that an operator should be aware of, is the problem of spots appearing on the beryllium window that isolates the x-ray source from the scintillator. These spots occur when the tungsten target is heated by the electron beam to such a degree that flecks of tungsten ping off \nb{find better phrase}, and attach themselves to the beryllium window. Once this occurs, the flecks remain permanently attached to the window until the window is replaced. Figure~\ref{fig:screen-spots} shows the effect of the screen spots in the set of images acquired on 14-10-09.
-
-Screen spots can be particularly problematic for two reasons. Firstly, because they appear only in the presence of an x-ray source and not in the black images, they are not removed by the shading correction (\ref{fig:screen-spots:sc}); and secondly, because their position may appear to shift slightly between separate acquisitions, as the x-ray source is moved and refocused  (\ref{fig:screen-spots:shift}). This means that even if pixels covered by screen spots were added to the bad pixel map for correction, the locations would most likely be invalid for all successive acquisitions. \nb{Is there anything in the image processing to allow screen spots to be corrected, save by switching values?}
-
-%----------------------------------------------------
-% screen spots in shading correction & shifting in successive images
-\begin{figure}[!ht]
-\caption{Screen spots visible in the lower quarter of the white image acquired on 14-10-09 and successive dates (spots are circled for ease of identification)}
-\label{fig:screen-spots}
-
-\begin{subfigure}[t]{0.32\textwidth}
-\caption{Pixelwise mean white image}
-\includegraphics[scale=0.3]{screen-spots/pwm-image-141009-white}
-\end{subfigure}
-%
-\begin{subfigure}[t]{0.32\textwidth}
-\caption{White shading-corrected image}
-\label{fig:screen-spots:sc}
-\includegraphics[scale=0.3]{screen-spots/sc-image-141009-white}
-\end{subfigure}
-%
-\begin{subfigure}[t]{0.32\textwidth}
-\caption{Shift in apparent position}
-\label{fig:screen-spots:shift}
-\includegraphics[scale=0.3]{screen-spots/spots-overplotted}
-\end{subfigure}
+\sfquad{pwm-images/pwm-white-131122}{131122: \\ \footnotesize{just prior to first refurbishment}}%
+\sfquad{pwm-images/pwm-white-141009}{141009: \\ \footnotesize{several months after second refurbishment}}%
+\sfquad{pwm-images/pwm-white-loan}{Loan panel: \\ \footnotesize{\nb{recently refurbished?}}}%
+\sfquad{pwm-images/pwm-white-MCT225}{MCT225: \\ \footnotesize{not recently refurbished}}%
 
 \end{figure}
 %----------------------------------------------------
-
-Screen spots are generally not detected in their entirety by the internal software because of their relatively low intensity difference from their surroundings. However, when looking for small features in a processed image (such as defects in objects produced by additive layer manufacturing), these differences may prove large enough to obscure a defect of a millimetre or two \nb{back up}; so a robust method for identifying such defects is required. Our solution to this problem is outlined in \autoref{proc:screen-spots}.
-
-%----------------------------------------------------
-% procedure to identify screen spots
-\begin{algorithm}
-    \caption{Procedure for identifying spots on beryllium window}
-	\label{proc:screen-spots}
-
-    \SetKwInOut{Input}{Input}
-    \SetKwInOut{Parameters}{Parameters}
-
-    \Input{Bright image without offset correction $W$}
-    \Parameters{Minimum spot diameter, $d$ \\ Lowess smoothing span, $f$ \\ y-coordinate of midline (if any), $\lambda$}
-
-Adjust offset of columns in upper panel (if midline exists)
-
-Detrend each column by subtracting Lowess-smoothed value with span $f$ from offset-adjusted value
-
-Truncate values by setting all pixel values above median value to median value
-
-Apply morphological closing with disc-shaped structuring element, diameter $d$, to truncated image
-
-Threshold resulting image to give binary classification for each pixel
-
-%Filter spots, using 75th quantile of detrended residuals to assess `depth'
-
-Dilate identified spots to approximately reconstruct edges lost in thresholding
-
-\end{algorithm}
-%----------------------------------------------------
-
-%If we were to plot the pixel values from a single column of a white image without screen spots, we would expect to observe a smooth curve, with its highest point at the focal point of the x-ray source. Where a spot falls on the  \nb{add figure? Already a lot of figures...}
-Our aim is to fit a smooth spline to each column of the image array, to use this spline to de-trend each column's data, and to identify large, round-edged dips in the detrended residuals. Detrending in both directions at once is theoretically possible, but two-dimensional spline fitting is extremely time-consuming, whereas the implementation suggested here can be applied in a matter of minutes \nb{benchmark final process}. We use columns rather than rows to minimise the number of subpanels crossed by each spline, since the response surface is usually discontinuous at boundaries between subpanels. 
-
-Rather than fit a separate spline to the upper and lower segment of each column - which would result in a horizontal strip of unfitted pixels across the critical central region of the panel at the end of each spline - we first apply an offset correction to smooth the join between the upper and lower columns. Since the absolute values are currently of no real interest, for each column we calculate the median value of the 100 pixels above and below the midline, and subtract the difference from the values of the upper column, resulting in a smooth gradient across the midline in each column (Figure \ref{fig:screen-spots:offset}). 
-
-The overall trend of the pixel responses in each column is modelled by fitting a nonparametric Lowess curve to the offset-adjusted values. The function is controlled by a smoothing parameter $\alpha$, denoting the proportion of the available data to be used in fitting each point. This smoothing span must be sufficiently large that the fitted curve does not follow the short dips in value caused by the presence of contaminants on the screen, but small enough that we don't lose too many pixels at the upper and lower edges of the panel. On the data sets available, smoothing spans using anything between 1/5 and 1/35 of the points produced reasonably similar results. The former requires 410 data points to fit each value, so is unable to fit a smoothed curve within 205 pixels of the upper and lower edges of the panel; the latter uses 59 points to fit each value, so loses only 30 pixels at the panel edges, but may fail to identify the smallest and faintest spots due to over-fitting of the data. Over the available data, consistently good results were obtained using a smoothing span of 1/15, leaving a border of 68 pixels (13.6mm) at the top and bottom edges of the panel that cannot be checked; in normal operation, objects are not generally placed this close to the edges of the panel, so this is a reasonable compromise. \nb{add something on sensitivity to smoothing span after proper investigation: also on minimum discoverable defect size?}. 
-
-%----------------------------------------------------
-% screen spots - procedure
-\begin{figure}
-\caption{Stages of screen spot detection, illustrated on a section of the white image acquired on 14-10-09. The section contains 4 dim spots, and also crosses the midline of the panel. \\
-\footnotesize{All pixel values are shaded to reflect their distance from the median value in multiples of the SD. \\ To allow clearer comparison, the residual images (c), (d) and (e) are all coloured according to the same absolute scale.}}
-
-\newcommand{\sfwidth}{0.24\textwidth}
-\newcommand{\sfscaleIV}{0.2}
-
-\centering
-\begin{subfigure}[t]{\sfwidth}
-\caption{Raw image}
-\includegraphics[scale=\sfscaleIV]{screen-spots/ss-raw-image}
-\end{subfigure}
-%
-\begin{subfigure}[t]{\sfwidth}
-\caption{Offset adjusted}
-\label{fig:screen-spots:offset}
-\includegraphics[scale=\sfscaleIV]{screen-spots/ss-offset-adj}
-\end{subfigure}
-%
-\begin{subfigure}[t]{\sfwidth}
-\caption{Lowess residuals}
-\label{fig:screen-spots:lowess-res}
-\includegraphics[scale=\sfscaleIV]{screen-spots/ss-loess-res}
-\end{subfigure}
-%
-\begin{subfigure}[t]{\sfwidth}
-\caption{Truncated residuals}
-\includegraphics[scale=\sfscaleIV]{screen-spots/ss-loess-res-trunc}
-\end{subfigure}
-%
-
-\vspace*{\baselineskip}
-
-\begin{subfigure}[t]{\sfwidth}
-\caption{Closing applied}
-\includegraphics[scale=\sfscaleIV]{screen-spots/ss-closing}
-\end{subfigure}
-%
-\begin{subfigure}[t]{\sfwidth}
-\caption{Thresholded}
-\includegraphics[scale=\sfscaleIV]{screen-spots/ss-thresholded}
-\end{subfigure}
-%
-\begin{subfigure}[t]{\sfwidth}
-\caption{Spots dilated}
-\includegraphics[scale=\sfscaleIV]{screen-spots/ss-enlarged}
-\end{subfigure}
-%
-\begin{subfigure}[t]{\sfwidth}
-\caption{Final identification}
-\label{fig:screen-spots:overlay}
-\includegraphics[scale=\sfscaleIV]{screen-spots/ss-overlaid}
-\end{subfigure}
-
-\end{figure}
-%----------------------------------------------------
-
-The fitted trend is removed by subtracting each columnwise fitted curve from the column's values and, since we are looking specifically for dim patches in this case, we ignore any deviations above the fitted trend, truncating the data at the median value (\ref{fig:screen-spots:lowess-res}). To identify only those dim pixels that form large, rounded-edged clusters (as opposed to single pixels, lines or small clusters), we perform a morphological closing \cite{Vincent1997} over the resulting residual image, using a disc-shaped structuring element. Any size of structuring element may be used, with the diameter determining the minimum size of defect that will be retained; the analysis above uses a disc of diameter 5 pixels, retaining defects of 1mm or greater diameter. 
-
-A threshold of -1 standard deviation of the untruncated Lowess residuals is used to binarise the data into spots and healthy pixels; smaller residual differences than this are generally the result of poor spline fitting, rather than of screen contamination. Finally, to approximately reconstruct the edges of each spot, which are trimmed away by the spline fitting process, we perform a morphological dilation of the spots, using the same structuring element. Figure~\ref{fig:screen-spots:overlay} shows the pixels selected by this method.
-
-The results of this procedure can be assessed by comparing the results from two successive acquisitions (unless, of course, the screen has been replaced in the interim). \nb{assess results on consecutive acquisitions: what appears/disappears? Need to perfect spot-matching algorithm to check this!}
-
-The approach above is easily tuned by adjusting the minimum defect diameter and smoothing span; the algorithm can be applied to any bright image (grey or white), but the clearest results were generally found to be obtained from the white images.
-
-It should be noted that many of the pixels identified as covered by screen spots will appear normal after the shading correction is applied; generally, only pixels under the thickest part of the spot will still appear as a dark patch in the corrected image, so adding the the whole spot to the bad pixel map would remove a relatively large number of useable pixels along with the genuinely problematic. Those pixels that should be added to the bad pixel map can be identified using the criteria listed in section \nb{ref}; however, separate identification of screen spots will ensure that the affected pixels are not misclassified as independently underperforming. Identification also allows the operator to  quantify the area affected by such spots, and so to make an objective judgement of whether the beryllium window needs to be replaced. In the current data set, the highest observed affected proportion of the detector was 0.3\% (in the images acquired on 16-03-14), after which the window was replaced at the operator's request.
-
-\subsubsection{Full-column and full-row defects}
-
-Because of the way in which data is read out in these CCDs (first passing along each column to a sensor at the detector edge, then row-by-row to a charge amplifier \nb{?}, as shown in Figure~\ref{fig:charge-transfer-direction}), it is possible for whole columns of a subpanel to become non-responsive to the presence of a spot. 
-
-None of the images obtained in the study cover the full 2048-pixel span of the detector, so it is impossible to state categorically whether the problem originates in the channel's readout sensor, or in a specific pixel on the panel's unobserved border. Of the 17 unique cases where a dark line terminates in the observed region of the detector, 16 show a slight upturn before normal readout resumes, with only 1 dark line showing a drop before returning to normal levels. Of the 5 unique cases where a dark line runs the full length of a subpanel, all show a slight decrease in value at the edge of the panel at all three power settings. These are very small sample sizes from which it is impossible to draw any firm conclusions, but the indications are that those dark columns that extend the full distance from the panel's midline to its edge are of a different type to those that terminate at a specific pixel. As such, our analysis will assume that these are defects in a whole readout panel, rather than caused by a specific pixel, and will treat the pixels in these columns as unreadable.
-
-An even less common defect - one that has been observed only once in this study, and to which we have found no other references in the literature \nb{although should have a proper search!} occurs in the `loan' panel, where a defect affects a whole row of the detector Figure~\ref{fig:row-defect}. Given that data is only transferred from row to row after the columns have been transferred to the panel edges, we must assume that this defect lies in one of the readout sensors, and so does not form part of our investigation of pixel behaviour. In this case, the defect manifests as a relatively small offset against the neighbouring rows, almost identical at all three observed power settings, so is removed by the shading correction. Unfortunately, the images containing this defect were acquired at the end of the study period, so no data is available on the progression (or otherwise) of the problem. However, an informal comparison of the row with its neighbour in an uncorrected image provided by the operator one month later shows.... \nb{(Jay to send over single frame so that we can check status)}
-
-\addfigure{image showing dark row; transect along one power setting; neighbour-offset transect}
-
-\begin{figure}
-\caption{Transects along defective row 77 of the `loan' panel. The observed values of the affected row and its neighbours show the same characteristic sawtooth pattern, caused by the increasing gradient from right to left over each subpanel; the overall decreasing trend of row 77 can be seen more clearly when we consider only the offset between each pixel and its upper or lower neighbours along the row, as in (b). The offset is the same at all observed power settings (c), so will be removed by the shading correction.}
-\label{fig:row-defect}
-
-%\sfquad{row-defects/row-defect-image}{Subset of black image \\}%
-\sftriple{row-defects/row-defect-transect}{Transect along row 77\\ and adjacent rows}%
-\sftriple{row-defects/row-defect-diffs}{Difference between row 77\\ and adjacent rows}%
-\sftriple{row-defects/row-defect-powers}{Difference between rows 77\\ and 76 at each power setting}%
-
-\end{figure}
-
-\subsection{Thresholding \& definitions of bad pixels}
-
-Need to consider \& justify the local thresholding limit. Currently using 2x SD of image as limit for median differences, but would surely make more sense to use a pixelwise standard deviation? Or even a local standard deviation (eg. standard deviation within kernel region)
-
-\addfigure{Histograms showing thresholds of extreme-valued pixels}
-\addfigure{Linear regression of white vs black \& grey images, showing thresholding by residuals}
-
-\addfigure{Comparison of `official' classifications given in manual vs our thresholds}
-
-\subsection{Multi-pixel defects}
-
-\subsubsection{Column defects}
-
-\label{sec:column-defects}
-
-\addfigure{Linear defects detected by subtracting a median-filtered image from the original, then convolution \& thresholding over the residuals. Since linear defects may be 2 or 3 pixels wide (4 pixels is possible, according to the manual, but not yet observed), the smoothing kernel should be at least 7 pixels wide (5 pixels and a 3-pixel line cannot be smoothed out, 3 pixels wide and a 2-pixel line cannot be smoothed out) \nb{Actually, with a square kernel (as in edge detection in traditional image processing), we lose detail where there are multiple adjacent columns. Could try linear kernel, or omit linear convolution step altogether?}}
-
-Data in a CCD panel is read out by transferring charge vertically along columns, \nb{CONFIRM} from the midline towards amplifiers situated at the outer edges of the panel. It is not uncommon for a single defective pixel (or a cluster of pixels) to affect the behaviour of other pixels in the same column. In the most severe cases, a column of dark pixels will occur (\autoref{fig:dark column}), appearing as a black line in the grey and white images. The affected pixels exhibit no response to the presence of the x-ray source, with similar values in the black, grey and white images. Close inspection of transects along dark columns in the grey and white images often shows a stepped or sawtooth pattern of values, increasing at regular intervals  \nb{try to include this in the example images}. This regularity suggests that no additional charge is being added from the pixels along the dark column, that the root defect is somehow blocking its transfer along the channel to the readout sensor \nb{ideally, could relate this gradient to y-gradient along subpanel, but this is a tall ask}.
-
-In less severe cases, a column may appear slightly brighter or dimmer than its neighbours, often by only a few hundred GV. Again, the offset from the neighbouring columns generally remains constant \nb{enumerate this: how many do remain constant, how many dip, how many appear in combination?}, suggesting that the offset may be the effect of additional charge being `leaked' or `drained' by the root defect, rather than a similar defect appearing in each pixel along the length of the column defect. Dim or dark columns have only been observed running from the root away from the amplifier, with bright columns only observed running from the root towards the amplifier \nb{CONFIRM}, with the two features often appearing in combination, on either side of a particularly bright or dark pixel (\autoref{fig:bright-dim column}).
-
-%----------------------------------------------------
-% transects along each type of column defect
-\begin{figure}[!ht]
-\caption{Pixel images and column transects showing known types of column defect in the dark images acquired on 13-11-22. In each transect, the defective column is shown in black, with an unaffected neighbouring column shown in blue for reference.}
-
-	\begin{subfigure}[t]{0.24\textwidth}
-	\caption{Dark pixels}
-	\label{fig:dark column}
-	\end{subfigure}
-		%
-	\begin{subfigure}[t]{0.24\textwidth}
-	\caption{Bright pixels}
-	\label{fig:bright column}
-	\end{subfigure}
-		%
-	\begin{subfigure}[t]{0.24\textwidth}
-	\caption{Slightly dim pixels}
-	\label{fig:dim column}
-	\end{subfigure}
-		%
-	\begin{subfigure}[t]{0.24\textwidth}
-	\caption{Bright and dim pixels}
-	\label{fig:bright-dim column}
-	\end{subfigure}
-	
-\end{figure}
-%----------------------------------------------------	
 
 \end{document}

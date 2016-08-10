@@ -109,13 +109,20 @@ ssp <- screen.spots(pw.m[,,"white", "141009"], enlarge = T)
 
 # MEDIAN-DIFFERENCING OVER INDIVIDUAL IMAGES                                                    ####
 
-####################################################################################################
-
-# MEDIAN-DIFFERENCING OVER SHADING CORRECTION                                                   ####
-
+inpath <- "./02_Objects/med-diffs"
+ff <- list.files(inpath, pattern = "md7-[a-z, A-Z, 0-9]+\\.rds$", full.names = F)
+md7 <- abind(sapply(gsub(".rds", "", gsub("md7-", "", ff)), 
+                    function(nm) readRDS(paste0(inpath, 
+                                                "/md7-", nm, ".rds")), simplify = F), along = 4)
+    
+    
 ####################################################################################################
 
 # NONLINEARITY                                                                                  ####
+
+####################################################################################################
+
+# MEDIAN-DIFFERENCING OVER SHADING CORRECTION                                                   ####
 
 ####################################################################################################
 

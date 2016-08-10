@@ -5,12 +5,12 @@ fpath <- "./01_Paper/fig/exploratory/"
 pw.m <- load.pixel.means()
 pw.sd <- load.pixel.sds()
 
-models <- read.csv("./Other-data/Gaussian-spots.csv", row.names = 1)
 
 ####################################################################################################
 
 # SUMMARY STATISTICS                                                                            ####
 
+# table of summary statistics for all images
 df <- data.frame("acq" = sort(rep(dimnames(pw.m)[[4]], 3)),
                  "im" = rep(dimnames(pw.m)[[3]], dim(pw.m)[[4]]),
                  "mean" = c(apply(pw.m, 3:4, mean, na.rm = T)),
@@ -24,63 +24,58 @@ write.csv(df, paste0(fpath, "image-summary.csv"), quote = F, row.names = F)
 
 df <- read.csv(paste0(fpath, "image-summary.csv"), as.is = T)
 
-# convert to .csv format for export
+# reformat for export into paper
 qq <- do.call("rbind", lapply(unique(df$acq), function(dt) unlist(df[df$acq == dt, 3:5])))
 
 write.csv(qq, paste0(fpath, "summary-statistics.csv"), quote = F, row.names = F)
-
-df$median <- c(apply(pw.m, 3:4, median, na.rm = T))
 
 ####################################################################################################
 
 # DESCRIPTIVE                                                                                   ####
 
-# plot colour scale
+# create standalone plot of colour scale
 {
-    jpeg(paste0(fpath, "image-scale.jpg"), height = 100); {
-        par(mar = c(4, 1, 1, 1))
+    jpeg(paste0(fpath, "image-scale.jpg"), width = 640, height = 100); {
+        par(mar = c(4, 1, 0, 1))
         image.scale(-9:9, c(-9,9), col = sd.colours(), breaks = c(-9,-6,-3,-2,-1,-0.5, 0, 0.5, 1,2,3,6,9))
         title(xlab = expression(paste("Mean value + ", x * sigma), collapse = ""))
-        abline(v = 0, lty = 2)
+        abline(v = c(-9:9), lty = 2)
+        abline(v = 0)
         dev.off()
     }
 
 }
 
-# pixelwise mean images
+# pixelwise mean images - black
 {
-    # 'healthy' detector: 14-10-09 (first images after refurbishment)
+    jpeg(paste0(fpath, "pwm-black-131122.jpg")); {
+        par(mar = c(2,2,1,1))
+        pixel.image(pw.m[,,"black", "131122"])
+        draw.panels()
+        dev.off()
+    }
     jpeg(paste0(fpath, "pwm-black-141009.jpg")); {
         par(mar = c(2,2,1,1))
         pixel.image(pw.m[,,"black", "141009"])
-        draw.panels(lty = 3)
+        draw.panels()
         dev.off()
     }
-    jpeg(paste0(fpath, "pwm-grey-141009.jpg")); {
+    jpeg(paste0(fpath, "pwm-black-loan.jpg")); {
         par(mar = c(2,2,1,1))
-        pixel.image(pw.m[,,"grey", "141009"])
-        draw.panels(lty = 3)
+        pixel.image(pw.m[,,"black", "loan"])
+        draw.panels()
         dev.off()
     }
-    jpeg(paste0(fpath, "pwm-white-141009.jpg")); {
+    jpeg(paste0(fpath, "pwm-black-MCT225.jpg")); {
         par(mar = c(2,2,1,1))
-        pixel.image(pw.m[,,"white", "141009"])
-        draw.panels(lty = 3)
+        pixel.image(pw.m[,,"black", "MCT225"])
+        draw.panels(p = list(x = panel.edges()$x, y = c(1, 2049)))
         dev.off()
     }
-    
-    # detector with dark lines: 
-    {
-        
-    }
+
 }
 
-hist.scale <- function(data, sc.offset = -100, xlim = c(min(data, na.rm = T), max(data, na.rm = T)), scale.colours = sd.colours(), scale = sd.levels(data), pch = 15, ...) {
-    cl <- cut(xlim[1]:xlim[2], scale)
-    points(xlim[1]:xlim[2], rep(sc.offset, length(xlim[1]:xlim[2])), pch = pch, col = scale.colours[cl], ...)
-}
-
-# pixelwise mean histograms
+# pixelwise mean histograms - black
 {
     jpeg(paste0(fpath, "pwm-black-141009-hist.jpg"), height = 240); {
         par(mar = c(2,2,1,1))
@@ -118,21 +113,86 @@ hist.scale <- function(data, sc.offset = -100, xlim = c(min(data, na.rm = T), ma
     }
 }
 
-# histograms of different spot shapes
+# pixelwise mean images - grey
 {
-    pdf(paste0(fpath, "white-spot-hist-160430.pdf"), height = 4); {
+    jpeg(paste0(fpath, "pwm-grey-131122.jpg")); {
         par(mar = c(2,2,1,1))
-        hist(pw.m[,,"white", "160430"], breaks = "fd", main = "", xlab = "", ylab = "")
+        pixel.image(pw.m[,,"grey", "131122"])
+        draw.panels()
         dev.off()
     }
-    pdf(paste0(fpath, "white-spot-hist-160705.pdf"), height = 4); {
+    jpeg(paste0(fpath, "pwm-grey-141009.jpg")); {
         par(mar = c(2,2,1,1))
-        hist(pw.m[,,"white", "160705"], breaks = "fd", main = "", xlab = "", ylab = "")
+        pixel.image(pw.m[,,"grey", "141009"])
+        draw.panels()
         dev.off()
     }
-    pdf(paste0(fpath, "white-spot-hist-MCT225.pdf"), height = 4); {
+    jpeg(paste0(fpath, "pwm-grey-loan.jpg")); {
         par(mar = c(2,2,1,1))
-        hist(pw.m[,,"white", "MCT225"], breaks = "fd", main = "", xlab = "", ylab = "")
+        pixel.image(pw.m[,,"grey", "loan"])
+        draw.panels()
+        dev.off()
+    }
+    jpeg(paste0(fpath, "pwm-grey-MCT225.jpg")); {
+        par(mar = c(2,2,1,1))
+        pixel.image(pw.m[,,"grey", "MCT225"])
+        draw.panels(p = list(x = panel.edges()$x, y = c(1, 2049)))
+        dev.off()
+    }
+}
+
+# pixelwise mean images - white
+{
+    jpeg(paste0(fpath, "pwm-white-131122.jpg")); {
+        par(mar = c(2,2,1,1))
+        pixel.image(pw.m[,,"white", "131122"])
+        draw.panels()
+        dev.off()
+    }
+    jpeg(paste0(fpath, "pwm-white-141009.jpg")); {
+        par(mar = c(2,2,1,1))
+        pixel.image(pw.m[,,"white", "141009"])
+        draw.panels()
+        dev.off()
+    }
+    jpeg(paste0(fpath, "pwm-white-loan.jpg")); {
+        par(mar = c(2,2,1,1))
+        pixel.image(pw.m[,,"white", "loan"])
+        draw.panels()
+        dev.off()
+    }
+    jpeg(paste0(fpath, "pwm-white-MCT225.jpg")); {
+        par(mar = c(2,2,1,1))
+        pixel.image(pw.m[,,"white", "MCT225"])
+        draw.panels(p = list(x = panel.edges()$x, y = c(1, 2049)))
+        dev.off()
+    }
+}
+
+# offset mean images - white
+{
+    jpeg(paste0(fpath, "offset-white-131122.jpg")); {
+        par(mar = c(2,2,1,1))
+        pixel.image(pw.m[,,"white", "131122"] - pw.m[,,"black", "131122"])
+        draw.panels()
+        dev.off()
+    }
+    jpeg(paste0(fpath, "offset-white-141009.jpg")); {
+        par(mar = c(2,2,1,1))
+        pixel.image(pw.m[,,"white", "141009"] - pw.m[,,"black", "141009"])
+        draw.panels()
+        dev.off()
+    }
+    jpeg(paste0(fpath, "offset-white-loan.jpg")); {
+        par(mar = c(2,2,1,1))
+        pixel.image(pw.m[,,"white", "loan"] - pw.m[,,"black", "loan"])
+        draw.panels()
+        dev.off()
+    }
+    jpeg(paste0(fpath, "offset-white-MCT225.jpg")); {
+        par(mar = c(2,2,1,1))
+        pixel.image(pw.m[,,"white", "MCT225"] - pw.m[,,"black", "MCT225"])
+        draw.panels()
         dev.off()
     }
 }
@@ -147,6 +207,8 @@ hist.scale <- function(data, sc.offset = -100, xlim = c(min(data, na.rm = T), ma
 ####################################################################################################
 
 # PARAMETRIC MODELLING                                                                          ####
+
+models <- read.csv("./Other-data/Gaussian-spots.csv", row.names = 1)
 
 # Gaussian spot with constrained centre: 16-07-05
 {
@@ -313,6 +375,43 @@ jpeg(paste0(fpath, "spots-overplotted.jpg")); {
 
 ####################################################################################################
 
+# PARTIAL-COLUMN DEFECTS                                                                        ####
+
+ll <- find.lines(pw.m[,,"grey", "131122"], dim.lines = T)
+ll.px <- summarise.lines(ll)
+
+n.plot <- function(cc, im, add = F, ...) {
+    
+    if (add) {
+        lines(im[cc, ] - im[cc - 1, ], ...)
+    } else {
+        plot(im[cc, ] - im[cc - 1, ], type = "l", xlab = "", ylab = "", main = paste0(cc, "-", cc-1), ...)
+        abline(h = 0, col = "red")
+    }
+}
+
+# dark column (1302 1526 1893 1398 1998  610 1327   88 1994)
+n.plot(1301, pw.m[,,"grey", "131122"], xlim = c(1025, 2048), col = "sky")
+
+plot(pw.m[1301,,"grey", "131122"], xlim = c(1025, 2048), type = "l", col = "skyblue")
+lines(pw.m[1303,,"grey", "131122"], col = "cyan3")
+lines(pw.m[1302,,"grey", "131122"])
+
+
+# dim & bright (232)
+n.plot(232, pw.m[,,"grey", "131122"], xlim = c(1025, 2048))
+
+plot(pw.m[231,,"grey", "131122"], type = "l", col = "skyblue", xlim = c(1025, 2048))
+lines(pw.m[233,,"grey", "131122"], col = "cyan3")
+lines(pw.m[232,,"grey", "131122"])
+
+
+
+
+
+
+####################################################################################################
+
 # FULL-COLUMN DEFECTS                                                                           ####
 
 jpeg(paste0(fpath, "Column-defect-407.jpg"), height = 240); {
@@ -350,3 +449,195 @@ o.plot(pw.m[1100:1500,1600,"white","130613"])
 o.plot(pw.m[1302,,"white","130613"])
 
 ####################################################################################################
+
+
+####################################################################################################
+
+####################################################################################################
+
+# READOUT DARK (PER SUBPANEL)                                                                   ####
+
+fpath <- "./Image-plots/subpanels/"
+library(spatial)
+
+surface.trend <- function(im, order = 2) {
+    gv <- setNames(melt(im), nm = c("x", "y", "z"))
+    s.ls <- surf.ls(order, gv[!is.na(gv$z),])
+    trmat(s.ls, 1, 2048, 1, 2048, 2047)$z
+}
+
+subpanel.lm <- function(im) {
+    
+    # fit linear model to each subpanel
+    apply(array(im, dim = c(128, 16, 1024, 2)), c(2, 4),
+          function(s) lm(z ~ x + y, data = setNames(melt(s), nm = c("x", "y", "z"))))
+}
+
+predict.subpanels <- function(sp.fitted) {
+    
+    sp.template <- setNames(melt(array(dim = c(128, 1024))), nm = c("x", "y", "z"))
+    
+    sp.predicted <- lapply(sp.fitted, predict, newdata = sp.template)
+    array(abind(abind(lapply(sp.predicted[1:16], array, dim = c(128, 1024)), along = 1.5),
+                abind(lapply(sp.predicted[17:32], array, dim = c(128, 1024)), along = 1.5), along = 4),
+          dim = c(2048, 2048))
+}
+
+subpanel.gradients <- function(sp.fitted) {
+    
+    # create matrix of fitted coefficients
+    models <- do.call("rbind", lapply(sp.fitted, "[[", "coefficients"))
+    
+    setNames(data.frame(models, models[,2] * 128 + models[,3]*1024),
+             nm = c("intercept", "x", "y", "g"))
+}
+
+#----------------------------------------------------------------------------------------
+# fit quadratic surface to all images in 'main seqence'
+qs <- array(apply(pw.m[,,"black", 7:19], 3, surface.trend), dim = c(2048, 2048, 13))
+adj <- pw.m[,,"black", 7:19] - qs
+
+saveRDS(adj, paste0(fpath, "quadratic-surface-removed.rds"))
+
+sp.models <- list()
+sp.models$"141009" <- subpanel.lm(adj[,,"141009"])
+sp.models$"141118" <- subpanel.lm(adj[,,"141118"])
+sp.models$"141217" <- subpanel.lm(adj[,,"141217"])
+sp.models$"150108" <- subpanel.lm(adj[,,"150108"])
+sp.models$"150113" <- subpanel.lm(adj[,,"150113"])
+sp.models$"150126" <- subpanel.lm(adj[,,"150126"])
+sp.models$"150529" <- subpanel.lm(adj[,,"150529"])
+sp.models$"150730" <- subpanel.lm(adj[,,"150730"])
+sp.models$"150828" <- subpanel.lm(adj[,,"150828"])
+sp.models$"151015" <- subpanel.lm(adj[,,"151015"])
+sp.models$"160314" <- subpanel.lm(adj[,,"160314"])
+sp.models$"160430" <- subpanel.lm(adj[,,"160430"])
+sp.models$"160705" <- subpanel.lm(adj[,,"160705"])
+
+saveRDS(sp.models, paste0(fpath, "sp-fitted.rds"))
+
+g <- abind(lapply(lapply(sp.models, subpanel.gradients), as.matrix), along = 3)
+
+pdf(paste0(fpath, "Sp-gradient-plots.pdf")); {
+    par(mfrow = c(4,2), mar = c(2,2,3,1))
+    
+    matplot(g[1:16,"g",], type = "l", main = "Gradient (lower)", xlab = "", ylab = "")
+    matplot(g[17:32,"g",], type = "l", main = "Gradient (upper)", xlab = "", ylab = "")
+    
+    matplot(g[1:16,"intercept",], type = "l", main = "Intercept (lower)", xlab = "", ylab = "")
+    matplot(g[17:32,"intercept",], type = "l", main = "Intercept (lower)", xlab = "", ylab = "")
+    
+    matplot(g[1:16,"x",], type = "l", main = "X-gradient (lower)", xlab = "", ylab = "")
+    matplot(g[17:32,"x",], type = "l", main = "X-gradient (lower)", xlab = "", ylab = "")
+    
+    matplot(g[1:16,"y",], type = "l", main = "Y-gradient (lower)", xlab = "", ylab = "")
+    matplot(g[17:32,"y",], type = "l", main = "Y-gradient (lower)", xlab = "", ylab = "")
+    
+    dev.off()
+}
+
+
+####################################################################################################
+
+# READOUT DARK (WHOLE IMAGE)                                                                    ####
+
+fpath <- "./Image-plots/Diffs-between-acquisitions/"
+
+diffs.old <- pw.m[,,"black", c("130701", "131002", "131122")] - pw.m[,,"black", c("130613", "130701", "131002")]
+diffs <- pw.m[,,"white", 8:19] - pw.m[,,"white", 7:18]
+
+
+# plots of changes in old images
+invisible(lapply(dimnames(diffs.old)[[3]], 
+                function(dd) {
+                    bmp(paste0(fpath, "diff-black-", dd, ".bmp"))
+                    par(mar = c(2,2,1,1))
+                    pixel.image(diffs.old[,,dd])
+                    draw.panels(lty = 3)
+                    dev.off()
+                }))
+
+# plots of changes in new images
+invisible(lapply(dimnames(diffs)[[3]], 
+                 function(dd) {
+                     bmp(paste0(fpath, "diff-white-", dd, ".bmp"))
+                     par(mar = c(2,2,1,1))
+                     pixel.image(diffs[,,dd])
+                     draw.panels(lty = 3)
+                     dev.off()
+                 }))
+
+# change in dark lines - they're actually LESS changeable than the rest of the panel.
+plot(pw.m[1314,,"black", "131122"], xlim = c(0,1024), type = "l", xlab = "", ylab = "",
+       ylim = range(pretty(pw.m[1314,1:1024,"black",1:4])))
+lines(pw.m[1314,,"black", "131002"], col = "blue")
+lines(pw.m[1314,,"black", "130701"], col = "forestgreen")
+lines(pw.m[1314,,"black", "130613"], col = "green3")
+
+# change in corner value
+plot(pw.m[2024,,"black", "131122"], xlim = c(1025, 2048), type = "l", xlab = "", ylab = "",
+     ylim = range(pretty(pw.m[2024,1025:2048,"black",1:4])))
+lines(pw.m[2024,,"black", "131002"], col = "blue")
+lines(pw.m[2024,,"black", "130701"], col = "forestgreen")
+lines(pw.m[2024,,"black", "130613"], col = "green3")
+
+####################################################################################################
+
+# EDGE EFFECTS                                                                                  ####
+
+# divide image into edge region & border of same size from within panel, compare
+
+box.strip <- function(im, start, width) {
+    xo <- c(start, ncol(im) - start)
+    xi <- xo + c(width, - width)
+    
+    yo <- c(start, nrow(im) - start)
+    yi <- yo + c(width, - width)
+    
+    c(im[xo[1]:xi[1], yo[1]:yo[2]], 
+      im[xo[2]:xi[2], yo[1]:yo[2]],
+      im[xi[1]:xi[2], yo[1]:yi[1]],
+      im[xi[1]:xi[2], yo[2]:yi[2]])
+}
+
+st <- box.strip(pw.m[,,"black", "160430"], start = 1, width = 60)
+st.inner <- box.strip(pw.m[,,"black", "160430"], start = 61, width = 64)
+st.inmost <- box.strip(pw.m[,,"black", "160430"], start = 126, width = 69)
+st.central <- box.strip(pw.m[,,"black", "160430"], start = 196, width = 75)
+
+
+hist(st, breaks = "fd", xlim = c(0,10000))
+hist(st.inner, breaks = "fd", border = adjustcolor("cyan3", alpha = 0.3), add = T)
+hist(st.inmost, breaks = "fd", border = adjustcolor("gold", alpha = 0.3), add = T)
+hist(st.central, breaks = "fd", border = adjustcolor("orange", alpha = 0.3), add = T)
+
+l <- list(st, st.inner, st.inmost, st.central)
+round(unlist(lapply(l, mean, na.rm = T)), 1)
+round(unlist(lapply(l, sd, na.rm = T)), 1)
+
+ss <- lapply(c(1:10)*10, function(ww) sd(box.strip(pw.m[,,"black", "160430"], start = 1, width = ww), na.rm = T))
+ss.g <- lapply(c(1:10)*10, function(ww) sd(box.strip(pw.m[,,"grey", "160430"], start = 1, width = ww), na.rm = T))
+ss.w <- lapply(c(1:10)*10, function(ww) sd(box.strip(pw.m[,,"white", "160430"], start = 1, width = ww), na.rm = T))
+
+plot(c(1:10)*10, ss.w, pch = 20, xlab = "border width", ylab = "SD")
+
+ss.b <- apply(pw.m[,,"black",], 3, 
+              function(im) {
+                  unlist(lapply(c(1:10)*10, function(ww) sd(box.strip(im, start = 1, width = ww), na.rm = T) / sd(im, na.rm = T)))
+              })
+
+matplot(c(1:10)*10, ss.b, type = "l", xlab = "Border width", ylab = "Standard deviation")
+
+ss.g <- apply(pw.m[,,"grey",], 3, 
+              function(im) {
+                  unlist(lapply(c(1:10)*10, function(ww) sd(box.strip(im, start = 1, width = ww), na.rm = T) / sd(im, na.rm = T)))
+              })
+matplot(c(1:10)*10, ss.g, type = "l", xlab = "Border width", ylab = "Regional vs global SD")
+abline(h = 1, col = "yellow")
+
+ss.w <- apply(pw.m[,,"white",], 3, 
+              function(im) {
+                  unlist(lapply(c(1:10)*10, function(ww) sd(box.strip(im, start = 1, width = ww), na.rm = T) / sd(im, na.rm = T)))
+              })
+matplot(c(1:10)*10, ss.w, type = "l", xlab = "Border width", ylab = "Regional vs global SD")
+abline(h = 1, col = "yellow")

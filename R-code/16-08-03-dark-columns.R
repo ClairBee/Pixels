@@ -154,7 +154,7 @@ jpeg("./01_Paper/fig/exploratory/row-defect-diffs.jpg", height = 240); {
 
 jpeg("./01_Paper/fig/exploratory/row-defect-powers.jpg", height = 240); {
     par(mar = c(2,2,1,1))
-    plot(pw.m[,77,"white", "loan"] - pw.m[,76,"white", "loan"], type = "l", col = "gold", xlab = "", ylab = "")
+    plot(pw.m[,77,"white", "loan"] - pw.m[,76,"white", "loan"], type = "l", col = "gold", ylim = c(-1000,1000), xlab = "", ylab = "")
     lines(pw.m[,77,"grey", "loan"] - pw.m[,78,"grey", "loan"], col = "green3")
     lines(pw.m[,77,"black", "loan"] - pw.m[,78,"black", "loan"])
     legend("topright", col = c("gold", "green3", "black"), lty = 1,
@@ -162,3 +162,5 @@ jpeg("./01_Paper/fig/exploratory/row-defect-powers.jpg", height = 240); {
     dev.off()
 }
 
+plot(pw.m[,77,"white", "loan"] - pw.m[,77,"black", "loan"], type = "l", col = "gold", ylim = c(35000, 45000), xlab = "", ylab = "")
+lines(pw.m[,76,"white", "loan"] - pw.m[,76,"black", "loan"], type = "l", col = "green3", xlab = "", ylab = "")

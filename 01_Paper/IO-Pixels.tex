@@ -60,6 +60,11 @@
 	\textcolor{ForestGreen}{\emph{JB: #1}}
 }
 
+% temporary command: notes from Clair
+\newcommand{\CB}[1]{
+	\textcolor{RoyalBlue}{\emph{CB: #1}}
+}
+
 \newcommand{\sftriple}[2]{
     \begin{subfigure}[t]{0.32\textwidth}
     \caption{#2}
@@ -77,12 +82,34 @@
 
 \begin{document}
 
+
 \maketitle
+
+%-----------------------------------------------------------------------------------------------------------------------
+\color{Red}
+    
+To install necessary packages to R (will likely install some dependencies as well):
+\begin{verbatim}
+install_github("ClairBee/IO.Pixels")
+library("IO.Pixels")
+\end{verbatim}
+
+The pixelwise means are stored as RDS objects at \url{https://github.com/ClairBee/Pixels/02_Objects/images}. 
+
+Download the images of interest into a single folder
+
+Run \texttt{load.pixel.means(fpath = <folder containing .rds objects>)} to produce a named array called \texttt{pw.m}, containing the black, grey and white pixelwise mean for each image.
+
+
+\color{black}
+%-----------------------------------------------------------------------------------------------------------------------
+
 
 \subfile{./sections/intro.tex}
 \subfile{./sections/tech-data.tex}
 \subfile{./sections/pilot.tex}
 \subfile{./sections/exploratory.tex}
+\subfile{./sections/defects.tex}
 \subfile{./sections/spatial.tex}
 \subfile{./sections/temporal.tex}
 \subfile{./sections/discussion.tex}
