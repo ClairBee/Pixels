@@ -2,8 +2,9 @@
 library("IO.Pixels"); library("CB.Misc")
 fpath <- "./01_Paper/fig/exploratory/"
 
-pw.m <- load.pixel.means()
-pw.sd <- load.pixel.sds()
+unique.panels <- c("130613", "140128", "160430", "loan", "MCT225")
+md7 <- load.objects("./02_Objects/med-diffs/", otype = "md7")
+pw.m <- load.objects("./02_Objects/images/", otype = "pwm")
 
 sc <- array(apply(pw.m, 4, shading.corrected), dim = dim(pw.m)[-3], dimnames = dimnames(pw.m)[-3])
 
@@ -109,13 +110,85 @@ ssp <- screen.spots(pw.m[,,"white", "141009"], enlarge = T)
 
 # MEDIAN-DIFFERENCING OVER INDIVIDUAL IMAGES                                                    ####
 
-inpath <- "./02_Objects/med-diffs"
-ff <- list.files(inpath, pattern = "md7-[a-z, A-Z, 0-9]+\\.rds$", full.names = F)
-md7 <- abind(sapply(gsub(".rds", "", gsub("md7-", "", ff)), 
-                    function(nm) readRDS(paste0(inpath, 
-                                                "/md7-", nm, ".rds")), simplify = F), along = 4)
+JF.threshold <- function(im, cut.probs = pnorm(c(-6,6), 0, 1)) {
     
+    dat <- im[!is.na(im)]
+    JF <- JohnsonFit(dat)
     
+    cut.points <-  qJohnson(cut.probs, JF)
+    
+    rbind(which(im < min(cut.points), arr.ind = T),
+          which(im > max(cut.points), arr.ind = T))
+}
+
+# write JF-threshold function, compare to 'new categories' by SD thresholding,
+# make final decision, write up.
+
+# histograms of all observed dark residuals after median-differencing
+hist(md7[,,"black",], breaks = "fd", ylim = c(0,100), xlab = "Observed GV", ylab = "Frequency", main = "Residuals after median-smoothing in black images")
+
+JF <- JohnsonFit(md7[,,"black", ][!is.na(md7[,,"black", ])])
+abline(v = qJohnson(pnorm(c(-6,6), 0, 1), JF), col = "red")
+
+sum(md7[,,"black",] > qJohnson(pnorm(6, 0, 1), JF), na.rm = T)
+sum(md7[,,"black",] < qJohnson(pnorm(-6, 0, 1), JF), na.rm = T)    
+
+# replace dark lines with 0 in residual dark images
+md7.adj <- abind(sapply(names(dl), 
+                        function(dt) {
+                            b <- replace(md7[,,"black", dt], as.matrix(dl[[dt]][,1:2]), 0)
+                            g <- replace(md7[,,"grey", dt], as.matrix(dl[[dt]][,1:2]), 0)
+                            w <- replace(md7[,,"white", dt], as.matrix(dl[[dt]][,1:2]), 0)
+                            abind(b, g, w, along = 3, new.names = dimnames(md7[,,,dt]))
+                        }, simplify = F),
+                 along = 4, new.names = dimnames(md7))
+# alternatively: try setting all dark pixels to 0?
+
+# compare results with different cutpoints
+JF.px.b.5 <- apply(md7.adj[,,"black",], 3, JF.threshold, cut.probs = pnorm(c(-5,5), 0, 1))
+JF.px.b.6 <- apply(md7.adj[,,"black",], 3, JF.threshold, cut.probs = pnorm(c(-6,6), 0, 1))
+JF.px.g <- apply(md7.adj[,,"grey",], 3, JF.threshold, cut.probs = pnorm(c(-6,6), 0, 1))
+
+sapply(JF.px.b.5, nrow)
+sapply(JF.px.b.6, nrow)
+sapply(JF.px.g, nrow)
+
+hist(md7.adj[,,"black", "160430"], breaks = "fd", ylim = c(0,100))
+
+six.sig <- sapply(names(JF.px.g),
+                  function(dt) {
+                      px <- rbind(data.frame(JF.px.g[[dt]], type = "g"),
+                                  data.frame(JF.px.b.6[[dt]], type = "b"))
+                      px[!duplicated(px[,1:2]),]
+                  })
+
+
+# check fit of Johnson distribution
+Johnson.QQ(md7[,,"black", "140128"])
+
+# histogram of adjusted residuals with thresholds marked - black
+hist(md7[,,"black",-3], breaks = "fd", ylim = c(0, 100), xlab = "Observed GV", ylab = "Frequency", main = "Residuals after median-smoothing in black images")
+abline(v = qJohnson(pnorm(c(-5,5), 0, 1), JohnsonFit(md7[,,"black", ][!is.na(md7[,,"black", ])])), col = "red")
+
+# histogram of adjusted residuals with thresholds marked - grey
+hist(md7[,,"grey",], breaks = "fd", ylim = c(0, 100), xlab = "Observed GV", ylab = "Frequency", main = "Residuals after median-smoothing in grey images")
+abline(v = qJohnson(pnorm(c(-5,5), 0, 1), JohnsonFit(md7[,,"grey", ][!is.na(md7[,,"grey", ])])), col = "red")
+
+JF.px.b <- apply(md7[,,"black",], 3, JF.threshold, cut.probs = pnorm(c(-5,5), 0, 1))
+
+sapply(JF.px.b, nrow)
+
+ol <- offset.lines(md7[,,"grey", "MCT225"])
+table(ol[,c("x", "type")])
+
+
+Johnson.QQ(md7[,,"black", 5])
+lines(-30000:60000, dJohnson(-30000:60000, JF), col = "cyan3")
+abline(v = qJohnson(pnorm(c(-6,6), 0, 1), JF), col = "red")
+           
+sum(md7[,,"grey",] > qJohnson(pnorm(5, 0, 1), JF), na.rm = T)
+sum(md7[,,"grey",] < qJohnson(pnorm(-5, 0, 1), JF), na.rm = T)
+
 ####################################################################################################
 
 # NONLINEARITY                                                                                  ####
