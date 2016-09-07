@@ -1,7 +1,54 @@
 
 ####################################################################################################
 
-# DATA FLOW IN XRD-1621 PANEL                                                                   ####
+# DATA FLOW IN XRD-1621 PANEL - TO SCALE                                                        ####
+
+library(shape)
+
+pdf("./01_Paper/fig/intro/data-readout.pdf"); {
+    plot(0, type = "n", xlim = c(0,2048), ylim = c(0,2048), xlab = "", ylab = "", xaxt = "n", yaxt = "n", bty = "n")
+    draw.panels()
+    rect(0,0,2048,2048)
+    
+    text(x = rep(c(128 * 1:16) - 56, 2),
+         y = c(rep(1024+512, 16), rep(1024-512, 16)),
+         labels = c(1:32), cex = 0.6)
+    
+    b <- 20
+    arr.col <- "cyan3"
+    
+    Arrows(x0 = c(128 * 1:16) - b, y0 = 1024 + b,
+           x1 = c(128 * 1:16) - b, y1 = 2048 + b,
+           col = arr.col, code = 2, arr.type = "curved", arr.length = 0.2, arr.width = 0.1, arr.adj = 1)
+    Arrows(x0 = c(128 * 1:16) - b, y0 = 2048 + b,
+           x1 = c(128 * 0:15) + b, y1 = 2048 + b,
+           col = arr.col, code = 2, arr.type = "curved", arr.length = 0.2, arr.width = 0.1, arr.adj = 1)
+    
+    Arrows(x0 = c(128 * 0:15) + b, y0 = 1024 - b,
+           x1 = c(128 * 0:15) + b, y1 = -b,
+           col = arr.col, code = 2, arr.type = "curved", arr.length = 0.2, arr.width = 0.1, arr.adj = 1)
+    Arrows(x0 = c(128 * 0:15) + b, y0 = -b,
+           x1 = c(128 * 1:16) - b, y1 = -b,
+           col = arr.col, code = 2, arr.type = "curved", arr.length = 0.2, arr.width = 0.1, arr.adj = 1)
+    
+    Arrows(x0 = 2048, y0 = 2048 + b * 2.5, x1 = 0, y1 = 2048 + b * 2.5,
+           col = "green3", code = 2, arr.type = "curved", arr.length = 0.2, arr.width = 0.1, arr.adj = 1)
+    Arrows(x0 = 2048, y0 = - b * 2.5, x1 = 0, y1 = - b * 2.5,
+           col = "green3", code = 2, arr.type = "curved", arr.length = 0.2, arr.width = 0.1, arr.adj = 1)
+    
+    points(x = c(c(128 * 0:15) + b, c(128 * 1:16) - b), y = c(rep(2048 + b, 16), rep(-b, 16)),
+           pch = 15, col = "red", cex = 0.6)
+    
+    dev.off()
+}
+
+crop.pdf("./01_Paper/fig/intro/data-readout.pdf")
+
+
+
+####################################################################################################
+
+# DATA FLOW IN XRD-1621 PANEL - NOT TO SCALE                                                    ####
 
 library(shape)
 
