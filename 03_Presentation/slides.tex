@@ -1,0 +1,252 @@
+\documentclass{beamer}
+
+%\usetheme{Singapore}
+%\usetheme{Madrid}
+\usetheme{default}
+
+\hypersetup{pdfpagemode=FullScreen}		% pdf will automatically open in presentation mode
+
+\title{The Life \& Death of Pixels}
+%\subtitle{Optional Subtitle}
+
+\author{Clair Barnes}
+
+\institute[University of Warwick] % (optional, but mostly needed)
+{
+  Department of Statistics \& WMG\\
+  University of Warwick
+}
+
+\date{Steering Group Meeting, September 20th 2016}
+
+
+%======================================================================
+
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Outline}
+  \tableofcontents
+  % You might wish to add the option [pausesections]
+\end{frame}
+
+%-----------------------------------------------------------------------
+
+\section{Identification of defects}
+
+\subsection{Classification of abnormal pixels}
+
+\begin{frame}{Abnormal pixel values}%{Optional Subtitle}
+  \begin{itemize}
+  \item Identification of abnormal pixels: histogram of black/grey/white values, with cropping to show the length of the tails
+  \item Applying a simple 6-sigma cutoff doesn't work particularly well because data may not be symmetrical
+  \item Need robust approach because of expected relatively large numbers of pixels with very high or very low values
+  \item Straightforward approach: divide data at modal density (not necessarily modal value), take NMAD of each half, use 6-NMAD. If data were normally distributed, this would be equivalent to a 6-sigma approach, but more flexible when data is not normal.
+  \item cutoffs quite close to body of data, so pick up maximum number of bad pixels. NB purpose here is not to create a bad pixel map for correction, it is to pick up as many abnormally-valued pixels as possible so that we can evaluate their behaviour.
+  \item To identify pixels to add to bad pixel map, easier to go straight to shading correction (depending on purpose)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Types of defect}%{Optional Subtitle}
+  \begin{itemize}
+  		\item Strong correlation between defect residuals in grey \& black images (0.99, vs 0.44 for all pixels - although this is based on only one image, need to look more closely into it
+  		\item scatterplot of error residuals in grey \& black, with correlation score, and abline with gradient 1
+  		\item suggests that majority of errors aren't due to a problem in response, so much as a base offset from expected value (sometimes called a hot pixel in the literature - different names used here to allow easier distinction between degrees, for later on
+  		\item Are these offset errors generally removed by shading correction?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Nonlinearity}
+	Add in notes on nonlinear response of pixels, IF it needs to be included - not sure if this will add anything much!
+\end{frame}
+
+%-----------------------------------------------------------------------
+
+\subsection{Multi-pixel features}
+
+\begin{frame}{Column defects}
+	
+	\begin{itemize}
+		\item Most notable errors are dark columns - `blocked' pixel
+		\item Also bright \& dim columns, sometimes in combination - `leaking' or `draining' charge
+		\item Do column errors ever develop?
+		\item Are offset errors ever a problem in the shading-corrected image 
+	\end{itemize}
+\end{frame}
+
+%-----------------------------------------------------------------------
+
+\begin{frame}{Cluster defects}
+
+	\begin{itemize}
+		\item Discuss main direction of `spread' within defects: horizontal or vertical, or both?
+		\item Clusters in conjunction with lines - how many lines have cluster roots, how many clusters are on a line?
+	\end{itemize}
+
+\end{frame}
+
+%-----------------------------------------------------------------------
+
+\subsection{Non-pixel features}
+
+\begin{frame}{Spots on beryllium window}
+
+	\begin{itemize}
+	
+		\item Causes of screen spots
+		
+		\item Identification of screen spots
+		
+		\item Proportion of screen identified (esp. on day when this was noted by Jay), size of screen spots identified
+		
+		\item Why is this a problem? - not removed by shading correction, presumably expensive to fix, 
+		
+		\item Assess number of spots not cleared by shading correction: what \% of pixels are affected?
+	
+	\end{itemize}
+	
+\end{frame}
+
+%-----------------------------------------------------------------------
+
+\begin{frame}{Full-row and full-column defects}
+
+	\begin{itemize}
+		\item Full-column defects
+		\begin{itemize}
+			\item Observed mainly in `loan' panel
+			\item BGW in different order to those columns where line end is observed
+			\item Suspect that this is due to a problem in readout.
+		\end{itemize}
+		\item Full-row defects
+		\begin{itemize}
+			\item Only observed in `loan' panel
+			\item Two rows: one has constant offset, one has steady decline in gradient from right to left
+			\item Since panels are read out separately, can only assume that this is a problem in the readout array. Thoughts?
+		\end{itemize}
+	\end{itemize}
+	
+\end{frame}
+
+%-----------------------------------------------------------------------
+
+\subsection{General detector health: response to spot}
+
+%-----------------------------------------------------------------------
+
+\begin{frame}{Non-circular response to x-ray source}{Assessing overall panel response}
+  \begin{itemize}
+  	\item X-rays are emitted in a cone, so expect to see a circular response, well modelled by a 2d Gaussian
+  	\item Deviations from that pattern may indicate less sensitive regions within detector, or an off-centred spot
+  	
+  	\item Fit an elliptical 2d Gaussian (x \& y independent) with focus constrained to be in centre
+  	\item If centre is on constraint boundary, compare constrained model to a free model
+  	\begin{itemize}
+  		\item Improvement in RMSE suggests spot is off-centre
+  		\item No improvement suggests no elliptical pattern to be found - indicating that there are unexpected regions of high or low values in the detector
+	\end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Non-circular response to x-ray source}
+  \begin{itemize}
+  	\item Why is this important?
+	\begin{itemize}
+		\item Power settings are selected based on nominal value, which assumes normal response (see bimodal plot of MCT225, or v skewed 160705) - if response is not 2d Gaussian, may need to revise power settings to get appropriate value in given region of detector
+		\item If heavily desensitized, detector may eventually need to be refurbished - tracking degree of deviation from expected response 
+	\end{itemize}		 
+  \end{itemize}
+\end{frame}
+
+
+%======================================================================
+
+
+\section{Persistence of defects}
+
+\subsection{Short-term persistence of defects}
+\begin{frame}{Persistence of defects}
+
+	\begin{itemize}
+		\item Proportion of defects (per type) remaining defective in following acquisition
+		\item Of defects that persist from one acquisition to next, what proportion persist for a third, etc...
+		\item Proportion of recurrent/intermittent defects (limited to single detector)
+		\item Did any pixels remain unhealthy after the two refurbishments? (What happens at refurbishment, anyway?)
+	\end{itemize}
+\end{frame}
+
+\subsection{Progression of defects}
+\begin{frame}{Progression of defects}
+	\begin{itemize}
+		\item Transition matrix (non-instantaneous) between observed states: mean and SD
+		\item Once pixels reach a given state, do they tend to stay there, or do pixels ever return to a healthy state? Is there a `point of no return'?
+	\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Clusters of defective pixels}
+	\begin{itemize}
+		\item Do clusters ever shrink?
+		\item Total cluster value, as well as size
+		
+	\end{itemize}
+
+\end{frame}
+
+
+%======================================================================
+
+
+\section{Spatial distribution of defects}
+\subsection{Patterns in spatial distribution of defective pixels}
+
+\begin{frame}{Spatial distribution of defects}
+
+	\begin{itemize}
+		\item Are defects more likely to occur in some regions of the panel than others?
+		\item Is this related to size/severity of defect at all?
+		\item Is inhomogeneous distribution of defects related in any way to surface of dark image?
+	\end{itemize}
+
+\end{frame}
+
+%======================================================================
+
+
+\section*{Summary}
+
+\begin{frame}{Summary}
+
+  \begin{itemize}
+  \item
+  	Benefits
+  	\begin{itemize}
+    \item
+    		Detector `health check' - independent assessment of possible problems
+    	\item
+    		Acceptable tolerances can be tailored to operator's requirements
+  	\item
+    		Assess rate of deterioration - better planning for refurbishment/replacement
+    	\end{itemize}
+  \end{itemize}
+  
+  \begin{itemize}
+  \item
+    Future work
+    \begin{itemize}
+    \item
+      More extensive study with more panels, each examined over a period of time 
+    \item
+    	  Currently lacking a `gold standard' - obtain sample of new panels to test assumptions of `healthy' behaviour
+    \end{itemize}
+  \end{itemize}
+  
+\end{frame}
+
+
+
+\end{document}
