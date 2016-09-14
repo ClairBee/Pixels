@@ -1,4 +1,62 @@
 
+####################################################################################################
+
+# SUMMARY IMAGES PER ACQUISITION                                                                ####
+
+mm <- read.csv("./Other-data/Gaussian-spots.csv", row.names = 1)
+fpath <- "./Image-plots/gaussian-spots/"
+
+# temporary function to create pixel image
+plot.spot <- function(dt, ...) {
+    dt <- toString(dt)
+    pixel.image(pw.m[,,"grey", dt] - pw.m[,,"black", dt], ...)
+    contour(1:2048, 1:2048, gaussian.spot.mat(unlist(mm[dt, 1:5])), add = T, drawlabels = F, lty = 1, lwd = 2)
+    rect(768, 768, 1280, 1280)
+    points(mm[dt, "x0"], mm[dt, "y0"], pch = 15, cex = 1.5)
+    
+    if (!is.na(mm[dt, "fm.rmse"])) {
+        contour(1:2048, 1:2048, gaussian.spot.mat(unlist(setNames(mm[dt, 7:11], nm = names(mm)[1:5]))), 
+                add = T, drawlabels = F, lty = 2, lwd = 2)
+        points(mm[dt, "fm.x0"], mm[dt, "fm.y0"], pch = 17, cex = 1.5)
+        title(main = paste0(dt, "; RMSE ", round(mm[dt, "rmse"]), "; free RMSE ", round(mm[dt, "fm.rmse"])))
+    } else {
+        title(main = paste0(dt, "; RMSE ", round(mm[dt, "rmse"])))
+    }
+    cat(paste0(dt, " plotting complete \n"))
+}
+
+
+invisible(lapply(rownames(mm)[7:21],
+                 function(nm) {
+                     bmp(paste0("./Image-plots/gaussian-spots/spot-", nm, ".bmp"), height = 2048, width = 2048, pointsize = 20)
+                     par(mfrow = c(2,2), mar = c(2,2,3,1))
+                     
+                     if(is.na(mm[nm, "fm.rmse"])) {
+                         sp <- gaussian.spot.mat(unlist(mm[nm, 1:5]))
+                     } else {
+                         sp <- gaussian.spot.mat(unlist(setNames(mm[nm, 7:11], names(mm)[1:5])))
+                     }
+                     
+                     spot.res <- pw.m[,,"grey", nm] - pw.m[,,"black", nm] - sp
+                     
+                     plot.spot(nm)
+                     pixel.image(spot.res, title = paste0(nm, " - spot residuals"))
+                     
+                     hist.with.boundaries(spot.res, title = paste0(nm, " - spot residuals"), xlim = c(-2000,2000))
+                     
+                     pixel.plot(which(abs(spot.res) > 1000, arr.ind = T), col = "cyan3", cex = 0.3,
+                                main = paste0(nm, " - extreme residuals"))
+                     points(which(array(findInterval(spot.res, asymm.bounds(spot.res)) %in% c(0,2),
+                                        dim = dim(spot.res)), arr.ind = T), cex = 0.3, pch = 15)
+                     draw.panels(col = "grey")
+                     
+                     dev.off()
+                 }))
+
+####################################################################################################
+
+# MISC                                                                                          ####
+
 # power in vs brightness out
 
 # where power settings need to be changed to obtain same mean/median, what does operator use as target value?
