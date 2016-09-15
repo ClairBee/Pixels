@@ -1,7 +1,11 @@
 
 # screen spot deregistration between black & white images
 
+# useful to note correlation between observed & fitted values
+# eg. 130701: 99.9% within bounds, 99.4% outside, 99.88% overall
+
 library("IO.Pixels"); library("CB.Misc")
+
 pw.m <- load.objects("./02_Objects/images/", otype = "pwm")
 
 ####################################################################################################
@@ -19,14 +23,18 @@ im <- fit.w.lm(pw.m[,,,dt])      # run on linear residuals
 
 spots <- function(im, smooth.span = 1/15, min.diam = 5, edge.trim = 10) {
     
-    # offset adjustment not necessary in linear image - difference generally much smaller
+    # offset adjustment not necessary in linear residuals - difference generally much smaller
 
     # apply lowess smoothing in both directions, get residuals
     col.sm <- t(apply(im, 1, function(cc) lowess(cc, f = smooth.span)$y))
     row.sm <- apply(im, 2, function(rr) lowess(rr, f = smooth.span)$y)
     
+    # further trim edges & combine row & column residuals
+#    col.rng <- apply(which(!is.na(col.sm), arr.ind = T), 2, range) + edge.trim * c(1,-1,1,-1)
+#    row.rng <- apply(which(!is.na(row.sm), arr.ind = T), 2, range) + edge.trim * c(1,-1,1,-1)
+    
     # combine row & column residuals
-    res <- apply(abind(col.res, row.res, along = 3), 1:2, mean, na.rm = T)
+    res <- apply(abind(im - col.sm, im - row.sm, along = 3), 1:2, mean, na.rm = T)
     
     # truncate residual values at median
     res.high <- res.low <- res
@@ -48,7 +56,18 @@ spots <- function(im, smooth.span = 1/15, min.diam = 5, edge.trim = 10) {
     px.bright <- which(cl.bright > mad(res, na.rm = T), arr.ind = T)
     px.dim <- which(cl.dim < -mad(res, na.rm = T), arr.ind = T)
     
-    min(px.dim[,1])
+    # filter by size
+    cc <- clump(m2r(cl.bright > mad(res, na.rm = T) & !is.infinite(cl.bright)))
+    
+    xy.bright <- data.frame(xyFromCell(cc, which(!is.na(getValues(cc)))),
+                       id = getValues(cc)[!is.na(getValues(cc))])
+    df.bright <- ddply(xy.bright, .(id), summarise,
+                       xm = mean(x), ym = mean(y), size = length(x))
+
+    hist(df.bright$size, breaks = "fd")
+    pixel.plot(xy.bright[xy.bright$id %in% df.bright$id[df.bright$size > 20],])
+    
+    pixel.plot(px.dim)
 }
 
 # original function, for reference
@@ -94,6 +113,41 @@ screen.spots <- function(im, min.diam = 5, smooth.span = 1/15, midline = 1024.5,
 
 ####################################################################################################
 
+# TRY TO FIND FAINT SPOTS IN GREY/WHITE IMAGES                                                  ####
+
+dt <- "130701"
+
+# plot using gradient & direct thresholding in grey, white & linear residuals of each acquisition
+fpath <- "./Image-plots/spots-per-image/"
+
+invisible(lapply(names(pw.m),
+                 function(dt) {
+                     bmp(paste0(fpath, dt, "-spots.bmp"), height = 480 * 2, width = 480 * 3)
+                     par(mfrow = c(2,3), mar = c(2,2,3,1))
+                     
+                     g <- pw.m[,,"grey", dt]
+                     w <- pw.m[,,"white", dt]
+                     linear <- fit.w.lm(pw.m[,,,dt], res.only = F)
+                 }))
+
+####################################################################################################
+
+# INDIVIDUAL RAW IMAGES FROM LOAN PANEL                                                          ####
+
+# is absence of shadow in white image due to blurring?
+loan <- array(dim = c(2048, 2048, 20))
+loan[25:2024, 25:2024,] <- abind(lapply(list.files("./Image-data/loan/white/", pattern = "\\.tif$", full.names = T), 
+                                        function(nm) {
+                                            tmp <- readTIFF(nm, as.is = T)
+                                            t(tmp[nrow(tmp):1, , drop = FALSE])
+                                        }), along = 3)
+
+loan.spots <- apply(loan, 3, screen.spots)
+
+invisible(lapply(loan.spots, pixel.plot, cex = 0.2))
+
+####################################################################################################
+
 # SPOTS BY MORPHOLOGICAL GRADIENT                                                               ####
 
 spots.by.gradient <- function(im, smoothing.span = 1/5, min.diam = 5, ignore.edge = 5) {
@@ -126,6 +180,7 @@ sp.org <- screen.spots(pw.m[,,"white", "141009"])
 # white residuals; gradient; spots by standard method; spots by gradient
 
 ####################################################################################################
+
 
 # PLOTS OF SCREEN SPOTS + REGISTRATION IN ALL IMAGES                                            ####
 
