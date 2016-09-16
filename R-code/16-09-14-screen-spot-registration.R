@@ -1,6 +1,8 @@
 
 # screen spot deregistration between black & white images
 
+# ADJUST FUNCTION TO PRODUCE THREE LISTS: WHITE DIM, NL DIM, NL BRIGHT
+
 # useful to note correlation between observed & fitted values
 # eg. 130701: 99.9% within bounds, 99.4% outside, 99.88% overall
 

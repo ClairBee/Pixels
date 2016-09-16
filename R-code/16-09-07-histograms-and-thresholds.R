@@ -30,8 +30,8 @@ asymm.bounds <- function(dat, n = 6) {
 hist.with.boundaries <- function(dat, xlim = c(0,10000), title = "", JF = F, ...) {
     
     hist(dat, breaks = "fd", xlim = xlim, main = title, xlab = "", ylab = "", ...)
-    abline(v = asymm.bounds(dat, n = 6), lty = 2, col = "red")
-    abline(v = asymm.bounds(dat, n = 5), lty = 3, col = "red")
+    abline(v = asymmetric.mad(dat, n = 6), lty = 2, col = "red")
+    abline(v = asymmetric.mad(dat, n = 5), lty = 3, col = "red")
     
     if (JF) {
         abline(v = qJohnson(pnorm(c(-6, -5, 5, 6), 0, 1), JohnsonFit(dat[!is.na(dat)])), col = "cyan3", lty = c(2,3,3,2))

@@ -1,8 +1,24 @@
-\documentclass{beamer}
+\documentclass[8pt]{beamer}
+%\usepackage{nicefrac}
 
 %\usetheme{Singapore}
 %\usetheme{Madrid}
 \usetheme{default}
+%======================================================================
+\newcommand{\todo}[1]{
+	\begin{minipage}{\textwidth}
+	\begin{footnotesize}
+	\textcolor{purple}{
+					\begin{tabular}{p{0.01\textwidth}p{0.95\textwidth}}
+						$\bullet$ & #1
+					\end{tabular}
+					}
+	\end{footnotesize}
+	\end{minipage}
+}
+
+\newcommand{\nb}[1]{\textcolor{red}{\textit{[#1]}}}
+%======================================================================
 
 \hypersetup{pdfpagemode=FullScreen}		% pdf will automatically open in presentation mode
 
@@ -38,227 +54,273 @@
 
 \section{Identification of defects}
 
-\subsection{Classification of abnormal pixels}
+\subsection{Abnormal pixels}
 
-\begin{frame}{Abnormal pixel values}%{Optional Subtitle}
-  \begin{itemize}
-  \item Identification of abnormal pixels: histogram of black/grey/white values, with cropping to show the length of the tails
-  \item Applying a simple 6-sigma cutoff doesn't work particularly well because data may not be symmetrical
-  \item Need robust approach because of expected relatively large numbers of pixels with very high or very low values
-  \item Straightforward approach: divide data at modal density (not necessarily modal value), take NMAD of each half, use 6-NMAD. If data were normally distributed, this would be equivalent to a 6-sigma approach, but more flexible when data is not normal.
-  \item cutoffs quite close to body of data, so pick up maximum number of bad pixels. NB purpose here is not to create a bad pixel map for correction, it is to pick up as many abnormally-valued pixels as possible so that we can evaluate their behaviour.
-  \item To identify pixels to add to bad pixel map, easier to go straight to shading correction (depending on purpose)
-  \end{itemize}
-\end{frame}
+\subsubsection{Thresholding}
 
-\begin{frame}{Types of defect}%{Optional Subtitle}
-  \begin{itemize}
-  		\item Strong correlation between defect residuals in grey \& black images (0.99, vs 0.44 for all pixels - although this is based on only one image, need to look more closely into it
-  		\item scatterplot of error residuals in grey \& black, with correlation score, and abline with gradient 1
-  		\item suggests that majority of errors aren't due to a problem in response, so much as a base offset from expected value (sometimes called a hot pixel in the literature - different names used here to allow easier distinction between degrees, for later on
-  		\item Are these offset errors generally removed by shading correction?
-  \end{itemize}
-\end{frame}
-
-\begin{frame}{Nonlinearity}
-	Add in notes on nonlinear response of pixels, IF it needs to be included - not sure if this will add anything much!
-\end{frame}
-
-%-----------------------------------------------------------------------
-
-\subsection{Multi-pixel features}
-
-\begin{frame}{Column defects}
-	
+\begin{frame}{Abnormal pixel values}{Thresholding}
 	\begin{itemize}
-		\item Most notable errors are dark columns - `blocked' pixel
-		\item Also bright \& dim columns, sometimes in combination - `leaking' or `draining' charge
-		\item Do column errors ever develop, or are they essentially static?
-		\item (Are offset errors ever a problem in the shading-corrected image?)
+		\item Common approach applicable to all variables of interest.
+		\item Cannot assume symmetry. \todo{histogram of grey values from `loan' image. Show median}
+		\item Expect to see a large number of outliers - need robust measure. \todo{compare SD with MAD on hist}
 	\end{itemize}
 \end{frame}
 
 %-----------------------------------------------------------------------
+
+\begin{frame}{Abnormal pixel values}{Thresholding}
+	A solution:
+	\begin{itemize}
+		\item Cut data at modal density, not at median
+		\item Use NMAD instead of SD
+		\item Calculate MAD on each side of modal density independently
+			\todo{histograms with thresholds marked}
+		\item A robust, asymmetric analogue to $6\sigma$ approach
+	\end{itemize}
+\end{frame}
+
+%-----------------------------------------------------------------------
+
+\begin{frame}{Abnormal pixel values}{Classification}
+	Further classification is straightforward:
+	\todo{add limits to histograms}
+	\todo{table of classifications}
+	
+	\nb{Check best approach: split globally extreme px by degree, then remainder by type? if only using degrees on pixelwise mean values, include this in slide on pixelwise mean values instead}
+\end{frame}
+
+
+%======================================================================
+
+\subsubsection{Pixel attributes}
+
+\begin{frame}{Variables of interest}{Pixelwise mean values}
+	\begin{itemize}
+		\item Each aquisition consists of 60 images:
+		\begin{itemize}
+			\item 20 with nominal mean value of 85\% of range (white)
+			\item 20 at 1/4 of the current required for the white images (grey)
+			\item 20 with no x-ray exposure (black)
+		\end{itemize}
+		\item Take the mean value of each pixel in each set of 20, to obtain black, grey and white mean images. 
+			\todo{Insert 14-10-09 black, grey, white images}
+		\item These are our main source of information about the detector's behaviour
+		\item Black \& grey pixelwise means are thresholded directly to identify \textbf{globally extreme} pixels
+	\end{itemize}
+\end{frame}
+
+%-----------------------------------------------------------------------
+
+\begin{frame}{Variables of interest}{Median-smoothed residuals}
+	\begin{itemize}
+		\item Smooth pixelwise mean image using median filter
+		\item Subtract median-smoothed values from original image
+		\item Threshold residuals to identify \textbf{locally extreme} pixels
+		\item High-valued residuals are also globally high-valued
+	\end{itemize}
+		\todo{smoothed image}
+		\todo{residual plot}
+		\todo{residual histogram}
+\end{frame}
+ 
+%-----------------------------------------------------------------------
+ 
+\begin{frame}{Variables of interest}{Linear residuals}
+	\begin{itemize}
+		\item Pixel response is expected to be linear 		% manual specifies < 1% non-linearity
+		\item Regression of grey value on black \& white value generally v. accurate
+		\item Threshold residuals
+	\end{itemize}		
+		\todo{fitted linear values}
+		\todo{Linear residuals}
+		\todo{histogram of linear residuals with thresholds}
+\end{frame}
+	
+%-----------------------------------------------------------------------
+	
+\begin{frame}{Variables of interest}{Response to spot}
+	\begin{itemize}
+		\item Response to conical x-ray beam should be well modelled by 2d Gaussian
+		\item \nb{Subtract black from grey images to give only spot response}
+		\item fit 2d Gaussian with constraint on location
+		\item If centre is on constraint boundary, compare constrained model to free model
+		\begin{itemize}
+			\item Improvement in RMSE suggests spot is off-centre
+			\item No improvement suggests response is not elliptical
+		\end{itemize}
+	\end{itemize}
+		\todo{Central spot: 14-10-09}
+		\todo{Off-centre spot: 16-07-05}
+		\todo{Non-elliptical response: Nikon panel MCT225}
+\end{frame}
+ 
+%-----------------------------------------------------------------------
+
+% INCLUDE STANDARD DEVIATION AS ONE OF THE VARIABLES?
+
+\subsubsection{Classification}
+
+\begin{frame}{Classification}
+
+	All variables are thresholded using the approach already outlined
+	
+	Pixelwise mean values are also divided into degrees of brightness \nb{or am I going to do this to all attributes?}	
+	
+	\todo{histogram of pixelwise mean values with thresholds marked}
+	\todo{table of classifications. Give counts of pixels observed?}
+
+\end{frame}
+% \todo{table of classifications. Give counts of pixels observed?}
+
+\subsection{Two case studies}
+
+\subsubsection{Images from 14-10-09}
+
+\begin{frame}{Images from 14-10-09}{Pixel values}
+	\todo{black pw.m + hist + px identified}
+	\todo{grey pw.m + hist + px identified}
+\end{frame}
+
+%-----------------------------------------------------------------------
+
+\begin{frame}{Images from 14-10-09}{Median-smoothed residuals}
+	\todo{black residuals + hist + px identified}
+	\todo{grey residuals + hist + px identified}
+\end{frame}
+
+%-----------------------------------------------------------------------
+
+\begin{frame}{Images from 14-10-09}{Model residuals}
+	\todo{linear residuals + hist + px identified}
+	\todo{spot residuals + hist + px identified}
+\end{frame}
+	
+%-----------------------------------------------------------------------
+
+\begin{frame}{Images from 14-10-09}{Pixels identified}
+	\todo{plot of pixels identified (colour-coded \& with counts)}
+	\nb{shading-corrected image?}
+\end{frame}
+	
+\subsubsection{Images from 16-07-19}
+
+\begin{frame}{Images from 16-07-19}{Pixel values}
+	\todo{black pw.m + hist + px identified}
+	\todo{grey pw.m + hist + px identified}
+\end{frame}
+
+%-----------------------------------------------------------------------
+
+\begin{frame}{Images from 16-07-19}{Median-smoothed residuals}
+	\todo{black residuals + hist + px identified}
+	\todo{grey residuals + hist + px identified}
+\end{frame}
+
+%-----------------------------------------------------------------------
+
+\begin{frame}{Images from 16-07-19}{Model residuals}
+	\todo{linear residuals + hist + px identified}
+	\todo{spot residuals + hist + px identified}
+\end{frame}
+	
+%-----------------------------------------------------------------------
+
+\begin{frame}{Images from 16-07-19}{Pixels identified}
+	\todo{plot of pixels identified (colour-coded \& with counts)}
+\end{frame}
+
+\section{Multi-pixel features}
+
+\subsection{Spots on beryllium window}
+
+\begin{frame}[label = screen-spots]{Spots on beryllium window}
+	\begin{itemize}
+		\item Visible in some images as irregular dim spots
+		\item Caused by flecks of superheated tungsten sticking to beryllium screen
+		\item Can only be removed by replacing the beryllium window
+		\item Apparent position likely to move between acquisitions
+		\item Not always removed by shading correction
+	\end{itemize}
+		\todo{white image with spots: 14-10-09}
+		\todo{shift in apparent position between acquisitions}
+		\todo{shading-corrected image with spots: 14-10-09}
+		\todo{link to appendix showing process of identification \hyperlink{ss-supplemental}{here}}
+\end{frame}
+
+%-----------------------------------------------------------------------
+
+\begin{frame}{Screen spots in linear residuals}
+
+	\begin{itemize}
+		\item Not always visible - behaving like any object in field of view
+		\item May appear as dim patch - thin enough to be invisible in white image, but not in grey?
+		\item May appear with associated bright patch
+		\item Will definitely not be removed by shading correction
+		\item May indicate a pit in the tungsten target?
+		\item Or just different diffraction at different power levels?
+	\end{itemize}	 
+		\todo{spots visible in linear residuals}
+\end{frame}
+
+
+%======================================================================
+
+\subsection{Dense regions}
+
+\begin{frame}{Dense regions of defects}
+	\begin{itemize}
+		\item Dense regions suggest a larger issue
+		\item Tend to arise around edges of panels
+		\item Can be identified by density filter
+	\end{itemize}
+	
+	\todo{examples of dense regions: 160430 corners, loan panel}
+	
+\end{frame}
+
+%-----------------------------------------------------------------------
+
+\subsection{Linear defects}
+
+\begin{frame}{Column defects}
+
+\end{frame}
+
+%-----------------------------------------------------------------------
+
+\begin{frame}{Row defects}
+	\begin{itemize}
+		\item Two row defects observed in current loan panel
+		\item Row 77: decreasing gradient R-L
+			\todo{three transects as before}
+		\hrule
+		\item Row 1025: constant offset
+			\todo{three transects as before}
+		\item Assume that these must occur after data is transferred along columns, in readout register?
+	\end{itemize}
+\end{frame}
+
+%-----------------------------------------------------------------------
+
+\subsection{Cluster defects}
 
 \begin{frame}{Cluster defects}
 
-	\begin{itemize}
-		\item Discuss main direction of `spread' within defects: horizontal or vertical, or both?
-		\item Clusters in conjunction with lines - how many lines have cluster roots, how many clusters are on a line?
-	\end{itemize}
-
-\end{frame}
-
-%-----------------------------------------------------------------------
-
-\begin{frame}{High-density regions}
-
-	\begin{itemize}
-		\item Areas of detector in which an extremely high density of pixels occurs
-		\item Tend to occur in panel corners or edges
-		\item Use in conjunction with spot response to identify potentially damaged regions 
-	\end{itemize}
-
-\end{frame}
-
-%-----------------------------------------------------------------------
-
-\subsection{Non-pixel features}
-
-\begin{frame}{Spots on beryllium window}
-
-	\begin{itemize}
-	
-		\item Causes of screen spots
-		
-		\item Identification of screen spots
-		
-		\item Proportion of screen identified (esp. on day when this was noted by Jay), size of screen spots identified
-		
-		\item Why is this a problem? - not removed by shading correction, presumably expensive to fix, 
-		
-		\item Assess number of spots not cleared by shading correction: what \% of pixels are affected?
-	
-	\end{itemize}
 	
 \end{frame}
 
-%-----------------------------------------------------------------------
 
-\begin{frame}{Full-row and full-column defects}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\appendix
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-	\begin{itemize}
-		\item Full-column defects
-		\begin{itemize}
-			\item Observed mainly in `loan' panel
-			\item BGW in different order to those columns where line end is observed
-			\item Suspect that this is due to a problem in readout.
-		\end{itemize}
-		\item Full-row defects
-		\begin{itemize}
-			\item Only observed in `loan' panel
-			\item Two rows: one has constant offset, one has steady decline in gradient from right to left
-			\item Since panels are read out separately, can only assume that this is a problem in the readout array. Thoughts?
-		\end{itemize}
-	\end{itemize}
-	
+\section{Screen spots}
+
+\begin{frame}[label = ss-supplemental]{Identification of screen spots}
+	Supplemental content.
+	Back to \hyperlink{screen-spots}{screen spots}.
 \end{frame}
 
-%-----------------------------------------------------------------------
-
-\subsection{General detector health: response to spot}
-
-%-----------------------------------------------------------------------
-
-\begin{frame}{Non-circular response to x-ray source}{Assessing overall panel response}
-  \begin{itemize}
-  	\item X-rays are emitted in a cone, so expect to see a circular response, well modelled by a 2d Gaussian
-  	\item Deviations from that pattern may indicate less sensitive regions within detector, or an off-centred spot
-  	
-  	\item Fit an elliptical 2d Gaussian (x \& y independent) with focus constrained to be in centre
-  	\item If centre is on constraint boundary, compare constrained model to a free model
-  	\begin{itemize}
-  		\item Improvement in RMSE suggests spot is off-centre
-  		\item No improvement suggests no elliptical pattern to be found - indicating that there are unexpected regions of high or low values in the detector
-	\end{itemize}
-  \end{itemize}
-\end{frame}
-
-\begin{frame}{Non-circular response to x-ray source}
-  \begin{itemize}
-  	\item Why is this important?
-	\begin{itemize}
-		\item Power settings are selected based on nominal value, which assumes normal response (see bimodal plot of MCT225, or v skewed 160705) - if response is not 2d Gaussian, may need to revise power settings to get appropriate value in given region of detector
-		\item If heavily desensitized, detector may eventually need to be refurbished - tracking degree of deviation from expected response 
-	\end{itemize}		 
-  \end{itemize}
-\end{frame}
-
-
-%======================================================================
-
-
-\section{Persistence of defects}
-
-\subsection{Short-term persistence of defects}
-\begin{frame}{Persistence of defects}
-
-	\begin{itemize}
-		\item Proportion of defects (per type) remaining defective in following acquisition
-		\item Of defects that persist from one acquisition to next, what proportion persist for a third, etc...
-		\item Proportion of recurrent/intermittent defects (limited to single detector)
-		\item Did any pixels remain unhealthy after the two refurbishments? (What happens at refurbishment, anyway?)
-	\end{itemize}
-\end{frame}
-
-\subsection{Progression of defects}
-\begin{frame}{Progression of defects}
-	\begin{itemize}
-		\item Transition matrix (non-instantaneous) between observed states: mean and SD
-		\item Once pixels reach a given state, do they tend to stay there, or do pixels ever return to a healthy state? Is there a `point of no return'?
-	\end{itemize}
-
-\end{frame}
-
-\begin{frame}{Clusters of defective pixels}
-	\begin{itemize}
-		\item Do clusters ever shrink?
-		\item Total cluster value, as well as size
-		
-	\end{itemize}
-
-\end{frame}
-
-
-%======================================================================
-
-
-\section{Spatial distribution of defects}
-\subsection{Patterns in spatial distribution of defective pixels}
-
-\begin{frame}{Spatial distribution of defects}
-
-	\begin{itemize}
-		\item Are defects more likely to occur in some regions of the panel than others?
-		\item Is this related to size/severity of defect at all?
-		\item Is inhomogeneous distribution of defects related in any way to surface of dark image?
-	\end{itemize}
-
-\end{frame}
-
-%======================================================================
-
-
-\section*{Summary}
-
-\begin{frame}{Summary}
-
-  \begin{itemize}
-  \item
-  	Benefits
-  	\begin{itemize}
-    \item
-    		Detector `health check' - independent assessment of possible problems
-    	\item
-    		Acceptable tolerances can be tailored to operator's requirements
-  	\item
-    		Assess rate of deterioration - better planning for refurbishment/replacement
-    	\end{itemize}
-  \end{itemize}
-  
-  \begin{itemize}
-  \item
-    Future work
-    \begin{itemize}
-    \item
-      More extensive study with more panels, each examined over a period of time 
-    \item
-    	  Currently lacking a `gold standard' - obtain sample of new panels to test assumptions of `healthy' behaviour \& set more informed thresholds
-    \end{itemize}
-  \end{itemize}
-  
-\end{frame}
-
-
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
