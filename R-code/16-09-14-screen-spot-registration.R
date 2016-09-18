@@ -183,7 +183,6 @@ sp.org <- screen.spots(pw.m[,,"white", "141009"])
 
 ####################################################################################################
 
-
 # PLOTS OF SCREEN SPOTS + REGISTRATION IN ALL IMAGES                                            ####
 
 # temporary support functions

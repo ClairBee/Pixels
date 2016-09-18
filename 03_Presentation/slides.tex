@@ -1,9 +1,12 @@
 \documentclass[8pt]{beamer}
-%\usepackage{nicefrac}
+\usepackage{appendixnumberbeamer}
 
-%\usetheme{Singapore}
+\usetheme{Singapore}
 %\usetheme{Madrid}
-\usetheme{default}
+%\usetheme{default}
+
+\setbeamertemplate{footline}[frame number] 
+
 %======================================================================
 \newcommand{\todo}[1]{
 	\begin{minipage}{\textwidth}
@@ -35,6 +38,8 @@
 
 \date{Steering Group Meeting, September 20th 2016}
 
+\graphicspath{{./fig/}}
+
 
 %======================================================================
 
@@ -46,24 +51,32 @@
 \end{frame}
 
 \begin{frame}{Outline}
+
+\nb{Still to do: Table of counts of each pixel classification in each image (split out dense areas?}
+
   \tableofcontents
   % You might wish to add the option [pausesections]
 \end{frame}
 
 %-----------------------------------------------------------------------
 
-\section{Identification of defects}
+\section{Identification of abnormal pixels}
 
-\subsection{Abnormal pixels}
-
-\subsubsection{Thresholding}
+\subsection{Thresholding}
 
 \begin{frame}{Abnormal pixel values}{Thresholding}
+Seeking a common approach, applicable to all variables of interest. \\
+Therefore we need to avoid distributional assumptions, where possible.
 	\begin{itemize}
-		\item Common approach applicable to all variables of interest.
-		\item Cannot assume symmetry. \todo{histogram of grey values from `loan' image. Show median}
-		\item Expect to see a large number of outliers - need robust measure. \todo{compare SD with MAD on hist}
+		\item Cannot assume symmetry.
+		\item Cannot assume unimodal distribution.				% will show such plots later on
+		\item Expect to see a large number of outliers - need robust measure.		% remark on dark lines at LHS of plot
 	\end{itemize}
+	
+	\begin{figure}[!ht]
+		\includegraphics[scale=0.3]{hist-asymmetry}
+		\includegraphics[scale=0.3]{hist-outliers}
+	\end{figure}
 \end{frame}
 
 %-----------------------------------------------------------------------
@@ -72,27 +85,21 @@
 	A solution:
 	\begin{itemize}
 		\item Cut data at modal density, not at median
-		\item Use NMAD instead of SD
+		\item Use normalised MAD instead of SD							% note formula for MAD
 		\item Calculate MAD on each side of modal density independently
-			\todo{histograms with thresholds marked}
-		\item A robust, asymmetric analogue to $6\sigma$ approach
 	\end{itemize}
-\end{frame}
-
-%-----------------------------------------------------------------------
-
-\begin{frame}{Abnormal pixel values}{Classification}
-	Further classification is straightforward:
-	\todo{add limits to histograms}
-	\todo{table of classifications}
 	
-	\nb{Check best approach: split globally extreme px by degree, then remainder by type? if only using degrees on pixelwise mean values, include this in slide on pixelwise mean values instead}
+	\begin{figure}[!ht]
+		\includegraphics[scale=0.3]{hist-bounds-160705}
+		\includegraphics[scale=0.3]{hist-bounds-131002}
+	\end{figure}
+	A robust, asymmetric analogue to $6\sigma$ approach
+	
 \end{frame}
-
 
 %======================================================================
 
-\subsubsection{Pixel attributes}
+\subsection{Pixel attributes}
 
 \begin{frame}{Variables of interest}{Pixelwise mean values}
 	\begin{itemize}
@@ -103,148 +110,149 @@
 			\item 20 with no x-ray exposure (black)
 		\end{itemize}
 		\item Take the mean value of each pixel in each set of 20, to obtain black, grey and white mean images. 
-			\todo{Insert 14-10-09 black, grey, white images}
-		\item These are our main source of information about the detector's behaviour
-		\item Black \& grey pixelwise means are thresholded directly to identify \textbf{globally extreme} pixels
+		% explain scale here 
 	\end{itemize}
+	
+	\begin{center}
+		\includegraphics[scale=0.11]{image-pwm-black}
+		\includegraphics[scale=0.11]{image-pwm-grey}
+		\includegraphics[scale=0.11]{image-pwm-white}
+	\end{center}
+	These are our main source of information about the detector's behaviour
 \end{frame}
 
 %-----------------------------------------------------------------------
 
-\begin{frame}{Variables of interest}{Median-smoothed residuals}
+\begin{frame}{Variables of interest}{Pixelwise mean values}
+	Black \& grey pixelwise means are thresholded directly to identify \textbf{globally extreme} pixels.
+	\vspace{-12pt}
+	\begin{center}
+		\includegraphics[scale=0.11]{th-hist-black}
+		\includegraphics[scale=0.11]{th-hist-grey}
+		
+		\includegraphics[scale=0.11]{th-hist-scale}
+	\end{center}
+	
+	\textbf{Dark} pixels: values in grey \& white images are typical of black image\\
+	\textbf{Hot} pixels: fully saturated, even in black image
+
+\end{frame}
+	
+%-----------------------------------------------------------------------
+
+\begin{frame}[label = ms-res]{Variables of interest}{Median-smoothed residuals}
 	\begin{itemize}
 		\item Smooth pixelwise mean image using median filter
 		\item Subtract median-smoothed values from original image
-		\item Threshold residuals to identify \textbf{locally extreme} pixels
-		\item High-valued residuals are also globally high-valued
+		\item Threshold residuals to identify \textbf{locally extreme} pixels		% sketch image of possible local-but-not-global bright/dim px.
 	\end{itemize}
-		\todo{smoothed image}
-		\todo{residual plot}
-		\todo{residual histogram}
+	\begin{center}
+		\includegraphics[scale=0.11]{image-med-smoothed-black}
+		\includegraphics[scale=0.11]{image-med-residuals-black}
+		\hyperlink{ms-res-supplemental}{\includegraphics[scale=0.11]{hist-med-residuals-black}}
+	\end{center}
+	High-valued residuals are often also globally high-valued
+	% Comment on unusual shape of histogram - link to oscillation as separate slide?
 \end{frame}
  
 %-----------------------------------------------------------------------
  
 \begin{frame}{Variables of interest}{Linear residuals}
 	\begin{itemize}
-		\item Pixel response is expected to be linear 		% manual specifies < 1% non-linearity
+		\item Pixel response is expected to be linear 		% manual specifies < 1% non-linearity, whatever that means
 		\item Regression of grey value on black \& white value generally v. accurate
-		\item Threshold residuals
+		\item Threshold residuals to identify \textbf{nonlinear} pixels
 	\end{itemize}		
-		\todo{fitted linear values}
-		\todo{Linear residuals}
-		\todo{histogram of linear residuals with thresholds}
+
+	\begin{center}
+		\includegraphics[scale=0.11]{image-linear-fv}
+		\includegraphics[scale=0.11]{image-linear-residual}
+		\includegraphics[scale=0.11]{hist-linear-residuals}
+	\end{center}
 \end{frame}
 	
 %-----------------------------------------------------------------------
 	
 \begin{frame}{Variables of interest}{Response to spot}
 	\begin{itemize}
+		\item Subtract black from grey images to get pixelwise response
 		\item Response to conical x-ray beam should be well modelled by 2d Gaussian
-		\item \nb{Subtract black from grey images to give only spot response}
-		\item fit 2d Gaussian with constraint on location
+		\item fit 2d Gaussian with constraint on location				% note formula: spot central, x & y independent
+	\end{itemize}
+	
+	\begin{center}
+		\includegraphics[scale=0.11]{gs-fitted-values}
+		\includegraphics[scale=0.11]{gs-org-values}			% contours are at same levels as colour contours, so should align 
+		\includegraphics[scale=0.11]{gs-residuals}
+	\end{center}
+	
+\end{frame}		
+		
+\begin{frame}{Variables of interest}{Response to spot}
+	\begin{itemize}
 		\item If centre is on constraint boundary, compare constrained model to free model
 		\begin{itemize}
 			\item Improvement in RMSE suggests spot is off-centre
 			\item No improvement suggests response is not elliptical
 		\end{itemize}
-	\end{itemize}
-		\todo{Central spot: 14-10-09}
-		\todo{Off-centre spot: 16-07-05}
-		\todo{Non-elliptical response: Nikon panel MCT225}
+	\end{itemize}			% link to supplemental slide showing difference in residuals when spot is constrained incorrectly
+	
+	\begin{center}
+		\includegraphics[scale=0.11]{gs-central-spot}
+		\includegraphics[scale=0.11]{gs-off-centre-spot}			% why does spot centring matter? Not necessarily for residuals, but for getting right nominal value in the first place when selecting power settings.
+		\includegraphics[scale=0.11]{gs-non-circular-response}
+	\end{center}
+
 \end{frame}
  
 %-----------------------------------------------------------------------
 
 % INCLUDE STANDARD DEVIATION AS ONE OF THE VARIABLES?
 
-\subsubsection{Classification}
+\subsection{Summary of classifications}
 
-\begin{frame}{Classification}
+\begin{frame}{Classification} 
 
-	All variables are thresholded using the approach already outlined
+	%All variables are thresholded using the approach outlined previously\\
+	% Retain classifications to track spatial distribution & development/progression of each pixel type
+	% order is prioritised: if bright in black but dark in white, 'dark' wins
 	
-	Pixelwise mean values are also divided into degrees of brightness \nb{or am I going to do this to all attributes?}	
-	
-	\todo{histogram of pixelwise mean values with thresholds marked}
-	\todo{table of classifications. Give counts of pixels observed?}
+	\begin{tabular}{p{0.2\textwidth}p{0.78\textwidth}}
+		\textbf{Hot} & Pixel value == 65535 in black images\\
+		\textbf{Dark} & Pixel value in white image $\leq$ 15000\\
+		\textbf{Very bright} & Pixel value between $Q_{0.5}$ of bright pixels \& maximum value\\
+		\textbf{Bright} & Pixel value between $Q_{0.25}$ \& $Q_{0.5}$ of bright pixels\\
+		\textbf{Slightly bright} & Pixel value between upper threshold \& $Q_{0.25}$ of bright pixels\\
+		\textbf{Dim} & Pixel value below lower threshold\\
+		\textbf{Locally bright} & Median-smoothed residual above upper threshold\\
+		\textbf{Locally dim} & Median-smoothed residual below lower threshold\\
+		\textbf{Nonlinear} & Linear residual outside of thresholds\\
+		\textbf{Spot response} & Gaussian spot residual outside of thresholds
+	\end{tabular}
 
 \end{frame}
 % \todo{table of classifications. Give counts of pixels observed?}
 
-\subsection{Two case studies}
 
-\subsubsection{Images from 14-10-09}
-
-\begin{frame}{Images from 14-10-09}{Pixel values}
-	\todo{black pw.m + hist + px identified}
-	\todo{grey pw.m + hist + px identified}
-\end{frame}
-
-%-----------------------------------------------------------------------
-
-\begin{frame}{Images from 14-10-09}{Median-smoothed residuals}
-	\todo{black residuals + hist + px identified}
-	\todo{grey residuals + hist + px identified}
-\end{frame}
-
-%-----------------------------------------------------------------------
-
-\begin{frame}{Images from 14-10-09}{Model residuals}
-	\todo{linear residuals + hist + px identified}
-	\todo{spot residuals + hist + px identified}
-\end{frame}
-	
-%-----------------------------------------------------------------------
-
-\begin{frame}{Images from 14-10-09}{Pixels identified}
-	\todo{plot of pixels identified (colour-coded \& with counts)}
-	\nb{shading-corrected image?}
-\end{frame}
-	
-\subsubsection{Images from 16-07-19}
-
-\begin{frame}{Images from 16-07-19}{Pixel values}
-	\todo{black pw.m + hist + px identified}
-	\todo{grey pw.m + hist + px identified}
-\end{frame}
-
-%-----------------------------------------------------------------------
-
-\begin{frame}{Images from 16-07-19}{Median-smoothed residuals}
-	\todo{black residuals + hist + px identified}
-	\todo{grey residuals + hist + px identified}
-\end{frame}
-
-%-----------------------------------------------------------------------
-
-\begin{frame}{Images from 16-07-19}{Model residuals}
-	\todo{linear residuals + hist + px identified}
-	\todo{spot residuals + hist + px identified}
-\end{frame}
-	
-%-----------------------------------------------------------------------
-
-\begin{frame}{Images from 16-07-19}{Pixels identified}
-	\todo{plot of pixels identified (colour-coded \& with counts)}
-\end{frame}
 
 \section{Multi-pixel features}
 
 \subsection{Spots on beryllium window}
 
-\begin{frame}[label = screen-spots]{Spots on beryllium window}
+\begin{frame}{Spots on beryllium window}
 	\begin{itemize}
-		\item Visible in some images as irregular dim spots
+		\item Visible in some illuminated images as irregular dim patches
 		\item Caused by flecks of superheated tungsten sticking to beryllium screen
 		\item Can only be removed by replacing the beryllium window
-		\item Apparent position likely to move between acquisitions
 		\item Not always removed by shading correction
+		\item Apparent position likely to move between acquisitions	% so simply adding position to bad pixel map won't help
 	\end{itemize}
-		\todo{white image with spots: 14-10-09}
-		\todo{shift in apparent position between acquisitions}
-		\todo{shading-corrected image with spots: 14-10-09}
-		\todo{link to appendix showing process of identification \hyperlink{ss-supplemental}{here}}
+	
+	\begin{center}
+		\includegraphics[scale=0.11]{image-white-spots}
+		\includegraphics[scale=0.11]{image-sc-spots}
+		\includegraphics[scale=0.11]{plot-spot-movement}
+	\end{center}
 \end{frame}
 
 %-----------------------------------------------------------------------
@@ -252,22 +260,39 @@
 \begin{frame}{Screen spots in linear residuals}
 
 	\begin{itemize}
-		\item Not always visible - behaving like any object in field of view
-		\item May appear as dim patch - thin enough to be invisible in white image, but not in grey?
-		\item May appear with associated bright patch
-		\item Will definitely not be removed by shading correction
+		\item Spots may also appear in linear residuals
+		\item Bright `shadow' indicates different position in grey \& white images
+	\begin{center}
+		\includegraphics[scale=0.14]{image-l-res-spots}
+		\includegraphics[scale=0.14]{plot-l-res-spots}
+	\end{center}
 		\item May indicate a pit in the tungsten target?
-		\item Or just different diffraction at different power levels?
-	\end{itemize}	 
-		\todo{spots visible in linear residuals}
+	\end{itemize}	
+\end{frame}
+
+%-----------------------------------------------------------------------
+
+\begin{frame}{Identification of screen spots}
+% include discussion of structuring element used
+	\begin{center}
+		\includegraphics[scale=0.1]{finding-spots-raw}
+		\includegraphics[scale=0.1]{finding-spots-midline-adj}
+		\includegraphics[scale=0.1]{finding-spots-lowess-res}
+		\includegraphics[scale=0.1]{finding-spots-truncated-res}
+		
+		\includegraphics[scale=0.1]{finding-spots-closing}
+		\includegraphics[scale=0.1]{finding-spots-thresholded}
+		\includegraphics[scale=0.1]{finding-spots-dilated}
+		\includegraphics[scale=0.1]{finding-spots-final}
+	\end{center}
 \end{frame}
 
 
 %======================================================================
 
-\subsection{Dense regions}
+\subsection{! Dense regions}
 
-\begin{frame}{Dense regions of defects}
+\begin{frame}{Dense regions of defects} % figs needed
 	\begin{itemize}
 		\item Dense regions suggest a larger issue
 		\item Tend to arise around edges of panels
@@ -280,15 +305,15 @@
 
 %-----------------------------------------------------------------------
 
-\subsection{Linear defects}
+\subsection{! Linear defects}
 
-\begin{frame}{Column defects}
+\begin{frame}{Column defects} % figs needed
 
 \end{frame}
 
 %-----------------------------------------------------------------------
 
-\begin{frame}{Row defects}
+\begin{frame}{Row defects} % figs needed
 	\begin{itemize}
 		\item Two row defects observed in current loan panel
 		\item Row 77: decreasing gradient R-L
@@ -302,11 +327,68 @@
 
 %-----------------------------------------------------------------------
 
-\subsection{Cluster defects}
+\subsection{! Cluster defects}
 
-\begin{frame}{Cluster defects}
+\begin{frame}{Cluster defects} % figs needed
 
 	
+\end{frame}
+
+\section{! Two case studies}
+
+\subsection{! Images from 14-10-09 (first images after refurbishment)}
+
+\begin{frame}{Images from 14-10-09}{Pixel values} % figs needed
+	\todo{black pw.m + hist + px identified}
+	\todo{grey pw.m + hist + px identified}
+\end{frame}
+
+%-----------------------------------------------------------------------
+
+\begin{frame}{Images from 14-10-09}{Median-smoothed residuals} % figs needed
+	\todo{black residuals + hist + px identified}
+	\todo{grey residuals + hist + px identified}
+\end{frame}
+
+%-----------------------------------------------------------------------
+
+\begin{frame}{Images from 14-10-09}{Model residuals} % figs needed
+	\todo{linear residuals + hist + px identified}
+	\todo{spot residuals + hist + px identified}
+\end{frame}
+	
+%-----------------------------------------------------------------------
+
+\begin{frame}{Images from 14-10-09}{Pixels identified} % figs needed
+	\todo{plot of pixels identified (colour-coded \& with counts)}
+	\nb{shading-corrected image?}
+\end{frame}
+	
+\subsection{! Images from 16-07-19 (loan panel currently in use)}
+
+\begin{frame}{Images from 16-07-19}{Pixel values} % figs needed
+	\todo{black pw.m + hist + px identified}
+	\todo{grey pw.m + hist + px identified}
+\end{frame}
+
+%-----------------------------------------------------------------------
+
+\begin{frame}{Images from 16-07-19}{Median-smoothed residuals} % figs needed
+	\todo{black residuals + hist + px identified}
+	\todo{grey residuals + hist + px identified}
+\end{frame}
+
+%-----------------------------------------------------------------------
+
+\begin{frame}{Images from 16-07-19}{Model residuals} % figs needed
+	\todo{linear residuals + hist + px identified}
+	\todo{spot residuals + hist + px identified}
+\end{frame}
+	
+%-----------------------------------------------------------------------
+
+\begin{frame}{Images from 16-07-19}{Pixels identified} % figs needed
+	\todo{plot of pixels identified (colour-coded \& with counts)}
 \end{frame}
 
 
@@ -314,13 +396,23 @@
 \appendix
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Screen spots}
 
-\begin{frame}[label = ss-supplemental]{Identification of screen spots}
-	Supplemental content.
-	Back to \hyperlink{screen-spots}{screen spots}.
+\section{Additional: Oscillation in dark images}
+
+\begin{frame}[label = ms-res-supplemental]{Oscillation along columns in dark images}
+
+	`Standing wave' oscillation along columns - not disrupted by bright or dead pixels.
+	
+	Observed in all images, but not in all columns
+	
+	\hyperlink{ms-res}{
+	\includegraphics[scale=0.3]{osc-transect-130613}	
+	\includegraphics[scale=0.3]{osc-transect-141009}	
+	\\
+	\includegraphics[scale=0.3]{osc-transect-loan}	
+	\includegraphics[scale=0.3]{osc-transect-MCT225}	
+	}
 \end{frame}
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

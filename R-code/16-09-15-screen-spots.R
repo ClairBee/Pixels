@@ -400,11 +400,8 @@ sspots <- function(im, smooth.span = 1/15, min.diam = 5, midline = 1024.5, match
         w.dim.th <- dilate(w.dim.th, sk)                        # slightly enlarge all spots
         w.dim.px <- which(w.dim.th > 0, arr.ind = T)            # get pixel coordinates
     }
-    
-    # combine dim pixels
-    dim.px <- unique(rbind(w.dim.px, l.dim.px))
-    
-    list(dim = dim.px, bright = l.bright.px)
+
+    list(nl.dim = l.dim.px, nl.bright = l.bright.pxw.dim = w.dim.px)
 }
 
 invisible(lapply(dimnames(pw.m)[[4]][5:21],
