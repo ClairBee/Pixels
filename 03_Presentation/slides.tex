@@ -39,7 +39,7 @@
 \date{Steering Group Meeting, September 20th 2016}
 
 \graphicspath{{./fig/}}
-
+\newcommand{\sctriple}{0.11}
 
 %======================================================================
 
@@ -52,14 +52,22 @@
 
 \begin{frame}{Outline}
 
-\nb{Still to do: Table of counts of each pixel classification in each image (split out dense areas?}
-
   \tableofcontents
   % You might wish to add the option [pausesections]
 \end{frame}
 
 %-----------------------------------------------------------------------
 
+\begin{frame}{Colour scheme used in pixel images}
+	All pixel images presented use the same basic colour scheme:
+	
+	\begin{center}
+	\includegraphics[scale=0.4]{image-scale}
+	\end{center}
+
+\end{frame}
+
+%-----------------------------------------------------------------------
 \section{Identification of abnormal pixels}
 
 \subsection{Thresholding}
@@ -68,14 +76,15 @@
 Seeking a common approach, applicable to all variables of interest. \\
 Therefore we need to avoid distributional assumptions, where possible.
 	\begin{itemize}
+		\item Cannot assume any particular universal distribution.				% will show such plots later on
 		\item Cannot assume symmetry.
-		\item Cannot assume unimodal distribution.				% will show such plots later on
 		\item Expect to see a large number of outliers - need robust measure.		% remark on dark lines at LHS of plot
 	\end{itemize}
 	
 	\begin{figure}[!ht]
-		\includegraphics[scale=0.3]{hist-asymmetry}
-		\includegraphics[scale=0.3]{hist-outliers}
+		\includegraphics[scale=0.11]{hist-bizarre-dist}
+		\includegraphics[scale=0.11]{hist-asymmetry}
+		\includegraphics[scale=0.11]{hist-outliers}
 	\end{figure}
 \end{frame}
 
@@ -84,15 +93,15 @@ Therefore we need to avoid distributional assumptions, where possible.
 \begin{frame}{Abnormal pixel values}{Thresholding}
 	A solution:
 	\begin{itemize}
-		\item Cut data at modal density, not at median
-		\item Use normalised MAD instead of SD							% note formula for MAD
+		\item Cut observed values at modal density, not at median
+		\item Use 6 $\times$ normalised MAD instead of SD							% note formula for MAD
 		\item Calculate MAD on each side of modal density independently
 	\end{itemize}
 	
-	\begin{figure}[!ht]
-		\includegraphics[scale=0.3]{hist-bounds-160705}
-		\includegraphics[scale=0.3]{hist-bounds-131002}
-	\end{figure}
+	\begin{center}
+		\includegraphics[scale=0.12]{hist-bounds-160705}
+		\includegraphics[scale=0.12]{hist-bounds-131002}
+	\end{center}
 	A robust, asymmetric analogue to $6\sigma$ approach
 	
 \end{frame}
@@ -157,10 +166,12 @@ Therefore we need to avoid distributional assumptions, where possible.
  
 %-----------------------------------------------------------------------
  
+ % add transect showing GV vs FV
 \begin{frame}{Variables of interest}{Linear residuals}
 	\begin{itemize}
 		\item Pixel response is expected to be linear 		% manual specifies < 1% non-linearity, whatever that means
-		\item Regression of grey value on black \& white value generally v. accurate
+		\item Fit grey values by linear regression, using black \& white values as explanatory variables. \\
+		\item Where panel midline exists, fit an offset for upper vs lower panel
 		\item Threshold residuals to identify \textbf{nonlinear} pixels
 	\end{itemize}		
 
@@ -169,6 +180,7 @@ Therefore we need to avoid distributional assumptions, where possible.
 		\includegraphics[scale=0.11]{image-linear-residual}
 		\includegraphics[scale=0.11]{hist-linear-residuals}
 	\end{center}
+	
 \end{frame}
 	
 %-----------------------------------------------------------------------
@@ -202,7 +214,8 @@ Therefore we need to avoid distributional assumptions, where possible.
 		\includegraphics[scale=0.11]{gs-off-centre-spot}			% why does spot centring matter? Not necessarily for residuals, but for getting right nominal value in the first place when selecting power settings.
 		\includegraphics[scale=0.11]{gs-non-circular-response}
 	\end{center}
-
+	Residuals are thresholded to identify regions of \textbf{non-standard} pixels\\
+	Off-centre spot may also lead to inappropriate choice of power settings
 \end{frame}
  
 %-----------------------------------------------------------------------
@@ -237,159 +250,191 @@ Therefore we need to avoid distributional assumptions, where possible.
 
 \section{Multi-pixel features}
 
-\subsection{Spots on beryllium window}
+\begin{frame}{Features consisting of multiple pixels}
 
-\begin{frame}{Spots on beryllium window}
+Small groups of pixels may be affected by a single defect
+	\begin{itemize}
+		\item Clusters of defective pixels
+		\item Lines of defective pixels
+		\begin{itemize}
+			\item May cover whole column/row: caused by defect in readout array
+			\item May cover only part of column: caused by defect in pixels
+		\end{itemize}
+	\end{itemize}
+	
+	\vspace{12pt}
+Larger features may also appear
+	\begin{itemize}
+		\item Dense regions of defective pixels (often at panel corners / edges)
+		\item Irregular dim patches indicate flecks of tungsten on beryllium screen
+	\end{itemize}
+%	\todo{image: dense regions}
+%	\todo{image: screen spots in white image}
+%	\todo{add hyperlinks to additional material}
+\end{frame}
+
+\subsection{Spots on screen}
+
+\begin{frame}[label = screen-spots]{Spots on beryllium window}
 	\begin{itemize}
 		\item Visible in some illuminated images as irregular dim patches
-		\item Caused by flecks of superheated tungsten sticking to beryllium screen
 		\item Can only be removed by replacing the beryllium window
 		\item Not always removed by shading correction
 		\item Apparent position likely to move between acquisitions	% so simply adding position to bad pixel map won't help
+		\item \hyperlink{app-screen-spots}{May appear with bright `shadow' in linear residuals - grey \& white positions differ}
 	\end{itemize}
-	
+	\vspace{-10pt}
 	\begin{center}
 		\includegraphics[scale=0.11]{image-white-spots}
 		\includegraphics[scale=0.11]{image-sc-spots}
 		\includegraphics[scale=0.11]{plot-spot-movement}
 	\end{center}
-\end{frame}
-
-%-----------------------------------------------------------------------
-
-\begin{frame}{Screen spots in linear residuals}
-
-	\begin{itemize}
-		\item Spots may also appear in linear residuals
-		\item Bright `shadow' indicates different position in grey \& white images
-	\begin{center}
-		\includegraphics[scale=0.14]{image-l-res-spots}
-		\includegraphics[scale=0.14]{plot-l-res-spots}
-	\end{center}
-		\item May indicate a pit in the tungsten target?
-	\end{itemize}	
-\end{frame}
-
-%-----------------------------------------------------------------------
-
-\begin{frame}{Identification of screen spots}
-% include discussion of structuring element used
-	\begin{center}
-		\includegraphics[scale=0.1]{finding-spots-raw}
-		\includegraphics[scale=0.1]{finding-spots-midline-adj}
-		\includegraphics[scale=0.1]{finding-spots-lowess-res}
-		\includegraphics[scale=0.1]{finding-spots-truncated-res}
-		
-		\includegraphics[scale=0.1]{finding-spots-closing}
-		\includegraphics[scale=0.1]{finding-spots-thresholded}
-		\includegraphics[scale=0.1]{finding-spots-dilated}
-		\includegraphics[scale=0.1]{finding-spots-final}
-	\end{center}
+		\vspace{-10pt}
+	\hyperlink{app-screen-spots-procedure}{Identified using morphological approach with thresholding}
 \end{frame}
 
 
 %======================================================================
 
-\subsection{! Dense regions}
+\section{Case study: loan panel (panel currently in use)}
 
-\begin{frame}{Dense regions of defects} % figs needed
-	\begin{itemize}
-		\item Dense regions suggest a larger issue
-		\item Tend to arise around edges of panels
-		\item Can be identified by density filter
-	\end{itemize}
-	
-	\todo{examples of dense regions: 160430 corners, loan panel}
-	
+\subsection{Defect detection}
+
+\begin{frame}{Images from 16-07-19}{Pixel values - black images}
+	\begin{center}
+		\includegraphics[scale=\sctriple]{cs1-img-black}
+		\includegraphics[scale=\sctriple]{cs1-hist-black}
+		\includegraphics[scale=\sctriple]{cs1-px-black}
+	\end{center}
 \end{frame}
 
 %-----------------------------------------------------------------------
 
-\subsection{! Linear defects}
-
-\begin{frame}{Column defects} % figs needed
-
+\begin{frame}{Images from 16-07-19}{Pixel values - grey images} % figs needed
+	\begin{center}
+		\includegraphics[scale=\sctriple]{cs1-img-grey}
+		\includegraphics[scale=\sctriple]{cs1-hist-grey}
+		\includegraphics[scale=\sctriple]{cs1-px-grey}
+	\end{center}
 \end{frame}
 
 %-----------------------------------------------------------------------
 
-\begin{frame}{Row defects} % figs needed
-	\begin{itemize}
-		\item Two row defects observed in current loan panel
-		\item Row 77: decreasing gradient R-L
-			\todo{three transects as before}
-		\hrule
-		\item Row 1025: constant offset
-			\todo{three transects as before}
-		\item Assume that these must occur after data is transferred along columns, in readout register?
-	\end{itemize}
+\begin{frame}{Images from 16-07-19}{Median-smoothed residuals - black images}
+	\begin{center}
+		\includegraphics[scale=\sctriple]{cs1-med-res-black}
+		\includegraphics[scale=\sctriple]{cs1-med-res-hist-black}
+		\includegraphics[scale=\sctriple]{cs1-med-res-px-black}
+	\end{center}
 \end{frame}
 
 %-----------------------------------------------------------------------
 
-\subsection{! Cluster defects}
-
-\begin{frame}{Cluster defects} % figs needed
-
-	
-\end{frame}
-
-\section{! Two case studies}
-
-\subsection{! Images from 14-10-09 (first images after refurbishment)}
-
-\begin{frame}{Images from 14-10-09}{Pixel values} % figs needed
-	\todo{black pw.m + hist + px identified}
-	\todo{grey pw.m + hist + px identified}
+\begin{frame}{Images from 16-07-19}{Median-smoothed residuals - grey images}
+	\begin{center}
+		\includegraphics[scale=\sctriple]{cs1-med-res-grey}
+		\includegraphics[scale=\sctriple]{cs1-med-res-hist-grey}
+		\includegraphics[scale=\sctriple]{cs1-med-res-px-grey}
+	\end{center}
 \end{frame}
 
 %-----------------------------------------------------------------------
 
-\begin{frame}{Images from 14-10-09}{Median-smoothed residuals} % figs needed
-	\todo{black residuals + hist + px identified}
-	\todo{grey residuals + hist + px identified}
-\end{frame}
-
-%-----------------------------------------------------------------------
-
-\begin{frame}{Images from 14-10-09}{Model residuals} % figs needed
-	\todo{linear residuals + hist + px identified}
-	\todo{spot residuals + hist + px identified}
+\begin{frame}{Images from 16-07-19}{Linear model residuals}
+	\begin{center}
+		\includegraphics[scale=\sctriple]{cs1-linear}
+		\includegraphics[scale=\sctriple]{cs1-linear-hist}
+		\includegraphics[scale=\sctriple]{cs1-linear-px}
+	\end{center}
 \end{frame}
 	
 %-----------------------------------------------------------------------
 
-\begin{frame}{Images from 14-10-09}{Pixels identified} % figs needed
-	\todo{plot of pixels identified (colour-coded \& with counts)}
-	\nb{shading-corrected image?}
+\begin{frame}{Images from 16-07-19}{Gaussian spot residuals}
+	\begin{center}
+		\includegraphics[scale=\sctriple]{cs1-gaussian}
+		\includegraphics[scale=\sctriple]{cs1-gaussian-hist}
+		\includegraphics[scale=\sctriple]{cs1-gaussian-px}
+	\end{center}
 \end{frame}
+
+%-----------------------------------------------------------------------
+
+\subsection{Defect classification}
+
+\begin{frame}{Images from 16-07-19}{Pixels identified}
+
+	\includegraphics[scale=0.38]{cs1-bad-pixels}
 	
-\subsection{! Images from 16-07-19 (loan panel currently in use)}
-
-\begin{frame}{Images from 16-07-19}{Pixel values} % figs needed
-	\todo{black pw.m + hist + px identified}
-	\todo{grey pw.m + hist + px identified}
 \end{frame}
 
 %-----------------------------------------------------------------------
 
-\begin{frame}{Images from 16-07-19}{Median-smoothed residuals} % figs needed
-	\todo{black residuals + hist + px identified}
-	\todo{grey residuals + hist + px identified}
-\end{frame}
+\begin{frame}{Images from 16-07-19}{Features identified}
 
-%-----------------------------------------------------------------------
-
-\begin{frame}{Images from 16-07-19}{Model residuals} % figs needed
-	\todo{linear residuals + hist + px identified}
-	\todo{spot residuals + hist + px identified}
-\end{frame}
+	\includegraphics[scale=0.38]{cs1-px-features}
 	
+\end{frame}
+
+%-----------------------------------------------------------------------
+\subsection{Effect in shading-corrected image}
+\begin{frame}{Images from 16-07-19}{Shading-corrected image}
+	\begin{center}
+		\includegraphics[scale=0.2]{cs1-shading-corrected}
+	\end{center}
+\end{frame}
+
 %-----------------------------------------------------------------------
 
-\begin{frame}{Images from 16-07-19}{Pixels identified} % figs needed
-	\todo{plot of pixels identified (colour-coded \& with counts)}
+\subsection{Effect after removal of official bad pixel map}
+
+\begin{frame}{Images from 16-09-19}{Images with system bad pixel map corrected}
+
+	\begin{center}
+		\includegraphics[scale=0.38]{cs2-bad-pixels}
+	\end{center}
 \end{frame}
+
+%-----------------------------------------------------------------------
+
+\begin{frame}{Images from 16-09-19}{Shading-corrected image}
+
+	\begin{center}
+		\includegraphics[scale=0.2]{cs2-shading-corrected}
+	\end{center}
+	
+\end{frame}
+
+%-----------------------------------------------------------------------\\
+
+\section{Summary}
+\begin{frame}{Summary}
+
+Benefits
+\begin{itemize}	
+	\item Detector `health check': objective assessment of detector defects
+	\item Can objectively evaluate need to replace beryllium screen
+	\item Pixel classification gives greater understanding of types \& development of defects
+	\item Sensitivity can be easily adjusted - currently picking up defects not identified by system pixel map
+\end{itemize}
+
+\vspace{12pt}
+Future directions
+\begin{itemize}
+	\item More extensive study with a number of panels, each examined over a period of time, to better understand development of defects
+	\item Currently lacking a `gold standard' - obtain sample of new panels, to test assumptions of `healthy' behaviour and set more informed thresholds
+\end{itemize}
+
+\end{frame}
+
+
+%-----------------------------------------------------------------------
+
+
+
+
+
+	
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -413,6 +458,58 @@ Therefore we need to avoid distributional assumptions, where possible.
 	\includegraphics[scale=0.3]{osc-transect-MCT225}	
 	}
 \end{frame}
+
+\section{Additional: Spots on beryllium window}
+
+%-----------------------------------------------------------------------
+
+\begin{frame}[label = app-screen-spots]{Screen spots in linear residuals}
+
+	\begin{itemize}
+		\item Bright `shadow' indicates different position in grey \& white images
+	\begin{center}
+		\includegraphics[scale=0.14]{image-l-res-spots}
+		\includegraphics[scale=0.14]{plot-l-res-spots}
+	\end{center}
+		\item May indicate a pit in the tungsten target?
+	\end{itemize}
+	
+	\hyperlink{screen-spots}{\beamerbutton{Back}}	
+\end{frame}
+
+%-----------------------------------------------------------------------
+
+\begin{frame}[label = app-screen-spots-procedure]{Identification of screen spots}
+% include discussion of structuring element used
+	\begin{center}
+		\includegraphics[scale=0.1]{finding-spots-raw}
+		\includegraphics[scale=0.1]{finding-spots-midline-adj}
+		\includegraphics[scale=0.1]{finding-spots-lowess-res}
+		\includegraphics[scale=0.1]{finding-spots-truncated-res}
+		
+		\includegraphics[scale=0.1]{finding-spots-closing}
+		\includegraphics[scale=0.1]{finding-spots-thresholded}
+		\includegraphics[scale=0.1]{finding-spots-dilated}
+		\includegraphics[scale=0.1]{finding-spots-final}
+	\end{center}
+	
+	\hyperlink{screen-spots}{\beamerbutton{Back}}	
+\end{frame}
+
+\section{Additional: Row defects}
+\begin{frame}{Row defects}{Row 77 of current (loan) panel} % figs needed
+
+	One of the observed row defects has an increasing offset (reading from right to left)
+	\begin{center}
+		\includegraphics[scale=0.23]{tr-row-77}
+		\includegraphics[scale=0.23]{tr-offset-77}		
+	
+		\includegraphics[scale=0.23]{tr-powers-77}
+		\includegraphics[scale=0.23]{tr-progress-77}
+	\end{center}
+	Defect presumably occurs after data is transferred along columns, in readout register?
+\end{frame}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
