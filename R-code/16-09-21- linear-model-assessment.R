@@ -291,6 +291,23 @@ pdf(paste0(fpath, "robust-vs-cropped-linear-model-plots.pdf"), width = 4 * 2, he
 
 # robust model almost always has lower RMSE
 
+attach(all.models)
+plot(all.models$b[!int & !cropped & !robust], all.models$b[!int & !cropped & robust], pch = 20, 
+     xlab = "robust", ylab = "least squares", main = "Coefficient b")
+abline(0,1,col = "darkred", lty = 2)
+
+plot(w[!int & !cropped & !robust], w[!int & !cropped & robust], pch = 20, 
+     xlab = "robust", ylab = "least squares", main = "Coefficient w")
+abline(0,1,col = "darkred", lty = 2)
+
+plot(b[!int & !cropped & !robust], X.Intercept.[!int & !cropped & !robust], pch = 20, 
+     xlab = "robust", ylab = "least squares", main = "Black coef vs intercept")
+abline(1300,-3000,col = "darkred", lty = 2)
+
+line(b[!int & !cropped & !robust], X.Intercept.[!int & !cropped & !robust])
+
+# white coefficient fitted by both approaches is v similar.
+
 ####################################################################################################
 
 # PROBLEMS WITH NON-ROBUST MODEL                                                                ####
@@ -397,4 +414,263 @@ pdf(paste0(fpath, "Filtering-effect.pdf"), width = 5 * 4, height = 5 * 2); {
     dev.off()
 }
 
+####################################################################################################
 
+# SIMULATE EFFECT OF INCREASING NUMBERS OF EXTREME PIXELS                                       ####
+
+# use 141009 as base data
+im <- pw.m[,,,"141009"]
+
+df <- setNames(data.frame(melt(im[, , "black"]), 
+                          melt(im[, , "grey"]), 
+                          melt(im[, , "white"]))[, c("X1", "X2", "value", "value.1", "value.2")],
+               nm = c("x", "y", "b", "g", "w"))
+df$upper <- df$y > 1024.5
+df <- df[!is.na(df$g),]
+
+# standard model
+{
+    rlm.141009 <- rlm(g ~ upper + b + w, data = df)
+    lm.141009 <- lm(g ~ upper + b + w, data = df)
+}
+# fit model with 50000 extreme white values
+{
+    df$w50000 <- df$w; df$w50000[sample(1:nrow(df), 50000)] <- 65535
+    
+    rlm.w50000 <- rlm(g ~ upper + b + w50000, data = df)
+    r.res.w50000 <- rlm.w50000$residuals
+    .smoothScatter(df$g, rlm.w50000$fitted.values); abline(0,1, col = "darkred", lty=2)
+    
+    coef(rlm.w50000); summary(rlm.w50000)$sigma
+        #  (Intercept)    upperTRUE            b       w50000          sigma
+        # -350.5630576   11.7636932    0.6574950    0.3404426       59.28925
+    
+    # least squares fitting
+    lm.w50000 <- lm(g ~ upper + b + w50000, data = df)
+    ls.res.w50000 <- lm.w50000$residuals
+    .smoothScatter(df$g, lm.w50000$fitted.values); abline(0,1, col = "darkred", lty=2)
+    
+    coef(lm.w50000); summary(lm.w50000)$sigma
+        #  (Intercept)    upperTRUE            b       w50000          sigma
+        # 8477.6804073   85.9265596    0.5364828    0.1716512       462.0374
+}
+
+# fit model with 50000 extreme black values - effect is worse
+{
+    df$b50000 <- df$b; df$b50000[sample(1:nrow(df), 50000)] <- 65535
+
+    rlm.b50000 <- rlm(g ~ upper + b50000 + w, data = df)
+    r.res.b50000 <- rlm.b50000$residuals
+    .smoothScatter(df$g, rlm.b50000$fitted.values, main = "Robust model, 50000 extreme black values")
+    abline(0,1, col = "darkred", lty=2)
+    
+    coef(rlm.b50000); summary(rlm.b50000)$sigma
+    #  (Intercept)    upperTRUE            w       b50000          sigma
+    # 4937.9656502   27.6781716    0.3038765    0.0005827       147.7138
+    
+    # least squares fitting
+    lm.b50000 <- lm(g ~ upper + b50000 + w, data = df)
+    ls.res.b50000 <- lm.b50000$residuals
+    .smoothScatter(df$g, lm.b50000$fitted.values, main = "Least squares model, 50000 extreme black values")
+    abline(0,1, col = "darkred", lty=2)
+    
+    coef(lm.b50000); summary(lm.b50000)$sigma
+    #  (Intercept)    upperTRUE            b       b50000          sigma
+    # 17610.660067   159.714954     0.397766    0.0000005   642.7129
+}
+
+# fit model with 50000 increased black values (+12000)
+{
+    df$bx50000 <- df$b; 
+    s <- sample(1:nrow(df), 50000); df$bx50000[s] <- df$b[s] + 12000
+    
+    rlm.bx50000 <- rlm(g ~ upper + bx50000 + w, data = df)
+    r.res.bx50000 <- rlm.bx50000$residuals
+    .smoothScatter(df$g, rlm.bx50000$fitted.values, main = "Robust model, 50000 black values + 12000")
+    abline(0,1, col = "darkred", lty=2)
+    
+    round(coef(rlm.bx50000), 7); summary(rlm.bx50000)$sigma
+    #  (Intercept)    upperTRUE            w      bx50000         sigma
+    # 4792.2745541   27.2047898    0.3049917    0.0173753      145.7641
+    
+    # least squares fitting
+    lm.bx50000 <- lm(g ~ upper + bx50000 + w, data = df)
+    ls.res.bx50000 <- lm.bx50000$residuals
+    .smoothScatter(df$g, lm.bx50000$fitted.values, main = "Least squares model, 50000 black values + 12000")
+    abline(0,1, col = "darkred", lty=2)
+    
+    round(coef(lm.bx50000), 7); summary(lm.bx50000)$sigma
+    #  (Intercept)    upperTRUE            w      bx50000       sigma
+    # 877.9295939   20.1988309    0.3179752    0.0694438     296.8281
+}
+
+# fit model with 5000 extreme white values
+{
+    df$w5000 <- df$w; df$w5000[sample(1:nrow(df), 5000)] <- 65535
+    
+    rlm.w5000 <- rlm(g ~ upper + b + w5000, data = df)
+    r.res.w5000 <- rlm.w5000$residuals
+    .smoothScatter(df$g, rlm.w5000$fitted.values, main = "Robust model, 5000 extreme white values")
+    abline(0,1, col = "darkred", lty=2)
+    
+    coef(rlm.w5000); summary(rlm.w5000)$sigma
+    #  (Intercept)    upperTRUE            b        w5000          sigma
+    # -797.1793570    8.6306691    0.6788071    0.3473058       57.25373
+    
+    # least squares fitting
+    lm.w5000 <- lm(g ~ upper + b + w5000, data = df)
+    ls.res.w5000 <- lm.w5000$residuals
+    .smoothScatter(df$g, lm.w5000$fitted.values, main = "Least squares model, 5000 extreme white values")
+    abline(0,1, col = "darkred", lty=2)
+    
+    coef(lm.w5000); summary(lm.w5000)$sigma
+    #  (Intercept)    upperTRUE            b       w5000          sigma
+    #  871.2298981   22.8992816    0.6554789   0.3154575       205.4668
+}
+
+# fit model with 5000 extreme black values
+{
+    df$b5000 <- df$w; df$b5000[sample(1:nrow(df), 5000)] <- 65535
+    
+    rlm.b5000 <- rlm(g ~ upper + b5000 + w, data = df)
+    r.res.b5000 <- rlm.b5000$residuals
+    .smoothScatter(df$g, rlm.b5000$fitted.values, main = "Robust model, 5000 extreme black values")
+    abline(0,1, col = "darkred", lty=2)
+    
+    round(coef(rlm.b5000), 7); summary(rlm.b5000)$sigma
+    #  (Intercept)    upperTRUE            w        b5000          sigma
+    # 4943.3638726   27.6964262    0.3038848   -0.0000463       147.7879
+    
+    # least squares fitting
+    lm.b5000 <- lm(g ~ upper + b5000 + w, data = df)
+    ls.res.b5000 <- lm.b5000$residuals
+    .smoothScatter(df$g, lm.b5000$fitted.values, main = "Least squares model, 5000 extreme black values")
+    abline(0,1, col = "darkred", lty=2)
+    
+    round(coef(lm.b5000), 7); summary(lm.b5000)$sigma
+    #  (Intercept)    upperTRUE            b        b5000          sigma
+    # 4426.3433383   21.5855028    0.3146186   -0.0000687       312.5519
+}
+
+# fit model with thresholded & trimmed data
+{
+    df$th <- findInterval(df$b, asymmetric.mad(df$b)) * findInterval(df$g, asymmetric.mad(df$g))
+    lm.th <- lm(g ~ upper + b + w, data = df[df$th == 1,])
+    rlm.th <- rlm(g ~ upper + b + w, data = df[df$th == 1,])
+}
+
+zz <- cbind(rbind(coef(lm.141009), coef(rlm.141009),
+                  coef(lm.w5000), coef(rlm.w5000), coef(lm.b5000), coef(rlm.b5000),
+                  coef(lm.w50000), coef(rlm.w50000), coef(lm.b50000), coef(rlm.b50000),
+                  coef(lm.bx50000), coef(rlm.bx50000)),
+            c(summary(lm.141009)$sigma, summary(rlm.141009)$sigma,
+              summary(lm.w5000)$sigma, summary(rlm.w5000)$sigma, summary(lm.b5000)$sigma, summary(rlm.b5000)$sigma,
+              summary(lm.w50000)$sigma, summary(rlm.w50000)$sigma, summary(lm.b50000)$sigma, summary(rlm.b50000)$sigma,
+              summary(lm.bx50000)$sigma, summary(rlm.bx50000)$sigma))
+
+pp <- cbind(rbind(coef(lm.th), coef(rlm.th)), 
+            c(summary(lm.th)$sigma, summary(rlm.th)$sigma),
+            c(F, T), c("-", "-"))
+      
+models <- rbind(models, setNames(data.frame(pp), nm = colnames(models)))
+rownames(models)[13:14] <- c("lm.th", "rlm.th")
+
+
+models <- setNames(data.frame(zz), nm = c("os", "u", "b", "w", "sigma"))
+rownames(models) <- c("lm", "rlm", "lm.w5000", "rlm.w5000", "lm.b5000", "rlm.b5000",
+                      "lm.w50000", "rlm.w50000", "lm.b50000", "rlm.b50000", "lm.bx50000", "rlm.bx50000")
+models$robust <- rep(c(F, T), 6)
+models$var <- c("-", "-", "w", "w", "b", "b", "w", "w", "b", "b", "b", "b", "th", "th")
+
+write.csv(models, paste0(fpath, "models-with-extreme-values.csv"), quote = F)
+
+attach(models)
+
+format(models, scientific = F)
+
+plot(os, b, pch = c(4, 20, 0, 1)[as.factor(var)], col = c("black", "green3")[(robust == T)+1])
+# changes to black values have strong effect on coefficient of b - absorbed by change in offset.
+
+plot(b, w, pch = c(4, 20, 0, 1)[as.factor(var)], col = c("black", "green3")[(robust == T)+1])
+# coefficient of w is fairly consistent - dominates the model
+
+plot(w, sigma, pch = c(4, 20, 0, 1)[as.factor(var)], col = c("black", "green3")[(robust == T)+1])
+# robust modelling always has lower sigma
+# threshold the data to be extre sure (since we're already doing so)
+
+####################################################################################################
+
+# TO FILTER OR NOT TO FILTER?                                                                   ####
+fpath <- "./Image-plots/linear-res/"
+acq.names <- c("130613", "130701", "131002", "131122", "140128", "140129", "141009", "141118", "141217",
+               "150108", "150113", "150126", "150529", "150730", "150828", "151015", "160314", "160430",
+               "160705", "loan2", "loan", "MCT225")
+
+invisible(lapply(acq.names,
+                 function(dt) {
+                     im <- load.objects("./02_Objects/images/", otype = "pwm", acq.list = dt)
+                     df <- setNames(data.frame(melt(im[, , "black", dt]), 
+                                               melt(im[, , "grey", dt]), 
+                                               melt(im[, , "white", dt]))[, c("X1", "X2", "value", "value.1", "value.2")],
+                                    nm = c("x", "y", "b", "g", "w"))
+                     df$upper <- df$y > 1024.5
+                     df <- df[!is.na(df$g),]
+                     df$th <- findInterval(df$b, asymmetric.mad(df$b)) * findInterval(df$g, asymmetric.mad(df$g))
+                     
+                     lm.full <- lm(g ~ upper + b + w, data = df)
+                     rlm.full <- rlm(g ~ upper + b + w, data = df)
+                     lm.th <- lm(g ~ upper + b + w, data = df[df$th == 1,])
+                     rlm.th <- rlm(g ~ upper + b + w, data = df[df$th == 1,])
+                     
+                     coeffs <- rbind(coef(lm.full), coef(rlm.full), coef(lm.th), coef(rlm.th))
+                     sig <- c(summary(lm.full)$sigma, 
+                              summary(rlm.full)$sigma, 
+                              summary(lm.th)$sigma,
+                              summary(rlm.th)$sigma)
+                     px.removed <- rep(c(0, sum(df$th != 1)), each = 2)
+                     npx <- c(sum(findInterval(lm.full$residuals, asymmetric.mad(lm.full$residuals)) != 1),
+                              sum(findInterval(rlm.full$residuals, asymmetric.mad(rlm.full$residuals)) != 1),
+                              sum(findInterval(lm.th$residuals, asymmetric.mad(lm.th$residuals)) != 1),
+                              sum(findInterval(rlm.th$residuals, asymmetric.mad(rlm.th$residuals)) != 1))
+                     
+                     df$res.lm.full <- df$g - predict(lm.full, df)
+                     df$res.rlm.full <- df$g - predict(rlm.full, df)
+                     df$res.lm.th <- df$g - predict(lm.th, df)
+                     df$res.rlm.th <- df$g - predict(rlm.th, df)
+                     
+                     zz <- setNames(data.frame(model = c("lm.full", "rlm.full", "lm.th", "rlm.th"), 
+                                               robust = rep(c(F, T), 2),
+                                               filtered = rep(c(F, T), each = 2),
+                                               coeffs, sig, px.removed, npx),
+                                    c("model", "robust", "filtered", "os", "u", "b", "w", "sigma", "omitted", "nonlinear"))
+                     
+                     write.csv(zz, paste0(fpath, "th-vs-full-", dt, ".csv"), quote = F, row.names = F)
+                     
+                     bmp(paste0(fpath, "th-vs-full-px-", dt, ".bmp"), height = 960 * 2, width = 960 * 2); {
+                         par(mfrow = c(2,2), mar = c(2,2,3,1))
+                         pixel.plot(df[df$th != 1,], col = "skyblue", main = paste0("Least squares, all data - ", dt))
+                         points(df[findInterval(df$res.lm.full, asymmetric.mad(df$res.lm.full)) != 1,],
+                                pch = 15, cex = 0.4)
+                         
+                         pixel.plot(df[df$th != 1,], col = "skyblue", main = paste0("Robust, all data - ", dt))
+                         points(df[findInterval(df$res.rlm.full, asymmetric.mad(df$res.rlm.full)) != 1,],
+                                pch = 15, cex = 0.4)
+                         
+                         pixel.plot(df[df$th != 1,], col = "skyblue", main = paste0("Least squares, filtered"))
+                         points(df[findInterval(df$res.lm.th, asymmetric.mad(df$res.lm.th)) != 1 & df$th == 1,],
+                                pch = 15, cex = 0.4)
+                         
+                         pixel.plot(df[df$th != 1,], col = "skyblue", main = paste0("Robust, filtered"))
+                         points(df[findInterval(df$res.rlm.th, asymmetric.mad(df$res.rlm.th)) != 1 & df$th == 1, ],
+                                pch = 15, cex = 0.4)
+                         dev.off()
+                     }
+                     
+}))
+
+qq <- lapply(acq.names, 
+             function(dt) {
+                 mm <- read.csv(paste0(fpath, paste0(fpath, "th-vs-full-", dt, ".csv")), row.names = 1)
+})
+
+qq.all <- rbind.fill(qq)
