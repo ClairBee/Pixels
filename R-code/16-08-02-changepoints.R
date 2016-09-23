@@ -424,7 +424,7 @@ cc <- bcp(res.smoo[773,])
 
 # ecp
 {
-    ed <- e.divisive(res.smoo[773,146:1019])
+    ed <- e.divisive(md7[773,146:1019])
 }
 
 # segmented

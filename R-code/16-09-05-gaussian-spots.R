@@ -192,3 +192,23 @@ s.160430.l <- gaussian.spot.ls(adj.l,
 pixel.image(pw.m[,,"grey", dt] - pw.m[,,"black", dt])
 contour(1:2048, 1:2048, gaussian.spot.mat(s.160430.u$par), add = T, drawlabels = F, lty = 1, lwd = 2)
 contour(1:2048, 1:2048, gaussian.spot.mat(s.160430.l$par), add = T, drawlabels = F, lty = 2, lwd = 2)
+
+
+####################################################################################################
+
+# APPLY TO ALL IMAGES, GET RESIDUALS                                                            ####
+
+spot.models <- read.csv("./Other-data/Gaussian-spots.csv", row.names = 1)
+spot.models["160705", 1:5] <- spot.models["160705", 7:11]
+spot.models <- spot.models[,1:5]
+
+pw.m <- load.objects("./02_Objects/images/", otype = "pwm")
+
+invisible(lapply(rownames(spot.models[3:22,]), 
+                 function(dt) {
+                     fv <- gaussian.spot.mat(unlist(spot.models[dt,]))
+                     res <- pw.m[,,"grey", dt] - pw.m[,,"black", dt] - fv
+                     saveRDS(res, paste0("./02_Objects/spot-res/s-res-", dt, ".rds"))
+                }))
+
+spot.res <- load.objects("./02_Objects/spot-res/", otype = "s-res")

@@ -668,9 +668,166 @@ invisible(lapply(acq.names,
                      
 }))
 
-qq <- lapply(acq.names, 
+qq <- sapply(acq.names, 
              function(dt) {
-                 mm <- read.csv(paste0(fpath, paste0(fpath, "th-vs-full-", dt, ".csv")), row.names = 1)
-})
+                 mm <- read.csv(paste0(fpath,  "th-vs-full-", dt, ".csv"), row.names = 1)
+}, simplify = F)
 
 qq.all <- rbind.fill(qq)
+rownames(qq.all) <- paste(rep(acq.names, each = 4), rep(row.names(qq[[1]]),22), sep = ".")
+
+write.csv(qq.all, paste0(fpath, "all-models-th-robust.csv"), quote = F, row.names = T)
+
+
+attach(qq.all)
+
+# check # pixels identified with thresholding & without
+# orange = LS fitted, black = robust
+plot(nonlinear[filtered], nonlinear[!filtered], pch = 20, xlab = "Filtered", ylab = "Unfiltered", 
+     main = "Nonlinear px identified", col = c("orange", "black")[robust+1])
+abline(0,1,col = "red", lty = 2)
+# unfair test: if px were high, values were removed. Large areas of v. high-valued px in corners
+
+plot(sigma[filtered], sigma[!filtered], pch = 20, xlab = "Filtered", ylab = "Unfiltered", 
+     main = "RMSE", col = c("orange", "black")[robust+1])
+abline(0,1,col = "red", lty = 2)
+
+# RMSE almost exactly the same in robust fitting. Higher without filtering in least-squares fitting.
+
+
+# what about increasing large # pixels by an offset?
+dt <- "141009"
+
+im <- load.objects("./02_Objects/images/", otype = "pwm", acq.list = dt)
+df <- setNames(data.frame(melt(im[, , "black", dt]), 
+                          melt(im[, , "grey", dt]), 
+                          melt(im[, , "white", dt]))[, c("X1", "X2", "value", "value.1", "value.2")],
+               nm = c("x", "y", "b", "g", "w"))
+df$upper <- df$y > 1024.5
+
+# additional offset, uniform between 10000 & 30000, truncated at max GV
+df$b[s] <- df$b[s] + a; df$g[s] <- df$g[s] + a; df$w[s] <- df$w[s] + a
+df[df > 65535] <- 65535
+
+rlm.full <- rlm(g ~ upper + b + w, data = df)
+
+coef(rlm.full)
+
+.smoothScatter(df$g, df$w)
+
+####################################################################################################
+
+# FIT ALL LINEAR MODELS, STORE RESIDUALS                                                        ####
+
+acq.names <- c("130613", "130701", "131002", "131122", "140128", "140129", "141009", "141118", "141217",
+               "150108", "150113", "150126", "150529", "150730", "150828", "151015", "160314", "160430",
+               "160705", "loan2", "loan", "MCT225")
+
+linear.models <- list()
+
+# get residuals for each image in turn
+invisible(lapply(acq.names,
+                 function(dt) {
+                     im <- load.objects("./02_Objects/images/", otype = "pwm", acq.list = dt)
+                     df <- setNames(data.frame(melt(im[, , "black", dt]), 
+                                               melt(im[, , "grey", dt]), 
+                                               melt(im[, , "white", dt]))[, c("X1", "X2", "value", "value.1", "value.2")],
+                                    nm = c("x", "y", "b", "g", "w"))
+                     df$upper <- df$y > 1024.5
+
+                     model <- rlm(g ~ upper + b + w, data = df)
+                     res <- array(df$g - predict(model, newdata = df), dim = dim(im[,,1, dt]))
+                     saveRDS(res, paste0("./02_Objects/linear-res/l.res-", dt, ".rds"))
+                     
+                     linear.models[[dt]] <<- c(coef(model), sigma = summary(model)$sigma, 
+                                              rmse = sqrt(sum(res^2, na.rm = T) / sum(!is.na(res))))
+                 }))
+
+all.models <- do.call("rbind", linear.models)
+
+write.csv(all.models, "./02_Objects/linear-res/models-fitted.csv", quote = F, row.names = T)
+
+####################################################################################################
+
+# LINEAR RESPONSE VS SHADING CORRECTION?                                                        ####
+
+im <- load.objects("./02_Objects/images/", otype = "pwm", acq.list = "loan")[,,,1]
+l.res <- load.objects("./02_Objects/linear-res/", otype = "l-res", acq.list = "loan")[,,1]
+sc <- shading.corrected(im)
+
+sc <- sc[!is.na(l.res)]; l.res <- l.res[!is.na(l.res)]
+.smoothScatter(sc, l.res, xlab = "Shading-corrected value", ylab = "Linear residuals")
+abline(line(sc, l.res), col = "darkred", lty = 2)
+
+####################################################################################################
+
+# FITTED RESPONSE VS EXPECTED?                                                                  ####
+
+l.res <- load.objects("./02_Objects/linear-res/", otype = "l-res", acq.list = c("141009", "loan", "160430"))
+pw.m <- load.objects("./02_Objects/images/", otype = "pwm", acq.list = c("141009", "loan", "160430"))
+
+l.model <- pw.m[,,"grey",] - l.res
+exp <- array(apply(pw.m, 4, function(im) 0.75 * im[,,"black"] + 0.25 * im[,,"white"]), dim = dim(pw.m[,,"white",]), dimnames = dimnames(pw.m[,,"grey", ]))
+
+# fitted vs expected
+{
+    .smoothScatter(l.model[,,"160430"], exp[,,"160430"], xlab = "Fitted", ylab = "Expected", main = "160430")
+    abline(0,1,col = "darkred", lty = 2)
+    
+    .smoothScatter(l.model[,,"141009"], exp[,,"141009"], xlab = "Fitted", ylab = "Expected", main = "141009")
+    abline(0,1,col = "darkred", lty = 2)
+    
+    .smoothScatter(l.model[,,"loan"], exp[,,"loan"], xlab = "Fitted", ylab = "Expected", main = "loan")
+    abline(0,1,col = "darkred", lty = 2)
+}
+
+# expected vs actual
+{
+    .smoothScatter(pw.m[,,"grey","160430"], exp[,,"160430"], xlab = "Observed", ylab = "Expected", main = "160430")
+    abline(0,1,col = "darkred", lty = 2)
+    
+    .smoothScatter(pw.m[,,"grey","141009"], exp[,,"141009"], xlab = "Observed", ylab = "Expected", main = "141009")
+    abline(0,1,col = "darkred", lty = 2)
+    
+    .smoothScatter(pw.m[,,"grey","loan"], exp[,,"loan"], xlab = "Observed", ylab = "Expected", main = "loan")
+    abline(0,1,col = "darkred", lty = 2)
+}
+
+# fitted vs actual
+{
+    .smoothScatter(pw.m[,,"grey","160430"], l.model[,,"160430"], xlab = "Observed", ylab = "Fitted", main = "160430")
+    abline(0,1,col = "darkred", lty = 2)
+    
+    .smoothScatter(pw.m[,,"grey","141009"], l.model[,,"141009"], xlab = "Observed", ylab = "Fitted", main = "141009")
+    abline(0,1,col = "darkred", lty = 2)
+    
+    .smoothScatter(pw.m[,,"grey","loan"], l.model[,,"loan"], xlab = "Observed", ylab = "Fitted", main = "loan")
+    abline(0,1,col = "darkred", lty = 2)
+}
+
+####################################################################################################
+
+# COMPARISON OF ASYMMETRIC MAD BY IMAGE                                                         ####
+
+m.b <- apply(pw.m[,,"black",], 3, function(im) abs(modal.density(im) - asymmetric.mad(im, n = 1)))
+m.g <- apply(pw.m[,,"grey",], 3, function(im) abs(modal.density(im) - asymmetric.mad(im, n = 1)))
+m.w <- apply(pw.m[,,"white",], 3, function(im) abs(modal.density(im) - asymmetric.mad(im, n = 1)))
+
+all.mad <- data.frame(b.l = m.b[1,], b.u = m.b[2,],
+                      g.l = m.g[1,], g.u = m.g[2,],
+                      w.l = m.w[1,], w.u = m.w[2,])
+
+plot(m.b[1,], m.b[2,], pch = 20, xlim = c(0,10000), ylim = c(0,10000))
+points(m.g[1,], m.g[2,], pch = 20, col = "green3")
+points(m.w[1,], m.w[2,], pch = 20, col = "gold")
+
+
+invisible(lapply(dimnames(pw.m)[[4]],
+               function(dt) {
+                   bmp(paste0("./Image-plots/Shading-corrections/shading-correction-", dt, ".bmp"),
+                       width = 2048, height = 2048, pointsize = 28); {
+                       pixel.image(shading.corrected(pw.m[,,,dt]), 
+                                   title = paste0(dt, " - shading corrected"))
+                           dev.off()
+                   }
+               }))
