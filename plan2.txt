@@ -2,27 +2,29 @@
 
 AIM TO COMPLETE BY THURSDAY 29TH SEPTEMBER:
 
-    + write up thresholding (variables used)
-        + linear response
-        + Gaussian spot response
+    . write up thresholding (variables used)
+        . linear response
+        . Gaussian spot response
 
-    + code bad pixel detection, get bad pixel map for all images
+    . code bad pixel detection, get bad pixel map for all images
     
-    + code feature detection
-        + lines
-        + clusters
-        + dense regions
+    . code feature detection
+        . lines
+        . clusters
+        . dense regions
         
-    + write up feature detection
-        + lines
-        + clusters
-        + dense regions
-        + screen spots
+    o rework dense feature detection to ignore lines (need to do this before rows/columns)
         
-    + produce R script to run report
-        + also include power settings & mean value obtained (overall & in central region)
-        + counts of features identified
-        + evaluate damage in central region (as in manual) vs over whole detector
+    o write up feature detection
+        . screen spots
+        o lines
+        o clusters
+        o dense regions
+        
+    o produce R script to run report
+        o also include power settings & mean value obtained (overall & in central region)
+        o counts of features identified
+        o evaluate damage in central region (as in manual) vs over whole detector
 
 ####################################################################################################
 
