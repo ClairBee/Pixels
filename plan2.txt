@@ -13,14 +13,23 @@ AIM TO COMPLETE BY THURSDAY 29TH SEPTEMBER:
         . clusters
         . dense regions
         
-    o rework dense feature detection to ignore lines (need to do this before rows/columns)
+    . rework dense feature detection to ignore lines (need to do this before rows/columns)
+    . also need to rework to pick up double/triple columns
+    . and to enumerate numbers of features automatically 
         
     o write up feature detection
         . screen spots
-        o lines
-        o clusters
+        . lines
+        . clusters
         o dense regions
         
+    o write functions for spatial analysis
+    o check aggregation with and without cluster bodies (in cropped image)
+    o quadrat tests to check subpanel, vertical & horizontal homogeneity
+    o F, G and K-functions with and without IPP fitted: check for CSR beyond inhomogeneity
+        o any patterns in inhomogeneity across distinct images?
+        o 
+    
     o produce R script to run report
         o also include power settings & mean value obtained (overall & in central region)
         o counts of features identified
@@ -40,5 +49,6 @@ NEXT STEPS:
         + quadrat tests, G-functions, F-functions, K-functions
         + with and without clustered features
         
+    + specify areas most affected by dense regions (always attached to an edge?)
     
     + persistence/progression of defects

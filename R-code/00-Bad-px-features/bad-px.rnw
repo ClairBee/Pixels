@@ -1,0 +1,112 @@
+\documentclass[10pt,fleqn, landscape]{article}
+\usepackage{/home/clair/Documents/mystyle}
+% add document-specific packages here
+
+\titleformat{\section}
+    {\normalfont\bfseries}
+    {\llap{\parbox{1cm}{\thesection}}}{0em}{}
+    
+\addtolength{\topmargin}{-0.5cm}
+\addtolength{\textheight}{1cm}
+    
+\begin{document}
+\renewenvironment{knitrout}{\vspace{1em}}{\vspace{1em}}
+<<setup, include=FALSE>>=
+opts_chunk$set(size = 'footnotesize',   # smaller font size for chunks
+               out.width = '0.45\\textwidth',   # default figure size = quarter of text width
+               fig.show = 'hold',   # display all figures at end of chunk
+               fig.align='center',
+               echo = F)
+options(width = 80, digits = 4)
+set.seed(24747)
+library(xtable)
+org.par <- par()        # save default parameters in case needed later
+
+library("IO.Pixels")
+dt <- "MCT225"
+if (dt == "MCT225") {ml <- NA} else {ml <- 1024.5}
+
+px <- readRDS(paste0("../../02_Objects/pixel-maps/pixel-map-", dt, ".rds"))
+@
+
+
+
+\section*{\Sexpr{dt}}
+% ----------------------------------------------------------------------
+
+<<table-px-features, results = 'asis'>>=
+
+# check multi-pixel features
+mc <- count.columns(px, midline = ml)
+if(is.null(mc)) {
+    multicol <- ""
+} else {
+    multicol <- paste0(". Columns by width: ",
+                       paste(apply(count(mc$width), 1, 
+                                   function(rr) {paste0(rr["freq"], " x ", rr["x"], "px")}), 
+                             collapse = ", "))
+}
+
+px$f.type <- ordered(px$f.type, levels = c("singleton", "cl.root", "cl.body", "line.c", "line.r", "s.spot", "dense.region"))
+
+px.tbl <- table(px$f.type, px$type, useNA = "ifany")
+
+px.tbl <- cbind(px.tbl, rowSums(px.tbl))
+px.tbl <- rbind(px.tbl, colSums(px.tbl))
+
+px.tbl[px.tbl == 0] <- "-"
+colnames(px.tbl) <- c("Hot", "Dark", "V bright", "Bright", "S bright", "L bright", "Dim", "L dim", "NL bright",
+                      "NL dim", "Spot bright", "Spot dim", " ")
+rownames(px.tbl) <- c("Single px", "Cluster root", "Cluster body", "Column", "Row", "Screen spot", "Dense region", "")
+
+print(xtable(px.tbl, row.names = rownames(px.tbl), 
+             align = "l|cc|cccc|cc|cccc|c",
+             caption = paste0("Pixels and features identified", multicol)),
+          hline.after = c(0,5, 7),
+          caption.placement = "top", 
+        size = "footnotesize", 
+        table.placement = "!h")
+@
+
+<<table-cluster-counts, results = 'asis'>>=
+cl <- count.clusters(px)
+p.cl <- count.clusters(px, check.dir = T)
+
+struc <- paste(c("l", sapply(c("single", "double", "small", "medium", "large", "mega", "error"),
+                  function(sz) {
+                      paste(c(rep("|", sum(cl$type == sz) > 0), rep("c", sum(cl$type == sz))), collapse = "")
+                  }), "|"), collapse = "")
+
+th <- paste(c(sapply(c("single", "double", "small", "medium", "large", "mega", "error"),
+             function(sz) {
+                 if (sum(cl$type == sz) == 0) {
+                     ""
+                 } else {
+                     if (sum(cl$type == sz) == 1) {
+                         paste0("& ", sz)
+                     } else {
+                         paste0("& \\multicolumn{", sum(cl$type == sz), "}{c|}{", sz, "}")
+                     }
+                 }}), "\\\\ ", paste("&", cl$dir, collapse = ""), "\\\\"), collapse = "")
+    
+
+print(xtable(t(cl[,3]), row.names = c("freq"),
+             align = struc,
+             caption = paste0("Cluster sizes \\& directions observed; direction difference (",
+                              round(p.cl$conf.int[1], 2), ", ", round(p.cl$conf.int[2], 2), "), p = ", round(p.cl$p.value, 3))),
+          add.to.row = list(pos = list(0), command = c(th)), 
+          include.colnames = F,
+          hline.after = c(0),
+          caption.placement = "top", 
+        size = "footnotesize", 
+        table.placement = "!h")
+@
+
+\vspace{-6pt}
+
+<<plot-pixel-types, out.width = '0.4\\textwidth'>>=
+pixel.plot(px, col = px.cols()[px$type], main = "Pixels by type")
+pixel.plot(px, col = c("gold", "green", "green3", "black", "blue", "grey", "magenta3")[px$f.type], main = "Pixels by feature")
+@
+
+\end{document}

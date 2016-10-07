@@ -236,3 +236,45 @@ df <- df[order(rownames(df)),]
  md <- array(md, dim = c(2048, 2048, 3))
  saveRDS(pw.m[,,,to.add[1]] - md, paste0("./02_Objects/med-diffs/md7-", to.add[1], ".rds"))
  
+ ############################################################################################
+ 
+ # FEATURE IDENTIFICATION                                                                ####
+ 
+ # label all feature types
+ {
+     process.img <- function(dt) {
+         
+         px <- bad.pixel.map(dt)
+         
+         cat(dt, "starting px:", nrow(px), "-")
+         
+         # screen spots
+         sp <- readRDS(paste0("./02_Objects/pixel-maps/screen-spots-", dt, ".rds"))
+         px <- label.screen.spots(px, sp) 
+         
+         # dense regions
+         px <- dense.regions(px) 
+         
+         # lines
+         px <- find.columns(px)
+         px <- find.rows(px)
+         
+         # clusters
+         px <- find.clusters(px)
+         
+         # remaining pixels must be singletons
+         px$f.type[is.na(px$f.type)] <- "singleton"
+         
+         px$f.type <- factor(px$f.type)
+         
+         saveRDS(px, paste0("./02_Objects/pixel-maps/pixel-map-", dt, ".rds"))
+         cat(" final px:", nrow(px), "\n")
+     }
+     
+     imgs <- gsub("\\.rds", "", gsub("pwm-", "", list.files("./02_Objects/images")))
+     
+     invisible(lapply(imgs[20:22], process.img))
+     
+     process.img("141009")
+     
+ }
