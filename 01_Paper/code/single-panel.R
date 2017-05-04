@@ -1,7 +1,7 @@
 
 library("IO.Pixels")
 
-dt <- "130613"
+dt <- "loan3"
 px <- readRDS(paste0("./02_Objects/pixel-maps/pixel-map-", dt, ".rds"))
 
 # rework column detection:
@@ -15,8 +15,80 @@ px <- readRDS(paste0("./02_Objects/pixel-maps/pixel-map-", dt, ".rds"))
 
 # IMPORT NEW IMAGES                                                                             ####
 
-# load 20 black, 20 grey, 20 white images
-# find median residuals, linear residuals, Gaussian spot residuals; save as objects
+# load 20 black, 20 grey, 20 white images; get pixelwise mean values
+{
+    image.path <- paste0("./Image-data/", dt)
+    pw.m <- array(dim = c(2048, 2048, 3), dimnames = list(NULL, NULL, c("black", "grey", "white")))
+    
+    invisible(lapply(dimnames(pw.m)[[3]],
+                     function(cc) {
+                         im.data <- xmlToList(xmlParse(list.files(paste0(image.path, cc, "/"), pattern = "\\.xml$", full.names = T)[1]))
+                         
+                         x.offset <- as.integer(im.data$CameraProperties$imageOffsetX)
+                         y.offset <- as.integer(im.data$CameraProperties$imageOffsetY)
+                         x.size <- as.integer(im.data$CameraProperties$imageSizeX)
+                         y.size <- as.integer(im.data$CameraProperties$imageSizeY)
+                         
+                         im.list <- list.files(paste0(image.path, cc), pattern = "\\.tif$", full.names = T)
+                         
+                         imp <- abind(lapply(im.list, readTIFF, as.is = T), along = 3)
+                         pwm <- apply(imp, 1:2, mean)
+                         pw.m[x.offset + c(1:x.size), y.offset + c(1:y.size), cc] <- t(pwm[nrow(pwm):1, , drop=FALSE])
+                     }))
+    
+    saveRDS(pw.m, paste0("./02_Objects/images/pwm-", dt, ".rds"))
+}
+
+
+# find median residuals
+{
+    md7 <- apply(pw.m, 3,
+                 function(im) {
+                     im - r2m(focal(m2r(im), matrix(rep(1, 49), ncol = 7), fun = median))
+                 })
+    md7 <- array(md7, dim = dim(pw.m), dimnames = dimnames(pw.m))
+    saveRDS(md7, paste0("./02_Objects/med-diffs/md7-", dt, ".rds"))
+}
+
+
+# linear residuals
+{
+    linear.res <- fit.gv.lm(pw.m)
+    saveRDS(linear.res, paste0("./02_Objects/linear-res/l-res-", dt, ".rds"))
+}
+
+
+# Gaussian spot residuals
+{
+    # fit constrained model
+    zz <- gaussian.spot.ls(pw.m[,,"grey"] - pw.m[,,"black"],
+                           c(A = 15000, x0 = 1024.5, y0 = 1024.5, sig.x = 500, sig.y = 500),
+                           x0.target = c(768, 1280), y0.target = c(768, 1280))
+    zz$rmse <- sqrt(zz$value / sum(!is.na(pw.m[,,"grey"] - pw.m[,,"black"])))
+    zz$rmse
+    
+    # check for x0, y0 on boundary
+    if (zz$par["x0"] %in% c(768, 1280) | zz$par["y0"] %in% c(768, 1280)) {
+        
+        # if found, fit unconstrained model
+        fm <- gaussian.spot.ls(pw.m[,,"grey"] - pw.m[,,"black"],
+                               c(A = 15000, x0 = 1024.5, y0 = 1024.5, sig.x = 500, sig.y = 500))
+        names(fm$par) <- apply(cbind("fm.", names(fm$par)), 1, paste, collapse = "")
+        fm$rmse <- sqrt(fm$value / sum(!is.na(pw.m[,,"grey"] - pw.m[,,"black"])))
+        df <- data.frame(acq = toString(dt), t(zz$par), rmse = rmse, 
+                         t(fm$par), fm.rmse = fm.rmse, 
+                         stringsAsFactors = F)
+        fm$rmse
+    }
+    
+    # if free rmse is small - say, less than 300 - and constrained rmse is large,
+    # use free model. Otherwise, use constrained model.
+    
+    spot.res <- pw.m[,,"grey"] - pw.m[,,"black"] - gaussian.spot.mat(zz$par)
+    saveRDS(spot.res, paste0("./02_Objects/spot-res/s-res-", dt, ".rds"))
+}
+
+
 
 ####################################################################################################
 
@@ -64,9 +136,11 @@ bad.pixel.map <- function(dt) {
 }
 
 px <- bad.pixel.map(dt)
+saveRDS(px, paste0("./02_Objects/pixel-maps/pixel-map-", dt, ".rds"))
 
 pixel.plot(px, col = px.cols()[px$type])
 table(px$type)
+
 
 ####################################################################################################
 
@@ -101,9 +175,6 @@ saveRDS(px, paste0("./02_Objects/pixel-maps/pixel-map-", dt, ".rds"))
 
 # FEATURES BY SIZE                                                                              ####
 
-dt <- "130613"
-px <- readRDS(paste0("./02_Objects/pixel-maps/pixel-map-", dt, ".rds"))
-
 count.columns(px, midline = 1024.5)
 
 
@@ -112,7 +183,7 @@ count.clusters(px)
 count.clusters(px, check.dir = T)
 
 
-####################################################################################################
+lunch####################################################################################################
 
 # CLUSTERING BEHAVIOUR                                                                          ####
 
@@ -152,3 +223,5 @@ blah <- px2ppp(all.px[!(all.px$f.type %in% c("s.spot", "dense.region", "line.c",
 
 plot(blah, pch = 15, cex = 0.4, asp = T)
 draw.panels(col = "skyblue")
+
+

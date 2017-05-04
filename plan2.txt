@@ -1,7 +1,5 @@
 ####################################################################################################
 
-AIM TO COMPLETE BY THURSDAY 29TH SEPTEMBER:
-
     . write up thresholding (variables used)
         . linear response
         . Gaussian spot response
@@ -23,6 +21,21 @@ AIM TO COMPLETE BY THURSDAY 29TH SEPTEMBER:
         . clusters
         o dense regions
         
+    o write up case studies: discuss pixels identified
+        - compare categories identified/not by system map
+        - pixels in system map NOT in original map
+        - behaviour in shading correction of pixels not identified by system map
+            - compare histogram of SC of 'official' good px vs my good px: outliers?
+        - would it help to identify offset defects? (eg. ratio of B to G for remainder? vs SC?) 
+        o panel with known damage (old data)
+        o panel in current use (loan panel)
+    
+    o investigate persistence of deefects
+    
+    o investigate development of defects
+    
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+    
     o write functions for spatial analysis
     o check aggregation with and without cluster bodies (in cropped image)
     o quadrat tests to check subpanel, vertical & horizontal homogeneity

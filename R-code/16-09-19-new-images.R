@@ -1,7 +1,7 @@
 
 # import new data
 
-image.path <- "./Image-data/loan2/"
+image.path <- "./Image-data/loan3/"
 
 load.raw.images <- function(image.path) {
     
