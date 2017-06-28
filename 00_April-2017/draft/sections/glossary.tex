@@ -1,0 +1,55 @@
+\providecommand{\main}{..}					% fix bibliography path
+\documentclass[\main/IO-Pixels.tex]{subfiles}
+   
+%======================================================================
+
+\begin{document}
+
+\section{Glossary of terms used}
+
+\subsection{Definitions of defective pixel types}
+
+\nb{If using multiple sets of definitions (eg. `official' definitions, global/local thresholding, shading-corrected median differences, non-linearity), split them out \& try to give different names in each set}
+
+\begin{description}
+
+\item[Dark pixels] have approximately the same value in a bright image as in a dark image; they do not show any response to the presence of an x-ray source.
+
+\item[Nonlinear pixels] have a high residual in a linear regression model of the grey value fitted to the white and black values, indicating that the response to the x-ray source is not linear (as it should be).
+
+\end{description}
+
+%======================================================================
+
+\subsection{Definitions of defect features}
+
+\begin{description}
+
+\item[Columns] of defective pixels are vertical strips of adjacent defective pixels.
+
+\item[Double columns]
+
+\item[Cluster] \nb{split cluster types according to size, as in manual?}
+ 
+\end{description}
+
+%======================================================================
+
+\subsection{Other terminology}
+
+\begin{description}
+
+\item[Dark image -] pixelwise mean of a set of exposures taken without x-ray source, capturing \nb{/showing} the varying level of background electrical activity in the panel. Also known as a \textbf{black} or \textbf{offset} image.
+
+\item[Bright image -] pixelwise mean of a set of exposures taken with a right x-ray source, with the power settings adjusted to give a mean value of around 50000 grey values \nb{check this with Jay} for the whole image. Also known as a \textbf{white} or \textbf{gain} image.
+
+\item[Gain -] response to presence of x-ray source, calculated as pixelwise difference between dark image and bright image.
+
+\item[Readout dark -] steady accumulation of dark current as the charge is passed along the columns and rows towards the readout amplifier. Can be observed as increasing diagonal gradient across each subanel, away from the readout sensor.
+
+\item[GV (Grey Value) -] unit of measurement of pixel brightness. Sometimes also referred to as DN (Digital Number).
+
+\end{description}
+
+
+\end{document}

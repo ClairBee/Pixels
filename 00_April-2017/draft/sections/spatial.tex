@@ -1,0 +1,58 @@
+\providecommand{\main}{..}					% fix bibliography path
+\documentclass[../../IO-Pixels.tex]{subfiles}
+    
+   
+%======================================================================
+
+\begin{document}
+
+\section{Spatial analysis}
+%----------------------------------------------------
+\begin{outline}
+Spatial statistics 101 (point patterns, F-, G-, K-functions etc)
+
+Parametric model basics
+
+Parametric model to adjust for spatial inhomogeneity
+
+CSR testing using K-functions etc
+
+Patterns: singletons, pairs, clusters, lines, bright lines etc
+
+\\
+Above 
+
+- for all malfunctioning pixels and 
+
+- for subsets (dead, hot, dim etc)
+
+- also for spots on screen
+- how far do spots on screen move (on average) in successive images?
+- can movement of spots on screen be related to position of spot centre at all?
+
+\\
+Modeling: e.g. Neyman-Scott type, Matern, Thomas... models
+
+Intermediate discussion
+
++ compare distribution of cluster px vs cluster roots: no evidence of clustering once adjacent pixels are removed (eg. nothing at distance 1) suggests single defect, not aggregation of individual px
+
++ quadrat tests: any evidence for inhomogeneous distribution of defects?
+
++ IPP for points generally: exclude v. dense regions \& check homogeneity of remainder
+
++ spatial distribution of pixels by pixel type: does dist differ by type? \\
+\-\ + where it does, can this be related to spot pattern/shape of dark current?
+
+\\
++ Compare spatial distribution across different threshold types: `official' threshold/ nonlinear px/ our thresholds/ shading-corrected median differences / standard deviations. Hope to see similar intensity across all bad pixel maps
+\end{outline}
+%----------------------------------------------------
+
+\addfigure{Show G-, F- and normed K-functions for bad pixel map incl. all pixels, and feature roots only (cluster \& line bodies removed). Functions at very low ratios should show a high degree of clustering with adjacent pixels, but probably not with non-adjacent pixels. Removing only directly connected pixels as cluster features should show no evidence of clustering of defects.}
+\addfigure{Model spatial inhomogeneity as quadratic trend \& as kernel density. Show K-functions of both. Could fit other inhomogeneous models (eg. an elliptic with centre matching that of spot) - compare distance within }
+
+\addfigure{check quadrat plots across subpanels, but also double, half- \& quarter-subpanels (may need to use MC if expected n is too small) - is significant difference only across subpanels?}
+
+\addfigure{Consider moving thresholds between dim/dark, bright/hot etc; does this change anything?}
+\end{document}

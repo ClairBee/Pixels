@@ -1,0 +1,28 @@
+\providecommand{\main}{..}					% fix bibliography path
+\documentclass[\main/IO-Pixels.tex]{subfiles}
+    
+   
+%======================================================================
+
+\begin{document}
+
+\textcolor{orange}{Next steps... Identify all line segments, summarise lengths, types, locations, association with clusters etc. Write up thresholding \& run final classification code. Write up clustering, code clustering algorithm \& cluster root locator \& link cluster roots with line roots. Plot examples of clusters \& line defects, add to document. Look at movement of screen spots vs movement of response spot. Look at bright row at loan panel midline: how can this be picked up?}
+
+\textcolor{orange}{Also check operation of line-detection algorithm over MCT225 - NA midline is producing upside-down results. Changepoint needs to be corrected (always picks up whole column - should test non-zero mean instead, and if no changepoint, ignore dim/bright pixels)}
+
+\addfigure{check linear model - do we need to retain interaction between white \& black, or is just b + w sufficient?}
+
+\section{Other notes etc}
+
+\addfigure{Have I explained coordinate system? Do I need to mention it, even?}
+
+\addfigure{Column 256 in 141009 has a `charge trap' (cf. that paper on ANNs for defect classification) with a hot/dead pixel cluster at 354 and a short dark segment after it - approx. 100px. The whole column is c. 300px brighter than column 255 but is not detected as a bright line because it lies along a subpanel edge, and it seems to disappear in subsequent images. It all looks normal after shading correction}
+
+\addfigure{Look for charge traps generally - check `downstream' behaviour of all hot/dead pixels to see if this commonly occurs or not. Paper on ANNs treats this as `smearing' - probably related to the lag test in the manual, which is not included in our tests. Would be useful to identify a visible example}
+
+\addfigure{Note that defect finding may be rather simpler in x-ray imaging than astro-imaging, b/c of the relative ease of obtaining calibration images. However, dark images are routinely obtained in astrophotography \nb{cite Hubble} so a similar procedure will be applicable, perhaps using different exposures rather than different power settings.}
+
+\addfigure{Difference of 1-2\% between pixels is apparently normal (http://www.xparallax.com/blog/hot-cold-dead-pixels-and-cosmic-rays) in flat field: Can we use this in thresholding?}
+
+
+\end{document}

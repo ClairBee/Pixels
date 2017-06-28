@@ -1,0 +1,58 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{mystyle}
+
+\newcommand{\sftriple}[2]{
+    \begin{subfigure}[t]{0.32\textwidth}
+    \caption{#2}
+    \includegraphics[scale = 0.3]{#1}
+    \end{subfigure}
+}
+
+\begin{document}
+%----------------------------------------------------
+% pixelwise mean images 14-10-09
+\begin{figure}
+\caption{\nb{add legend} Pixelwise mean images from 14-10-09. This is the first acquisition taken from the main WMG panel after refurbishment, and is presented as an example of a panel that shows no significant local damage.\\
+\footnotesize{The black image shows a convex, roughly circular shape across the whole panel, with values lower than the mean in the centre, and higher at the edges of the panel. The grey and white images show a concave, roughly circular shape, having higher values in the centre and lower at the edges; there are a number of large dim flecks in the lower half of the panel, which are the shadows of specks of tungsten on the detector's beryllium window (see Section~\ref{sec:screen-spots}). In all three images, discontinuities across the edges of the 32 subpanels can be discerned quite clearly.}}
+ This pattern is typical of the other acquisitions observed, with the exception of the images taken from the `loan' panel, which has no discernible convexity in the black images. This difference may be related to the fact that the loan panel is a high-sensitivity model, or may be specific to that particular detector panel; without further examples, we cannot draw any conclusions.}}
+\label{fig:pwm-images}
+    %
+    \sftriple{../fig/exploratory/pwm-images/pwm-black-141009}{Mean black image}
+    %
+    \sftriple{../fig/exploratory/pwm-images/pwm-grey-141009}{Mean grey image}
+    %
+    \sftriple{../fig/exploratory/pwm-images/pwm-white-141009}{Mean white image}
+    
+\end{figure}
+%----------------------------------------------------
+
+%----------------------------------------------------
+% pixelwise mean histograms 14-10-09
+\begin{figure}
+    \centering
+    \caption{Histograms of observed pixelwise mean values in the images shown in Figure~\ref{fig:pwm-images}. The upper plot shows histograms of all observed pixel values; the lower has been cropped to show only the very bottom part of the frequency scale, to better show the spread of pixel values.
+    \\ \footnotesize{The small cluster of values in the cropped images of (b) and (c) would represent normal behaviour in a black image; these `dark pixels' show no gain in response to exposure to an x-ray source. In images where there are whole lines of such dark pixels, this peak would be much higher.}}
+    \label{fig:pwm-hists}
+    
+    \begin{subfigure}[t]{0.32\textwidth}
+        \caption{Mean black image}
+        \includegraphics[scale = 0.3]{../fig/exploratory/pwm-images/pwm-black-141009-hist}
+        \includegraphics[scale = 0.3]{../fig/exploratory/pwm-images/pwm-black-141009-hist-cropped}
+    \end{subfigure}
+    % 
+    \begin{subfigure}[t]{0.32\textwidth}
+        \caption{Mean grey image}
+        \includegraphics[scale = 0.3]{../fig/exploratory/pwm-images/pwm-grey-141009-hist}
+        \includegraphics[scale = 0.3]{../fig/exploratory/pwm-images/pwm-grey-141009-hist-cropped}
+    \end{subfigure}
+    % 
+    \begin{subfigure}[t]{0.32\textwidth}
+        \caption{Mean white image}
+        \includegraphics[scale = 0.3]{../fig/exploratory/pwm-images/pwm-white-141009-hist}
+        \includegraphics[scale = 0.3]{../fig/exploratory/pwm-images/pwm-white-141009-hist-cropped}
+    \end{subfigure}
+    % 
+    
+\end{figure}
+
+\end{document}

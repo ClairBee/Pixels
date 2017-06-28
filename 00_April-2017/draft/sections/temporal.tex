@@ -1,0 +1,38 @@
+\providecommand{\main}{..}					% fix bibliography path
+\documentclass[\main/IO-Pixels.tex]{subfiles}
+    
+   
+%======================================================================
+
+\begin{document}
+
+\section{Temporal analysis}
+%----------------------------------------------------
+\begin{outline}
+
+Transition frequencies/probabilities
+
++ short-term persistence: what \% of px in one image are still there in the next?\\
++ of those that persist, what \% persist for a third image?
+
+Evolution of different types of malfunctioning pixels separately
+
+Usage data analysis
+
+Intermediate discussion
+
++ Introduce more detailed set of categories here to assess severity of defect (better to track progress)
+
++ Change in rate of occurrence of each bad pixel type over time: constant over all subpanels?
+
++ Change in feature size: \\ \-\ do clusters grow gradually over time, or do they simply appear suddenly?\\ \-\ Track new clusters as they appear \& study progress.
+
++ Can we relate this to change in shape of response over time (spot model across each image set)
+
++ How rapidly do new dead pixels occur? Can we recommend how often a new bad pixel map should be created?
+\end{outline}
+%----------------------------------------------------
+
+\addfigure{Focus should probably be on short-term persistence of pixels: of features identified now, how many are likely to persist into next image? Don't want to over-specify to the single panel for which we have a lengthy sequence of images (although, maybe include as case study?)}
+
+\end{document}

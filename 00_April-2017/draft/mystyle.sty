@@ -1,0 +1,138 @@
+\ProvidesPackage{mystyle}
+
+%=============================================================================
+
+% my defined commands
+\newcommand{\nb}[1]{\textcolor{red}{\textit{[#1]}}}
+
+\newcommand{\todo}[1]{
+	\begin{minipage}{\textwidth}
+	\textcolor{black}{
+					\begin{tabular}{p{0.01\textwidth}p{0.95\textwidth}}
+						$\bullet$ & #1
+					\end{tabular}
+					}
+	\end{minipage}
+}
+
+\newcommand{\cb}[1]{
+	\begin{minipage}{\textwidth}
+	\textcolor{black}{
+					\begin{tabular}{p{0.01\textwidth}p{0.95\textwidth}}
+						$\bullet$ & #1
+					\end{tabular}
+					}
+	\end{minipage}
+}
+
+\newcommand{\ci}[1]{#1\% confidence interval}
+
+\def\rot{\rotatebox}	
+
+
+
+%=============================================================================
+% general packages & settings
+
+\usepackage{siunitx}            % properly formatted SI units (specifically, \SI{200}{\micro\meter})
+ 
+% bibliographies
+\usepackage[backend=biber, sorting = none, style = nature]{biblatex}	
+
+\usepackage[linesnumbered,ruled]{algorithm2e}
+
+\usepackage{float}							% allow \restylefloat{figure} and position [H] to fix float positions
+\usepackage[section]{placeins}				% allow \floatbarrier to control figure placement (esp. in knitr)
+											% silently places \floatbarrier before each section
+\usepackage{fp}						% allows calculation of variables
+
+\usepackage{lscape}							% allow single pages to be set to landscape format
+
+\usepackage{booktabs}                       % tidier tables
+
+\usepackage{nicefrac}
+\usepackage{mathtools}
+
+\usepackage[T1]{fontenc}				% supports nonstandard characters
+\usepackage{lmodern}
+\usepackage[scaled=0.8]{beramono}	% additional Bera Mono tt font
+
+\usepackage{setspace}
+\usepackage{multirow}
+%\usepackage{subfig}					% doesn't play nicely with 'caption'
+\usepackage{amsmath,amssymb,amsfonts,dsfont}
+\usepackage{fullpage}
+\usepackage{parskip} 				% stop indenting paragraphs
+\usepackage{changepage} 				% allow indenting of whole sections of text
+\usepackage{array}
+\usepackage{booktabs}				% better control over tabular environment
+\usepackage{titlesec}				% control over section heading styles
+
+\usepackage{fancyhdr}				% make nice headers
+
+%\usepackage[usenames,dvipsnames]{color}					% allow use of colour in R code (for example)
+\usepackage[usenames,dvipsnames, table]{xcolor} % has to be declared before tikz
+
+\usepackage{enumitem}				% stop indenting bullet points in itemized lists, fix spacing between list items
+    \setlist[itemize]{itemsep=5pt}
+    \setlist[itemize,1]{itemsep=5pt}
+    \setlist[enumerate]{itemsep=40pt, leftmargin=0cm}
+    \setlist[enumerate,1]{itemsep=40pt}
+    \setlist[description]{itemsep=0pt}
+
+
+
+
+% draw decision trees, Venn diagrams etc
+\usepackage{pgf}
+\usepackage{tikz}
+
+\usepackage{graphicx}
+\usepackage[top=1in, bottom=1in, left=1in, right=1in]{geometry}
+\usepackage{epstopdf}
+
+%\usepackage[none]{hyphenat}			% don't hyphenate words
+\usepackage{hyperref}				% allows hyperlinking of references
+
+\usepackage{caption}
+	 \captionsetup{font = small}
+     \captionsetup{singlelinecheck = false}	% stops centring captions if they fit on one line
+     \captionsetup{format = hang}		% indents caption to same width as table/fig with leftskip on it
+     \captionsetup{labelfont = bf}			% all captions will appear in bold font
+
+\usepackage{subcaption}
+	 \captionsetup[sub]{font = footnotesize}
+\usepackage{csvsimple}				% allows autotabular function to import data from an R-generated csv
+
+% define style for R code
+%\usepackage{courier}				% allows listings to use courier as its monotype tt font
+\usepackage{listings} 
+\lstset{language = R,
+	basicstyle = \ttfamily\footnotesize,
+    commentstyle = \color{blue}\textit,
+	keywordstyle = \color{purple},
+    tabsize = 4,
+    breakatwhitespace = true,
+	showspaces = false,
+    xleftmargin = .75cm,
+	extendedchars = true}
+          
+%=============================================================================
+    \definecolor{gold}{rgb}{1.0, 0.84, 0.0}
+    \definecolor{celadon}{rgb}{0.67, 0.88, 0.69}
+
+    \newcolumntype{M}[1]{>{\centering\arraybackslash}m{#1}}			% column type to allow vertical & horizontal centering with rotation
+
+%---------------------------------------------------------------------------------
+% Mark Fiecas declarations
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{assumption}{Assumption}
+\newtheorem{prop}{Proposition}[section]
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem{corollary}{Corollary}[section]
+\newtheorem{conjecture}{Conjecture}[section]
+\newtheorem{definition}{Definition}[section]
+\newtheorem{remark}{Remark}[section] 
+
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}

@@ -1,0 +1,101 @@
+\providecommand{\main}{..}					% fix bibliography path
+\documentclass[\main/IO-Pixels.tex]{subfiles}
+   
+\graphicspath{{\main/fig/exploratory/}}			% fix graphics path
+%======================================================================
+
+\begin{document}
+
+\section{Exploratory analysis of experimental data}
+%----------------------------------------------------
+\begin{outline}
+Means: overall and spatial distribution
+
+SDs: overall and spatial distribution
+
+Subpanels
+
+Refined definition of states in the experimental data; thresholds
+
+\\
++ Compare/assess `official' thresholds in manual: why do we need to change them? (eg. in 160430, pixels with gv 65535 in all images aren't picked up as defective because 150\% of white median value is > 65535) 
+
++ Other indicators of poor detector health: \\ \-\  \-\ - power in vs brightness out (\& how does this relate to non-normal response? If more power required, is dip in response uniform across panel, or local to specific regions?) \\ \-\  \-\ - success of shading correction (eg. non-normality: 131122 vs 160430) \\\-\  \-\ - difference from parametric spot model (should have approx. circular response)
+
++ Screen spots
+
++ Edge cropping
+
++ Parametric description of panel (esp. black images)
+
++ Comparison of images from several detectors
+
+% Many approaches to defect identification have been proposed (PCA, ANNs etc) - our main focus here is to identify all defects (even minor ones) \& evaluate their distribution, NOT simply to provide a new way of identifying defects. As such, our approach will classify as defective any pixel with an abnormal response (maybe should call them abnormal rather than defective, then?), so that we can assess whether minor abnormalities are likely to develop into significant problems or not.
+
+\end{outline}
+%----------------------------------------------------
+\addfigure{May be better to split out theoretical prep vs case studies?}
+
+Should probably formally limit our analysis to central region of detector (possibly as defined in manual?), since extreme edges are less likely to be of interest. Therefore can use median filtering etc without losing any data, since we are cropping the edge anyway.
+
+One of the main problems in a systematic investigation of defects within a detector panel is the absence of an objectively defined `gold standard', a model for the expected behaviour of the panel under normal operating conditions. Ideally, alongside the images acquired as part of the study, we would also examine a brand-new detector, in order to gain a more complete and accurate understanding of how the panel `should' behave. Unfortunately, images from a new detector were not available during the study period; however, we have a sequence of 14 acquisitions taken from the same detector over a period of 21 months, the first of which was obtained 10 months after a refurbishment \nb{confirm dates with Jay/Mark - when exactly was refurbishment? And how old was the panel at the time?}. No issues were reported by the operator until the end of the 21-month period, when the panel was replaced due to a problem with a readout sensor that affected a whole subpanel. Of the four distinct data sets included here (pilot data, main data, loan data, and Nikon/MCT225 data), the main data sequence is also the only one in which columns of dark pixels do not appear. We therefore take the earliest of this sequence of images as our closest available approximation to the behaviour of a new, undamaged detector.
+
+%Could report this as MAD from mean, instead of SD - more robust measure (may be particularly useful when dealing with images with lots of dead lines?
+
+\begin{figure}
+\caption{For ease of comparison, all pixel images will be shaded not according to their absolute values, but on this normalised scale, according to their spread from the image's mean value. Areas of extreme values can still be easily identified, while fine detail within the central range of the data can be seen clearly.}
+
+\centering
+    \includegraphics[scale = 0.5]{pwm-images/image-scale}
+
+\end{figure}
+
+%Rather than summarising mean values, we generally prefer the median, which is more robust to extreme values. A single dark pixel in a white image may register 40000 DN lower than their neighbours; when healthy pixels fall within a range of only 7000 or so grey values, a handful of dark pixels can have a significant effect on local mean values, but less so on a median.
+
+\addfigure{Images of black/grey/white pixelwise SD? Or scatterplot vs pixelwise mean?}
+\addfigure{Images of quadratic trend model for black, grey \& white (grey \& white with dark image removed)}
+\addfigure{Images of linear gradients across subpanels}
+\addfigure{Boxplots of values in each subpanel?}
+
+\addfigure{Compare mean black images: 131122, loan, 160705, loan, MCT225. Give mean \& SD for each}
+\addfigure{Compare mean white/grey images: 131122, loan, 160705, loan, MCT225. Give mean \& SD for each}
+
+\addfigure{histogram of all observed black/grey/white values (all images or single representative of each set?}
+\subsection{Dark images}
+
+The black images, taken without exposure to an x-ray source, capture the base level of current within the detector. Many of the defects and features visible in an illuminated image are also present in the black images, indicating a localised offset from the normal base current.
+
+Readout dark has been found to increase over time in space-based detectors \nb{cite Hubble papers}, where it is attributed to constant radiation damage; we might therefore reasonably expect to see the same effect here.
+
+%----------------------------------------------------
+% black pixelwise mean images 14-10-09
+\begin{figure}
+\caption{Black pixelwise mean images from various detectors. A similar pattern of diagonal gradients across the subpanels can be discerned in all detectors, with higher values in the bottom-right corners of the upper row, and the top-left corners of the bottom row. Panel MCT225, having only one row of subpanels, also has its higher values of the top-left corner, resembling an elongated version of the lower row of panels in the other detectors. The gradient is the result of accumulating current during pixel readout, with the highest extra charge added to the pixels furthest from the readout sensor, which are last to be read out.}
+
+\sfquad{pwm-images/pwm-black-131122}{131122: \\ \footnotesize{just prior to first refurbishment}}%
+\sfquad{pwm-images/pwm-black-141009}{141009: \\ \footnotesize{several months after second refurbishment}}%
+\sfquad{pwm-images/pwm-black-loan}{Loan panel: \\ \footnotesize{\nb{recently refurbished?}}}%
+\sfquad{pwm-images/pwm-black-MCT225}{MCT225: \\ \footnotesize{not recently refurbished}}%
+
+\end{figure}
+%----------------------------------------------------
+
+\subsection{Illuminated images}
+
+The grey and white images are dominated by the pixels' response to the light generated by the x-rays hitting the scintillator.
+
+ The grey and white images show a concave, roughly circular shape, having higher values in the centre and lower at the edges; there are a number of large dim flecks in the lower half of the panel, which are the shadows of specks of tungsten on the detector's beryllium window (see Section~\ref{sec:screen-spots}). In all three images, discontinuities across the edges of the 32 subpanels can be discerned quite clearly.
+%----------------------------------------------------
+% grey pixelwise mean images
+\begin{figure}
+\caption{White pixelwise mean images from various detectors. The images show a concave, roughly circular shape, having higher values in the centre and lower at the edges.}
+
+\sfquad{pwm-images/pwm-white-131122}{131122: \\ \footnotesize{just prior to first refurbishment}}%
+\sfquad{pwm-images/pwm-white-141009}{141009: \\ \footnotesize{several months after second refurbishment}}%
+\sfquad{pwm-images/pwm-white-loan}{Loan panel: \\ \footnotesize{\nb{recently refurbished?}}}%
+\sfquad{pwm-images/pwm-white-MCT225}{MCT225: \\ \footnotesize{not recently refurbished}}%
+
+\end{figure}
+%----------------------------------------------------
+
+\end{document}

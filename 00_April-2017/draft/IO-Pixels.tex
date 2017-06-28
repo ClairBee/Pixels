@@ -1,0 +1,130 @@
+\documentclass[10pt,fleqn]{article}
+\usepackage{mystyle}
+
+\usepackage{subfiles}
+\usetikzlibrary{automata, positioning, shapes.multipart, arrows}
+\usepackage[utf8]{inputenc}
+
+
+
+%----------------------------------------------------------------------
+
+\title{The Life \& Death of Pixels}
+\author{}
+\date{July 2016}
+
+\providecommand{\main}{.}           % set folder head, relative to which files can be located
+\addbibresource{\main/Pixel-refs.bib}
+
+%----------------------------------------------------------------------
+    
+% UPDATE TO SWITCH ON & OFF USING BOOLEAN FLAG
+
+% temporary environment to add outline of paper structure
+ \newenvironment{outline}
+%    {\comment}				# uncomment & comment everything else out to hide outline structure
+    {\ttfamily
+    \color{MidnightBlue}
+    \begin{center}\begin{footnotesize}
+    \begin{tabular}{|p{0.9\textwidth}|}
+    \hline\\
+    }
+    {
+    \\\\\hline
+    \end{tabular} 
+    \end{footnotesize}
+    \end{center}
+    }
+    
+%----------------------------------------------------------------------
+
+% temporary command: note to self to insert figure
+% comment out contents to hide
+\newcommand{\addfigure}[1]{
+	\vspace{-5pt}
+	\begin{footnotesize}\begin{center}
+	\textcolor{RubineRed}{
+		\begin{tabular}{p{0.01\textwidth}p{0.95\textwidth}}
+			$\circ$ & \texttt{#1}
+		\end{tabular}
+	}
+	\end{center}\end{footnotesize}
+	\vspace{-10pt}
+}
+
+
+%----------------------------------------------------------------------
+
+% temporary command: notes from Julia
+\newcommand{\JB}[1]{
+	\textcolor{ForestGreen}{\emph{JB: #1}}
+}
+
+% temporary command: notes from Clair
+\newcommand{\CB}[1]{
+	\textcolor{RoyalBlue}{\emph{CB: #1}}
+}
+
+\newcommand{\sftriple}[2]{
+    \begin{subfigure}[t]{0.32\textwidth}
+    \caption{#2}
+    \includegraphics[scale = 0.3]{#1}
+    \end{subfigure}
+}
+
+\newcommand{\sfquad}[2]{
+    \begin{subfigure}[t]{0.24\textwidth}
+    \caption{#2}
+    \includegraphics[scale = 0.2]{#1}
+    \end{subfigure}
+}
+%======================================================================
+
+\begin{document}
+
+
+\maketitle
+
+%-----------------------------------------------------------------------------------------------------------------------
+\color{Red}
+    
+To install necessary packages to R (will likely install some dependencies as well):
+\begin{verbatim}
+install_github("ClairBee/IO.Pixels")
+library("IO.Pixels")
+\end{verbatim}
+
+The pixelwise means are stored as RDS objects at \url{https://github.com/ClairBee/Pixels/02_Objects/images}. 
+
+Download the images of interest into a single folder
+
+Run \texttt{load.pixel.means(fpath = <folder containing .rds objects>)} to produce a named array called \texttt{pw.m}, containing the black, grey and white pixelwise mean for each image.
+
+
+\color{black}
+%-----------------------------------------------------------------------------------------------------------------------
+
+
+\subfile{./sections/intro.tex}
+\subfile{./sections/tech-data.tex}
+\subfile{./sections/pilot.tex}
+\subfile{./sections/exploratory.tex}
+\subfile{./sections/defects.tex}
+\subfile{./sections/spatial.tex}
+\subfile{./sections/temporal.tex}
+\subfile{./sections/discussion.tex}
+
+%======================================================================
+
+\newpage
+
+\begin{appendix}
+\subfile{./sections/glossary.tex}
+\subfile{./sections/bpx-definitions.tex}
+\end{appendix}
+
+%======================================================================
+
+\newpage
+\printbibliography
+\end{document}

@@ -1,0 +1,98 @@
+\providecommand{\main}{..}					% fix bibliography path
+\documentclass[\main/IO-Pixels.tex]{subfiles}
+    
+   
+%======================================================================
+
+\begin{document}
+
+\section{Manufacturer definitions of underperforming pixels}
+\label{app:bpx-defn}
+
+\subsection{Underperforming pixel specifications}
+
+The following definitions are taken from the detector manual provided by Perkin Elmer \cite{PerkinElmerManual}. %(Bright offset-corrected images are $W-B$ and $G-B$)
+
+\subsubsection{Signal sensitivity}
+Tests performed on bright offset corrected image at different X-ray energies at first free running timing (133.2 ms). 
+
+\begin{description}
+
+\item[Underperforming Bright pixel:] value is greater than 150\% of the median bright
+
+\item[No gain:]  dark pixel with no light response 
+
+\item[Underperforming Dark pixel:] value is below 45\% of the median bright
+
+\end{description}
+
+\subsubsection{Bright noise}
+A sequence of 100 bright images in the first free running timing ($T_0$) is acquired. The bright image has a nominal value of roughly 30000 units. The pixel sigma for each pixel across the 100 images and the median pixel sigma are calculated. An underperforming bright noise pixel is a pixel whose sigma is more than 6 times the median pixel sigma.
+
+\subsubsection{Dark noise}
+A sequence of 100 dark images is acquired in two free running timings ($T_0$) and 1 s). The pixel sigma for each pixel across the 100 images and the median pixel sigma are calculated. An underperforming dark noise pixel is a pixel whose sigma is more than 6 times the median pixel sigma. 
+
+\subsubsection{Uniformity}
+Analysis performed on offset correction image acquired at $T_0$, and multiple gain correction images acquired also at $T_0$. Gain Images having a nominal value of 30000 and 3000 digits and the flood image a nominal value of 10000 digits acquired at $T_0$. These are combined to produce an offset- and gain-corrected bright image at a nominal value of 10000 ADU, with pixels $i$ having values $x(i)$, and
+
+\begin{tabular}{p{0.1\textwidth}p{0.9\textwidth}}
+$\tilde{x}$ & median value of all pixels in image \\
+$\tilde{x}_{9\times9}(i)$ & median value of pixels within a $9\times9$ square centred on pixel $i$
+\end{tabular}
+
+\begin{description}
+
+\item[Global uniformity:] A pixel is marked as underperforming if its value exceeds a deviation of more than $\pm 2\%$ for fixed Integration time of $T_0$, corrected with gain and offset images acquired at $T_0$ both.
+
+\vspace{-15pt}
+\begin{equation*}
+    \big\{ \, i: x(i) > 1.02 \tilde{x} \parallel x(i) < 0.98 \tilde{x} \big\}
+\end{equation*}
+
+\item[Local uniformity:] A pixel is marked as underperforming if its value exceeds a deviation of more than$\pm1\%$ of the median value of its 9x9 neighbours in the corrected image for fixed integration time of $T_0$, corrected with gain and offset images acquired at $T_0$ ms both.
+
+\vspace{-15pt}
+\begin{equation*}
+      \big\{ \, i: x(i) > 1.01 \tilde{x}_{9\times9}(i) \parallel x(i) < 0.99 \tilde{x}_{9\times9}(i) \big\}
+\end{equation*}
+
+\end{description}
+
+\subsubsection{Lag}
+The detector is set to an integration time of 2s (triggered mode). A sequence of offset-corrected frames is acquired where one image is irradiated during the gap after the readout time of the detector of up to 30000 units. The following two dark images (first frame after exposure and second frame after exposure) are analyzed in correspondence of the irradiated frame. A pixel is marked as underperforming if its value exceeds the following limit: 8\% in 1st Frame, 4\% in 2nd frame; and for the CsI option: 10\% in 1st Frame, 5\% in 2nd frame. 
+
+\FloatBarrier
+\subsection{Numbers of underperforming pixels}
+
+\begin{table}
+\caption{Permitted numbers of underperforming pixels in each region of the detector. \\
+\footnotesize{The \textbf{central region} is defined as the inner 1024 by 1024 pixels.  If an underperforming pixel occurs at the boundary of this area then it is permissible to shift the area by up to 10 pixels, but not to reduce it. \\ The \textbf{general region} is the whole panel, excluding a rim of 6 pixels (12 for AN3 models) around each edge of the detector.}}
+\label{app:tab:n-bad-px}
+
+\resizebox{\textwidth}{!}{
+\renewcommand{\arraystretch}{1.2}
+	\begin{tabular}{l cc c c cc c}
+
+	& \multicolumn{3}{c}{\textbf{Imaging grade}} && \multicolumn{3}{c}{\textbf{CT grade}} \\
+	\cmidrule{2-8}
+	& \multicolumn{2}{c}{\textbf{Limit per region}} & \multirow{2}{*}{\textbf{Max \# pixels}} & & \multicolumn{2}{c}{\textbf{Limit per region}} & \multirow{2}{*}{\textbf{Max \# pixels}} \\
+	\textbf{Feature type} & \textbf{Central} & \textbf{General} & & & \textbf{Central} & \textbf{General} & \\
+	\toprule
+	2 adjacent lines & 4 & 8 & && 0 & 1 & \\
+	3-4 adjacent lines & 1 & 2 & &&- & - & \\
+	\textbf{Cumulative underperforming lines} & \textbf{8} & \textbf{20} & \textbf{40960} & &\textbf{5} & \textbf{11} & \textbf{22528} \\
+	\hline
+	Medium cluster (4-9 pixels, no $3\times3$ & 125 & 400 & 3600& & 50 & 200 & 1800 \\
+	Large cluster (max. 17 pixels, no $4\times4$ & 15 & 40 & 680& & 5 & 20 & 340 \\
+	Mega cluster (max. 36 pixels) & 2 & 7 & 350& & 0 & 1 & 36 \\
+	\hline
+	Pixel density (\% defects in $51\times51$ neighbourhood)  & 10\% & 10\% & 260& &  10\% & 10\% & 260 \\
+	\bottomrule
+	\textbf{Total number of underperforming pixels} & & \textbf{2\%} & \textbf{83800} & && \textbf{1\%} & \textbf{40000}
+
+
+\end{tabular}
+}
+\end{table}
+
+\end{document}
