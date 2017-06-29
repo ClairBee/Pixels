@@ -1,5 +1,5 @@
 
-library("IO.Pixels"); library("beepr")
+library("IO.Pixels")
 
 img.nm <- "loan3"
 
@@ -118,41 +118,18 @@ saveRDS(ss, paste0("./02_Objects/pixel-maps/screen-spots-", img.nm, ".rds"))
 ############################################################################################################
 # IDENTIFY FEATURES                                                                                     ####
 
-f.cols <- c("cl.body" = "gold", "cl.root" = "red", "dense.region" = "blue", "line.c" = "black", "line.r" = "black",
-            "singleton" = "skyblue", "s.spot" = "grey")
+bpm <- readRDS(paste0("./02_Objects/pixel-maps/pixel-map-", img.nm, ".rds"))
 
-fl <- list.files("./02_Objects/pixel-maps", pattern = "pixel-map")
-fl <- gsub(".rds", "", gsub("pixel-map-", "", fl))[-(1:2)]
+# add feature classifications
+sp <- readRDS(paste0("./02_Objects/pixel-maps/screen-spots-", img.nm, ".rds"))
+bpm <- label.screen.spots(bpm, sp) 
 
-invisible(sapply(fl, function(img.nm) {
-    
-    bpm <- readRDS(paste0("./02_Objects/pixel-maps/pixel-map-", img.nm, ".rds"))
-    org.ftype <- bpm[,"f.type"]
-    bpm <- bpm[,1:3]
-    
-    # add feature classifications
-    sp <- readRDS(paste0("./02_Objects/pixel-maps/screen-spots-", img.nm, ".rds"))
-    
-    bpm <- label.screen.spots(bpm, sp) 
-    
-    bpm <- dense.regions(bpm)
-    
-    bpm <- find.columns(bpm)
-    bpm <- find.rows(bpm)
-    
-    bpm <- find.clusters(bpm)
-    bpm$f.type[is.na(bpm$f.type)] <- "singleton"
-    
-    cat(img.nm, "\n", "Original categories", "\n")
-    print(table(org.ftype, useNA = "ifany"))
-    
-    cat("\n", "New categories")
-    print(table(bpm$f.type, useNA = "ifany"))
-    
-    pixel.plot(bpm[,1:2], col = f.cols[bpm$f.type], main = img.nm)
-    legend("top", pch = 15, col = f.cols[unique(bpm$f.type)], unique(bpm$f.type), ncol = 3, bty = "n")
-    
-    beep()
-    yn <- readline("Save this map?")
-    if(yn != "n") saveRDS(bpm, paste0("./02_Objects/pixel-maps/pixel-map-", img.nm, ".rds"))
-}))
+bpm <- dense.regions(bpm)
+
+bpm <- find.columns(bpm)
+bpm <- find.rows(bpm)
+
+bpm <- find.clusters(bpm)
+bpm$f.type[is.na(bpm$f.type)] <- "singleton"
+
+saveRDS(bpm, paste0("./02_Objects/pixel-maps/pixel-map-", img.nm, ".rds"))
