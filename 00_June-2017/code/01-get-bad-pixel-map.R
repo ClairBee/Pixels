@@ -118,42 +118,41 @@ saveRDS(ss, paste0("./02_Objects/pixel-maps/screen-spots-", img.nm, ".rds"))
 ############################################################################################################
 # IDENTIFY FEATURES                                                                                     ####
 
-fl <- list.files("./02_Objects/pixel-maps", pattern = "pixel-map")
-fl <- gsub(".rds", "", gsub("pixel-map-", "", fl))[-(1:8)]
-
 f.cols <- c("cl.body" = "gold", "cl.root" = "red", "dense.region" = "blue", "line.c" = "black", "line.r" = "black",
             "singleton" = "skyblue", "s.spot" = "grey")
 
+fl <- list.files("./02_Objects/pixel-maps", pattern = "pixel-map")
+fl <- gsub(".rds", "", gsub("pixel-map-", "", fl))[-(1:2)]
+
 invisible(sapply(fl, function(img.nm) {
     
-bpm <- readRDS(paste0("./02_Objects/pixel-maps/pixel-map-", img.nm, ".rds"))
-
-org.ftype <- bpm[,"f.type"]
-
-# add feature classifications
-bpm <- find.columns(bpm[,1:3])
-bpm <- find.rows(bpm)
-bpm <- dense.regions(bpm)
-bpm <- find.clusters(bpm)
-
-sp <- readRDS(paste0("./02_Objects/pixel-maps/screen-spots-", img.nm, ".rds"))
-
-sp.chk <- unlist((lapply(sp, function(x) apply(sweep(x[,1:2], 2, c(10000,1), "*"), 1, sum))))
-bpm[which(apply(sweep(bpm[,1:2], 2, c(10000,1), "*"), 1, sum) %in% sp.chk &
-              (bpm$type %in% c("dim", "l.dim", "nl.dim", "spot.dim"))), "f.type"] <- "s.spot"
-
-bpm$f.type[is.na(bpm$f.type)] <- "singleton"
-
-cat(img.nm, "\n", "Original categories", "\n")
-print(table(org.ftype, useNA = "ifany"))
-
-cat("\n", "New categories")
-print(table(bpm$f.type, useNA = "ifany"))
-
-pixel.plot(bpm[,1:2], col = f.cols[bpm$f.type], main = img.nm)
-legend("top", pch = 15, col = f.cols[unique(bpm$f.type)], unique(bpm$f.type), ncol = 3, bty = "n")
-
-beep()
-yn <- readline("Save this map?")
-if(yn != "n") saveRDS(bpm, paste0("./02_Objects/pixel-maps/pixel-map-", img.nm, ".rds"))
+    bpm <- readRDS(paste0("./02_Objects/pixel-maps/pixel-map-", img.nm, ".rds"))
+    org.ftype <- bpm[,"f.type"]
+    bpm <- bpm[,1:3]
+    
+    # add feature classifications
+    sp <- readRDS(paste0("./02_Objects/pixel-maps/screen-spots-", img.nm, ".rds"))
+    
+    bpm <- label.screen.spots(bpm, sp) 
+    
+    bpm <- dense.regions(bpm)
+    
+    bpm <- find.columns(bpm)
+    bpm <- find.rows(bpm)
+    
+    bpm <- find.clusters(bpm)
+    bpm$f.type[is.na(bpm$f.type)] <- "singleton"
+    
+    cat(img.nm, "\n", "Original categories", "\n")
+    print(table(org.ftype, useNA = "ifany"))
+    
+    cat("\n", "New categories")
+    print(table(bpm$f.type, useNA = "ifany"))
+    
+    pixel.plot(bpm[,1:2], col = f.cols[bpm$f.type], main = img.nm)
+    legend("top", pch = 15, col = f.cols[unique(bpm$f.type)], unique(bpm$f.type), ncol = 3, bty = "n")
+    
+    beep()
+    yn <- readline("Save this map?")
+    if(yn != "n") saveRDS(bpm, paste0("./02_Objects/pixel-maps/pixel-map-", img.nm, ".rds"))
 }))

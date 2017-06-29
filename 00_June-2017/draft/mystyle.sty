@@ -7,7 +7,7 @@
 
 \newcommand{\todo}[1]{
 	\begin{minipage}{\textwidth}
-	\textcolor{black}{
+	\textcolor{lava}{
 					\begin{tabular}{p{0.01\textwidth}p{0.95\textwidth}}
 						$\bullet$ & #1
 					\end{tabular}
@@ -27,8 +27,13 @@
 
 \newcommand{\ci}[1]{#1\% confidence interval}
 
-\def\rot{\rotatebox}	
+% citation needed
+\newcommand{\CN}[1]{%
+	\textcolor{RubineRed}{\textsuperscript{\textbf{\textsc{CN%
+		\ifthenelse{\isempty{#1}}{}{: #1}}}}}%
+}
 
+\newcommand{\hlgreen}[1]{{\sethlcolor{green}\hl{#1}}}
 
 
 %=============================================================================
@@ -37,7 +42,8 @@
 \usepackage{siunitx}            % properly formatted SI units (specifically, \SI{200}{\micro\meter})
  
 % bibliographies
-\usepackage[backend=biber, sorting = none, style = nature]{biblatex}	
+%\usepackage[backend=bibtex, style=nature, citestyle=authoryear]{biblatex}
+\usepackage{natbib}	
 
 \usepackage[linesnumbered,ruled]{algorithm2e}
 
@@ -71,7 +77,8 @@
 \usepackage{fancyhdr}				% make nice headers
 
 %\usepackage[usenames,dvipsnames]{color}					% allow use of colour in R code (for example)
-\usepackage[usenames,dvipsnames, table]{xcolor} % has to be declared before tikz
+\usepackage[usenames,dvipsnames, table]{xcolor} 			% has to be declared before tikz
+\usepackage{soul}											% allows highlighter
 
 \usepackage{enumitem}				% stop indenting bullet points in itemized lists, fix spacing between list items
     \setlist[itemize]{itemsep=5pt}
@@ -80,6 +87,7 @@
     \setlist[enumerate,1]{itemsep=40pt}
     \setlist[description]{itemsep=0pt}
 
+\usepackage{xifthen}								% allows \isempty test for Citation Needed command
 
 
 
@@ -118,12 +126,26 @@
 	extendedchars = true}
           
 %=============================================================================
+
     \definecolor{gold}{rgb}{1.0, 0.84, 0.0}
     \definecolor{celadon}{rgb}{0.67, 0.88, 0.69}
+    \definecolor{lava}{rgb}{0.81, 0.06, 0.13}
 
     \newcolumntype{M}[1]{>{\centering\arraybackslash}m{#1}}			% column type to allow vertical & horizontal centering with rotation
 
-%---------------------------------------------------------------------------------
+%=============================================================================
+% Functions to compile only when subfiles are processed individually
+\newcommand{\onlyinsubfile}[1]{#1}														% only display contents when compiling as subfile
+\newcommand{\RC}[2]{
+	\emph{\footnotesize{\ifthenelse{\isempty{#2}}
+									{\hl{#1}}
+									{\hlgreen{#2}}
+		}}
+}
+
+%\emph{\footnotesize{\hl{#1} \hlgreen{#2}}}}				% only display Richard's comments when compiling as subfile
+	
+%=============================================================================
 % Mark Fiecas declarations
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{assumption}{Assumption}

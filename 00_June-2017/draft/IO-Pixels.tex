@@ -1,20 +1,17 @@
 \documentclass[10pt,fleqn]{article}
-\usepackage{mystyle}
+\providecommand{\main}{/home/clair/Documents/Pixels/00_April-2017/draft}           % set folder head
+
+\usepackage{\main/mystyle}
 
 \usepackage{subfiles}
 \usetikzlibrary{automata, positioning, shapes.multipart, arrows}
-\usepackage[utf8]{inputenc}
 
-
-
+\bibliographystyle{apalike}
 %----------------------------------------------------------------------
 
 \title{The Life \& Death of Pixels}
 \author{}
 \date{July 2016}
-
-\providecommand{\main}{.}           % set folder head, relative to which files can be located
-\addbibresource{\main/Pixel-refs.bib}
 
 %----------------------------------------------------------------------
     
@@ -78,31 +75,43 @@
     \includegraphics[scale = 0.2]{#1}
     \end{subfigure}
 }
-%======================================================================
 
+%=========================================================================================
 \begin{document}
+	% Switch off commands that should only run when compiling individual subfiles
+		\renewcommand{\onlyinsubfile}[1]{}
+		\renewcommand{\RC}[2]{}
+%=========================================================================================
 
 
 \maketitle
 
 %-----------------------------------------------------------------------------------------------------------------------
-\color{Red}
-    
-To install necessary packages to R (will likely install some dependencies as well):
-\begin{verbatim}
-install_github("ClairBee/IO.Pixels")
-library("IO.Pixels")
-\end{verbatim}
-
-The pixelwise means are stored as RDS objects at \url{https://github.com/ClairBee/Pixels/02_Objects/images}. 
-
-Download the images of interest into a single folder
-
-Run \texttt{load.pixel.means(fpath = <folder containing .rds objects>)} to produce a named array called \texttt{pw.m}, containing the black, grey and white pixelwise mean for each image.
-
-
-\color{black}
+%\color{Red}
+%    
+%To install necessary packages to R (will likely install some dependencies as well):
+%\begin{verbatim}
+%install_github("ClairBee/IO.Pixels")
+%library("IO.Pixels")
+%\end{verbatim}
+%
+%The pixelwise means are stored as RDS objects at \url{https://github.com/ClairBee/Pixels/02_Objects/images}. 
+%
+%Download the images of interest into a single folder
+%
+%Run \texttt{load.pixel.means(fpath = <folder containing .rds objects>)} to produce a named array called \texttt{pw.m}, containing the black, grey and white pixelwise mean for each image.
+%
+%
+%\color{black}
 %-----------------------------------------------------------------------------------------------------------------------
+
+\todo{Produce a flowchart showing hypothesized development of defects - get all transitions across all available sequences}
+
+\todo{Look at gradient over median-smoothed black images; anything useful to add?}
+
+\todo{Apply Julia's spatial analysis to the main image sequence}
+
+\todo{Rework schematic of direction of charge transfer}
 
 
 \subfile{./sections/intro.tex}
@@ -126,5 +135,5 @@ Run \texttt{load.pixel.means(fpath = <folder containing .rds objects>)} to produ
 %======================================================================
 
 \newpage
-\printbibliography
+\bibliography{\main/Pixel-refs}
 \end{document}
